@@ -115,6 +115,7 @@ export default component$(() => {
   const showPreview = useSignal(false);
   const showBatchRename = useSignal(false);
   const confirmDeleteIcon = useStore<{ show: boolean; iconId: number; iconName: string }>({ show: false, iconId: 0, iconName: "" });
+  const confirmBatchDelete = useStore<{ show: boolean; count: number }>({ show: false, count: 0 });
   const editingIcon = useStore<Partial<Icon>>({});
   const previewIcon = useStore<Partial<Icon>>({});
   const codeMode = useSignal<"symbol" | "fontclass" | "unicode">("fontclass");
@@ -122,6 +123,7 @@ export default component$(() => {
   const searchQuery = useSignal("");
   const sortBy = useSignal<"name" | "time" | "unicode">("time");
   const copied = useSignal(false);
+  const previewColor = useSignal("#333333");
 
   // Toast state
   const toasts = useStore<{ items: ToastItem[] }>({ items: [] });
@@ -155,6 +157,7 @@ export default component$(() => {
       if (showSettings.value) { showSettings.value = false; return; }
       if (showBatchRename.value) { showBatchRename.value = false; return; }
       if (confirmDeleteIcon.show) { confirmDeleteIcon.show = false; return; }
+      if (confirmBatchDelete.show) { confirmBatchDelete.show = false; return; }
     }
 
     // Ctrl+A / Cmd+A: select all visible icons
@@ -170,15 +173,8 @@ export default component$(() => {
       const visible = filteredIcons.value.map((i) => i.id);
       const selectedVisible = visible.filter((id) => selectedIds.ids.has(id));
       if (selectedVisible.length > 0) {
-        const count = selectedIds.ids.size;
-        if (confirm(`确定删除选中的 ${count} 个图标？`)) {
-          for (const id of Array.from(selectedIds.ids)) {
-            deleteIcon.submit({ id: String(id) });
-          }
-          icons.list = icons.list.filter((i) => !selectedIds.ids.has(i.id));
-          selectedIds.ids = new Set();
-          showToast(`已删除 ${count} 个图标`, "success");
-        }
+        confirmBatchDelete.count = selectedIds.ids.size;
+        confirmBatchDelete.show = true;
       }
       return;
     }
@@ -247,6 +243,17 @@ export default component$(() => {
     next.delete(iconId);
     selectedIds.ids = next;
     showToast(`图标 "${confirmDeleteIcon.iconName}" 已删除`, "success");
+  });
+
+  const doBatchDelete = $(async () => {
+    const count = confirmBatchDelete.count;
+    confirmBatchDelete.show = false;
+    for (const id of Array.from(selectedIds.ids)) {
+      await deleteIcon.submit({ id: String(id) });
+    }
+    icons.list = icons.list.filter((i) => !selectedIds.ids.has(i.id));
+    selectedIds.ids = new Set();
+    showToast(`已删除 ${count} 个图标`, "success");
   });
 
   const toggleSelect = $((id: number) => {
@@ -395,11 +402,9 @@ export default component$(() => {
             </label>
             {selectedIds.ids.size > 0 && (
               <>
-                <button class="btn btn-error btn-sm" onClick$={async () => {
-                  if (!confirm(`确定删除选中的 ${selectedIds.ids.size} 个图标？`)) return;
-                  for (const id of Array.from(selectedIds.ids)) await deleteIcon.submit({ id: String(id) });
-                  icons.list = icons.list.filter((i) => !selectedIds.ids.has(i.id));
-                  selectedIds.ids = new Set();
+                <button class="btn btn-error btn-sm" onClick$={() => {
+                  confirmBatchDelete.count = selectedIds.ids.size;
+                  confirmBatchDelete.show = true;
                 }}>删除选中</button>
                 <button class="btn btn-outline btn-sm" onClick$={() => showBatchRename.value = true}>批量重命名</button>
               </>
@@ -541,7 +546,26 @@ export default component$(() => {
           <div class="modal-box max-w-sm text-center">
             <h3 class="font-bold text-lg mb-4">{previewIcon.name}</h3>
             <div class="w-32 h-32 mx-auto mb-4 bg-base-200 rounded-lg flex items-center justify-center p-4">
-              {previewIcon.content && <SvgPreview content={previewIcon.content} class="w-full h-full" />}
+              {previewIcon.content && <SvgPreview content={previewIcon.content} class="w-full h-full" color={previewColor.value} />}
+            </div>
+            {/* Color picker */}
+            <div class="flex items-center justify-center gap-2 mb-4">
+              {["#333333", "#ef4444", "#22c55e", "#3b82f6", "#f59e0b", "#a855f7", "#ec4899"].map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  class={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${previewColor.value === c ? "border-primary scale-110" : "border-transparent"}`}
+                  style={{ backgroundColor: c }}
+                  onClick$={() => (previewColor.value = c)}
+                  title={c}
+                />
+              ))}
+              <input
+                type="color"
+                class="w-6 h-6 p-0 border-0 rounded-full overflow-hidden cursor-pointer"
+                value={previewColor.value}
+                onInput$={(ev: any) => (previewColor.value = ev.target.value)}
+              />
             </div>
             {previewIcon.unicode && <p class="text-sm text-gray-500 font-mono mb-4">{previewIcon.unicode}</p>}
             <div class="modal-action justify-center"><button class="btn" onClick$={() => showPreview.value = false}>关闭</button></div>
@@ -556,8 +580,27 @@ export default component$(() => {
           <div class="modal-box max-w-lg">
             <h3 class="font-bold text-lg mb-4">编辑图标</h3>
             <div class="flex gap-4">
-              <div class="w-24 h-24 bg-base-200 rounded-lg flex items-center justify-center p-3 flex-shrink-0">
-                {editingIcon.content && <SvgPreview content={editingIcon.content} class="w-full h-full" />}
+              <div class="flex flex-col items-center gap-2 flex-shrink-0">
+                <div class="w-24 h-24 bg-base-200 rounded-lg flex items-center justify-center p-3">
+                  {editingIcon.content && <SvgPreview content={editingIcon.content} class="w-full h-full" color={previewColor.value} />}
+                </div>
+                <div class="flex items-center gap-1">
+                  {["#333333", "#ef4444", "#22c55e", "#3b82f6", "#f59e0b", "#a855f7", "#ec4899"].map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      class={`w-4 h-4 rounded-full border-2 transition-transform hover:scale-110 ${previewColor.value === c ? "border-primary scale-110" : "border-transparent"}`}
+                      style={{ backgroundColor: c }}
+                      onClick$={() => (previewColor.value = c)}
+                    />
+                  ))}
+                  <input
+                    type="color"
+                    class="w-4 h-4 p-0 border-0 rounded-full overflow-hidden cursor-pointer"
+                    value={previewColor.value}
+                    onInput$={(ev: any) => (previewColor.value = ev.target.value)}
+                  />
+                </div>
               </div>
               <form class="flex-1" onSubmit$={async (ev: any) => { ev.preventDefault(); const fd = new FormData(ev.target); const iconId = editingIcon.id; await updateIcon.submit({ id: String(iconId), name: fd.get("name"), unicode: fd.get("unicode") || null, view_box: fd.get("view_box") || "0 0 1024 1024" }); const idx = icons.list.findIndex((i) => i.id === iconId); if (idx >= 0) icons.list[idx] = { ...icons.list[idx], name: fd.get("name") as string, unicode: fd.get("unicode") as string || null, view_box: fd.get("view_box") as string }; showEdit.value = false; }}>
                 <div class="form-control mb-3"><label class="label"><span class="label-text">图标名称</span></label><input name="name" type="text" class="input input-bordered" value={editingIcon.name} required /></div>
@@ -694,6 +737,23 @@ export default component$(() => {
             </div>
           </div>
           <div class="modal-backdrop" onClick$={() => { confirmDeleteIcon.show = false; confirmDeleteIcon.iconId = 0; }} />
+        </div>
+      )}
+
+      {/* Confirm Batch Delete Modal */}
+      {confirmBatchDelete.show && (
+        <div class="modal modal-open">
+          <div class="modal-box max-w-sm">
+            <h3 class="font-bold text-lg mb-2">确认批量删除</h3>
+            <p class="text-gray-500 mb-4">
+              确定要删除选中的 {confirmBatchDelete.count} 个图标吗？此操作不可恢复。
+            </p>
+            <div class="modal-action">
+              <button class="btn" onClick$={() => { confirmBatchDelete.show = false; confirmBatchDelete.count = 0; }}>取消</button>
+              <button class="btn btn-error" onClick$={doBatchDelete}>删除</button>
+            </div>
+          </div>
+          <div class="modal-backdrop" onClick$={() => { confirmBatchDelete.show = false; confirmBatchDelete.count = 0; }} />
         </div>
       )}
     </div>
