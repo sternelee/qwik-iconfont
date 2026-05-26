@@ -568,7 +568,18 @@ export default component$(() => {
                   <p class="text-xs truncate w-full font-medium" title={icon.name}>
                     <HighlightText text={icon.name} query={searchQuery.value} />
                   </p>
-                  {icon.unicode && <span class="text-[10px] text-gray-400 font-mono">{icon.unicode}</span>}
+                  {icon.unicode && (
+                    <button
+                      class="text-[10px] text-gray-400 font-mono hover:text-primary transition-colors"
+                      title="点击复制 Unicode"
+                      onClick$={async () => {
+                        await navigator.clipboard.writeText(icon.unicode || "");
+                        showToast(`已复制 ${icon.unicode}`, "success");
+                      }}
+                    >
+                      {icon.unicode}
+                    </button>
+                  )}
                   {/* Action buttons */}
                   <div class="flex gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button class="btn btn-ghost btn-xs btn-square" title="编辑" onClick$={() => { editingIcon.id = icon.id; editingIcon.name = icon.name; editingIcon.unicode = icon.unicode; editingIcon.view_box = icon.view_box; editingIcon.content = icon.content; showEdit.value = true; }}>
@@ -718,7 +729,7 @@ export default component$(() => {
               </button>
             </div>
             <div class="modal-action">
-              <button class="btn btn-primary" onClick$={() => { const code = generatedCode.value; if (!code) return; const blob = new Blob([code], { type: "text/plain" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `iconfont-${codeMode.value}.txt`; a.click(); URL.revokeObjectURL(url); }}>下载代码</button>
+              <button class="btn btn-primary" onClick$={() => { const code = generatedCode.value; if (!code) return; const mode = codeMode.value; const mime = mode === "symbol" ? "image/svg+xml" : mode === "fontclass" ? "text/css" : "text/plain"; const ext = mode === "symbol" ? "svg" : mode === "fontclass" ? "css" : "txt"; const blob = new Blob([code], { type: mime }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `${project.font_family}.${ext}`; a.click(); URL.revokeObjectURL(url); showToast(`已下载 ${project.font_family}.${ext}`, "success"); }}>下载代码</button>
               <button class="btn" onClick$={() => showCode.value = false}>关闭</button>
             </div>
           </div>
