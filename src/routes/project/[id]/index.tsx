@@ -125,6 +125,7 @@ export default component$(() => {
   const copied = useSignal(false);
   const previewColor = useSignal("#333333");
   const downloadLoading = useSignal<"font" | "package" | null>(null);
+  const showShortcuts = useSignal(false);
 
   // Toast state
   const toasts = useStore<{ items: ToastItem[] }>({ items: [] });
@@ -152,6 +153,7 @@ export default component$(() => {
 
     // Esc: close any open modal
     if (ev.key === "Escape") {
+      if (showShortcuts.value) { showShortcuts.value = false; return; }
       if (showPreview.value) { showPreview.value = false; return; }
       if (showEdit.value) { showEdit.value = false; return; }
       if (showCode.value) { showCode.value = false; return; }
@@ -159,6 +161,12 @@ export default component$(() => {
       if (showBatchRename.value) { showBatchRename.value = false; return; }
       if (confirmDeleteIcon.show) { confirmDeleteIcon.show = false; return; }
       if (confirmBatchDelete.show) { confirmBatchDelete.show = false; return; }
+    }
+
+    // ?: show keyboard shortcuts help
+    if (ev.key === "?" && !ev.shiftKey) {
+      showShortcuts.value = true;
+      return;
     }
 
     // Ctrl+A / Cmd+A: select all visible icons
@@ -549,7 +557,7 @@ export default component$(() => {
         <div class="modal modal-open">
           <div class="modal-box max-w-lg">
             <h3 class="font-bold text-lg mb-4">项目设置</h3>
-            <form onSubmit$={async (ev: any) => { ev.preventDefault(); const fd = new FormData(ev.target); await updateProject.submit({ id: loc.params.id, name: fd.get("name"), description: fd.get("description"), font_family: fd.get("font_family"), prefix: fd.get("prefix") }); project.name = fd.get("name") as string; project.description = fd.get("description") as string; project.font_family = fd.get("font_family") as string; project.prefix = fd.get("prefix") as string; showSettings.value = false; }}>
+            <form onSubmit$={async (ev: any) => { ev.preventDefault(); const fd = new FormData(ev.target); await updateProject.submit({ id: loc.params.id, name: fd.get("name"), description: fd.get("description"), font_family: fd.get("font_family"), prefix: fd.get("prefix") }); project.name = fd.get("name") as string; project.description = fd.get("description") as string; project.font_family = fd.get("font_family") as string; project.prefix = fd.get("prefix") as string; showSettings.value = false; showToast("项目设置已保存", "success"); }}>
               <div class="form-control mb-3"><label class="label"><span class="label-text">项目名称</span></label><input name="name" type="text" class="input input-bordered" value={project.name} required /></div>
               <div class="form-control mb-3"><label class="label"><span class="label-text">描述</span></label><input name="description" type="text" class="input input-bordered" value={project.description || ""} /></div>
               <div class="form-control mb-3"><label class="label"><span class="label-text">Font Family</span></label><input name="font_family" type="text" class="input input-bordered" value={project.font_family} /></div>
@@ -775,6 +783,41 @@ export default component$(() => {
             </div>
           </div>
           <div class="modal-backdrop" onClick$={() => { confirmBatchDelete.show = false; confirmBatchDelete.count = 0; }} />
+        </div>
+      )}
+
+      {/* Keyboard Shortcuts Help */}
+      {showShortcuts.value && (
+        <div class="modal modal-open">
+          <div class="modal-box max-w-md">
+            <h3 class="font-bold text-lg mb-4">键盘快捷键</h3>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between items-center py-1 border-b border-base-200">
+                <span>搜索聚焦</span>
+                <kbd class="kbd kbd-sm">/</kbd>
+              </div>
+              <div class="flex justify-between items-center py-1 border-b border-base-200">
+                <span>全选可见图标</span>
+                <span><kbd class="kbd kbd-sm">Ctrl</kbd> + <kbd class="kbd kbd-sm">A</kbd></span>
+              </div>
+              <div class="flex justify-between items-center py-1 border-b border-base-200">
+                <span>删除选中图标</span>
+                <kbd class="kbd kbd-sm">Delete</kbd>
+              </div>
+              <div class="flex justify-between items-center py-1 border-b border-base-200">
+                <span>关闭弹窗</span>
+                <kbd class="kbd kbd-sm">Esc</kbd>
+              </div>
+              <div class="flex justify-between items-center py-1">
+                <span>显示快捷键帮助</span>
+                <kbd class="kbd kbd-sm">?</kbd>
+              </div>
+            </div>
+            <div class="modal-action">
+              <button class="btn btn-sm" onClick$={() => showShortcuts.value = false}>关闭</button>
+            </div>
+          </div>
+          <div class="modal-backdrop" onClick$={() => showShortcuts.value = false} />
         </div>
       )}
     </div>

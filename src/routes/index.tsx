@@ -60,6 +60,7 @@ export default component$(() => {
   const searchQuery = useSignal("");
   const debouncedQuery = useSignal("");
   const deleting = useStore({ id: 0 });
+  const showShortcuts = useSignal(false);
 
   // Toast state
   const toasts = useStore<{ items: ToastItem[] }>({ items: [] });
@@ -83,8 +84,13 @@ export default component$(() => {
     const target = ev.target as HTMLElement;
     if (target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable) return;
 
-    if (ev.key === "Escape" && showModal.value) {
-      showModal.value = false;
+    if (ev.key === "Escape") {
+      if (showModal.value) { showModal.value = false; return; }
+      if (showShortcuts.value) { showShortcuts.value = false; return; }
+    }
+
+    if (ev.key === "?" && !ev.shiftKey) {
+      showShortcuts.value = true;
       return;
     }
 
@@ -284,6 +290,33 @@ export default component$(() => {
             </div>
           </div>
           <div class="modal-backdrop" onClick$={() => { confirmState.show = false; confirmState.project = null; }} />
+        </div>
+      )}
+
+      {/* Keyboard Shortcuts Help */}
+      {showShortcuts.value && (
+        <div class="modal modal-open">
+          <div class="modal-box max-w-md">
+            <h3 class="font-bold text-lg mb-4">键盘快捷键</h3>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between items-center py-1 border-b border-base-200">
+                <span>搜索聚焦</span>
+                <kbd class="kbd kbd-sm">/</kbd>
+              </div>
+              <div class="flex justify-between items-center py-1 border-b border-base-200">
+                <span>关闭弹窗</span>
+                <kbd class="kbd kbd-sm">Esc</kbd>
+              </div>
+              <div class="flex justify-between items-center py-1">
+                <span>显示快捷键帮助</span>
+                <kbd class="kbd kbd-sm">?</kbd>
+              </div>
+            </div>
+            <div class="modal-action">
+              <button class="btn btn-sm" onClick$={() => showShortcuts.value = false}>关闭</button>
+            </div>
+          </div>
+          <div class="modal-backdrop" onClick$={() => showShortcuts.value = false} />
         </div>
       )}
     </div>
