@@ -264,12 +264,13 @@ export default component$(() => {
                   prefix: fd.get("prefix"),
                 });
                 showModal.value = false;
-                if (result.value.success) {
+                if (result.value.success && result.value.id) {
                   showToast(`项目 "${fd.get("name")}" 创建成功`, "success");
+                  nav(`/project/${result.value.id}`);
                 } else {
                   showToast("项目创建失败", "error");
+                  nav("/", { replaceState: true });
                 }
-                nav("/", { replaceState: true });
               }}
             >
               <div class="form-control mb-3">
