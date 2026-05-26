@@ -826,6 +826,7 @@ ${classes}`;
               renameForm.suffix = "";
               renameForm.find = "";
               renameForm.replace = "";
+              selectedIds.ids = new Set();
               showBatchRename.value = false;
               showToast("批量重命名完成", "success");
             }}>
