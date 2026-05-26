@@ -477,11 +477,12 @@ export default component$(() => {
               <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
             </div>
           </div>
-          <select class="select select-bordered select-sm" onChange$={(ev: any) => sortBy.value = ev.target.value}>
+          <select class="select select-bordered select-sm" value={sortBy.value} onChange$={(ev: any) => sortBy.value = ev.target.value}>
             <option value="time">按时间排序</option>
             <option value="name">按名称排序</option>
             <option value="unicode">按Unicode排序</option>
           </select>
+          <span class="text-xs text-gray-500 self-center">{displayList.length} / {icons.list.length}</span>
         </div>
 
         {/* Drop zone */}
@@ -698,7 +699,7 @@ export default component$(() => {
 
             <div class="bg-base-300 rounded-lg p-4 relative group">
               <pre class="text-sm overflow-auto max-h-80 whitespace-pre-wrap"><code>{generatedCode.value}</code></pre>
-              <button class={`absolute top-2 right-2 btn btn-xs ${copied.value ? "btn-success" : "btn-ghost opacity-0 group-hover:opacity-100 transition-opacity"}`} onClick$={copyToClipboard}>
+              <button class={`absolute top-2 right-2 btn btn-xs ${copied.value ? "btn-success" : "btn-ghost md:opacity-0 md:group-hover:opacity-100 transition-opacity"}`} onClick$={copyToClipboard}>
                 {copied.value ? "已复制!" : "复制"}
               </button>
             </div>
