@@ -217,9 +217,14 @@ export default component$(() => {
     uploadLoading.value = true;
     dragOver.value = false;
     const projectId = loc.params.id;
+    let uploaded = 0;
+    let skipped = 0;
 
     for (const file of Array.from(files)) {
-      if (!file.name.endsWith(".svg")) continue;
+      if (!file.name.endsWith(".svg") && file.type !== "image/svg+xml") {
+        skipped++;
+        continue;
+      }
       const content = await file.text();
       const formData = new FormData();
       formData.append("name", file.name.replace(/\.svg$/i, ""));
@@ -232,10 +237,17 @@ export default component$(() => {
       if (res.ok) {
         const result = await res.json();
         icons.list.push(result.icon);
+        uploaded++;
       }
     }
     uploadLoading.value = false;
-    showToast("上传完成", "success");
+    if (skipped > 0) {
+      showToast(`已上传 ${uploaded} 个图标，跳过 ${skipped} 个非 SVG 文件`, uploaded > 0 ? "info" : "error");
+    } else if (uploaded > 0) {
+      showToast(`成功上传 ${uploaded} 个图标`, "success");
+    } else {
+      showToast("没有可上传的 SVG 文件", "error");
+    }
   });
 
   const handleDelete = $((iconId: number, iconName: string) => {
@@ -384,13 +396,19 @@ export default component$(() => {
       {/* Header */}
       <div class="navbar bg-base-100 shadow-sm px-4">
         <div class="flex-none">
-          <button class="btn btn-ghost btn-sm gap-1" onClick$={() => nav("/")}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-            返回
-          </button>
+          <div class="breadcrumbs text-sm">
+            <ul>
+              <li>
+                <button class="btn btn-ghost btn-xs gap-1" onClick$={() => nav("/")}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                  首页
+                </button>
+              </li>
+              <li class="font-bold truncate max-w-[200px]">{project.name}</li>
+            </ul>
+          </div>
         </div>
-        <div class="flex-1 px-4 min-w-0">
-          <h1 class="text-xl font-bold truncate">{project.name}</h1>
+        <div class="flex-1 px-4 min-w-0 hidden md:block">
           <p class="text-xs text-gray-500">{icons.list.length} 个图标 · Font: {project.font_family}</p>
         </div>
         {/* Desktop actions */}
