@@ -164,7 +164,7 @@ export default component$(() => {
           <div class="relative w-full sm:w-auto sm:min-w-[280px]">
             <input
               type="text"
-              class="input input-bordered input-sm w-full pl-9"
+              class="input input-bordered input-sm w-full pl-9 pr-8"
               placeholder="搜索项目..."
               value={searchQuery.value}
               onInput$={(ev: any) => searchQuery.value = ev.target.value}
@@ -172,6 +172,17 @@ export default component$(() => {
             <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/>
             </svg>
+            {searchQuery.value && (
+              <button
+                class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                onClick$={() => searchQuery.value = ""}
+                title="清除搜索"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/>
+                </svg>
+              </button>
+            )}
           </div>
         </div>
 
