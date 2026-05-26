@@ -3,6 +3,7 @@ import { routeLoader$, routeAction$, useNavigate } from "@builder.io/qwik-city";
 import type { Project } from "~/lib/types";
 import { ToastContainer, type ToastItem } from "~/components/toast/toast";
 import { SkeletonProjectCard } from "~/components/skeleton/skeleton";
+import { HighlightText } from "~/components/highlight-text/highlight-text";
 
 export const useProjects = routeLoader$(async ({ platform }) => {
   const { getDB, initDB } = await import("~/lib/db");
@@ -199,7 +200,9 @@ export default component$(() => {
               >
                 <div class="card-body cursor-pointer" onClick$={() => nav(`/project/${project.id}`)}>
                   <div class="flex items-start justify-between">
-                    <h2 class="card-title text-lg">{project.name}</h2>
+                    <h2 class="card-title text-lg">
+                      <HighlightText text={project.name} query={debouncedQuery.value} />
+                    </h2>
                     <button
                       class="btn btn-ghost btn-xs opacity-0 group-hover:opacity-100 transition-opacity text-error"
                       onClick$={(ev: any) => { ev.stopPropagation(); handleDelete(project); }}
@@ -211,7 +214,9 @@ export default component$(() => {
                     </button>
                   </div>
                   {project.description && (
-                    <p class="text-sm text-gray-500 line-clamp-2">{project.description}</p>
+                    <p class="text-sm text-gray-500 line-clamp-2">
+                      <HighlightText text={project.description} query={debouncedQuery.value} />
+                    </p>
                   )}
                   <div class="flex flex-wrap gap-2 mt-2">
                     <span class="badge badge-outline badge-sm">{project.icon_count ?? 0} 个图标</span>

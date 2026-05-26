@@ -5,6 +5,7 @@ import { generateTTFFont, generateCSS, generateSymbolSVG, generateDemoHTML } fro
 import { SvgPreview } from "~/components/svg-preview/svg-preview";
 import { ToastContainer, type ToastItem } from "~/components/toast/toast";
 import { SkeletonIconCard } from "~/components/skeleton/skeleton";
+import { HighlightText } from "~/components/highlight-text/highlight-text";
 
 export const useProject = routeLoader$(async ({ params, platform }) => {
   const { getDB, initDB } = await import("~/lib/db");
@@ -531,7 +532,9 @@ export default component$(() => {
                       <span class="text-xs text-gray-400">无预览</span>
                     )}
                   </button>
-                  <p class="text-xs truncate w-full font-medium" title={icon.name}>{icon.name}</p>
+                  <p class="text-xs truncate w-full font-medium" title={icon.name}>
+                    <HighlightText text={icon.name} query={searchQuery.value} />
+                  </p>
                   {icon.unicode && <span class="text-[10px] text-gray-400 font-mono">{icon.unicode}</span>}
                   {/* Action buttons */}
                   <div class="flex gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -721,6 +724,7 @@ export default component$(() => {
                 icons.list[i] = { ...icon, name: newName };
               }
               showBatchRename.value = false;
+              showToast("批量重命名完成", "success");
             }}>
               <div class="grid grid-cols-2 gap-3 mb-3">
                 <div class="form-control">
