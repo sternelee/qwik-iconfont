@@ -1,7 +1,7 @@
 {
-  "name": "<WORKER_NAME>",
+  "name": "iconfont",
   "main": "./dist/_worker.js",
-  "compatibility_date": "<COMPATIBILITY_DATE>",
+  "compatibility_date": "2025-01-01",
   "compatibility_flags": [
     "nodejs_compat",
     "global_fetch_strictly_public"
@@ -12,5 +12,18 @@
   },
   "observability": {
     "enabled": true
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "iconfont-db",
+      "database_id": "local"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "BUCKET",
+      "bucket_name": "iconfont-assets"
+    }
+  ]
 }

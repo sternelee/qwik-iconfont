@@ -16,33 +16,42 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture
 
-This is a **Qwik City** app (Qwik meta-framework) built with **Vite**.
+This is an **open-source iconfont service** built with **Qwik City** + **Vite**, styled with **Tailwind CSS** + **daisyUI**.
 
-### Entry Points
+### Infrastructure
 
-- `src/entry.ssr.tsx` — SSR render entry (used by dev, preview, and production builds).
-- `src/entry.preview.tsx` — Preview server entry.
-- `src/entry.dev.tsx` — Vite dev server entry.
+- **Cloudflare D1** (`wrangler.jsonc`) — SQLite database for projects and icons metadata.
+- **Cloudflare R2** (`wrangler.jsonc`) — Object storage for SVG files.
+- **Local dev fallback** — `src/lib/db.ts` and `src/lib/storage.ts` provide in-memory mocks when Cloudflare bindings are unavailable.
 
-### Routing
+### Data Model
 
-Qwik City uses directory-based routing under `src/routes/`.
+- `projects` — Iconfont projects (name, font_family, prefix, description).
+- `icons` — SVG icons within a project (name, unicode, svg_path, view_box, content).
 
-- `src/routes/layout.tsx` — Root layout (wraps all pages). Exports `useServerTimeLoader` routeLoader.
-- `src/routes/index.tsx` — Home page.
-- `src/routes/demo/flower/` and `src/routes/demo/todolist/` — Demo pages.
-- `index.ts` files in routes become API endpoints.
+### Pages
 
-### Components
+- `src/routes/index.tsx` — Project list with create-project modal.
+- `src/routes/project/[id]/index.tsx` — Project detail: icon grid, upload, batch ops, edit, code generation, font download.
 
-- `src/components/router-head/router-head.tsx` — Renders `<head>` meta, links, styles, and scripts from route `head` exports.
-- `src/root.tsx` — Root component wrapping the app in `<QwikCityProvider>`.
+### API Routes
+
+- `src/routes/api/projects/index.ts` — `GET` list, `POST` create.
+- `src/routes/api/projects/[id]/index.ts` — `GET` detail, `PUT` update, `DELETE` remove.
+- `src/routes/api/projects/[id]/icons/index.ts` — `GET` list icons, `POST` upload icon (multipart/form-data).
+- `src/routes/api/icons/[id]/index.ts` — `GET`, `PUT`, `DELETE` single icon.
+- `src/routes/api/icons/[id]/svg/index.ts` — `GET` raw SVG content.
+
+### Font Generation
+
+- `src/lib/font-gen.ts` — Uses `opentype.js` to generate TTF fonts from SVG paths.
+- Generates CSS, Symbol SVG sprite, and demo HTML.
+- `jszip` packages downloads into `.zip` files.
 
 ### Styling
 
-- Global styles: `src/global.css` (imported in `root.tsx`).
-- Route/layout styles: imported with `?inline` and applied via `useStyles$()`.
-- Component styles: CSS modules (e.g., `counter.module.css`) with TypeScript plugin support.
+- Global styles: `src/global.css` (Tailwind CSS v4 + daisyUI).
+- UI uses daisyUI components: `btn`, `card`, `modal`, `navbar`, `tabs`, `form-control`, etc.
 
 ### Path Aliases
 
@@ -53,4 +62,4 @@ Qwik City uses directory-based routing under `src/routes/`.
 - **Package manager:** pnpm (monorepo config in `pnpm-workspace.yaml`).
 - **TypeScript:** Target ES2020, module ES2022, JSX via `@builder.io/qwik`.
 - **ESLint:** Uses `eslint-plugin-qwik` + `typescript-eslint`. `@typescript-eslint/no-explicit-any` is disabled.
-- **Deployment:** `wrangler.jsonc` is present for Cloudflare Workers; run `pnpm qwik add` to configure an adapter.
+- **Deployment:** `wrangler.jsonc` configured for Cloudflare Workers with D1 and R2 bindings.
