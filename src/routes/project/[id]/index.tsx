@@ -124,6 +124,7 @@ export default component$(() => {
   const sortBy = useSignal<"name" | "time" | "unicode">("time");
   const copied = useSignal(false);
   const previewColor = useSignal("#333333");
+  const downloadLoading = useSignal<"font" | "package" | null>(null);
 
   // Toast state
   const toasts = useStore<{ items: ToastItem[] }>({ items: [] });
@@ -313,30 +314,42 @@ export default component$(() => {
   const handleDownloadFont = $(async () => {
     const selected = icons.list.filter((i) => selectedIds.ids.has(i.id));
     if (selected.length === 0) { showToast("请先选择图标", "error"); return; }
-    const ttf = await generateTTFFont(project.font_family, selected, project.prefix);
-    if (!ttf) { showToast("字体生成失败", "error"); return; }
-    const blob = new Blob([ttf], { type: "font/ttf" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `${project.font_family}.ttf`; a.click();
-    URL.revokeObjectURL(url);
+    downloadLoading.value = "font";
+    try {
+      const ttf = await generateTTFFont(project.font_family, selected, project.prefix);
+      if (!ttf) { showToast("字体生成失败", "error"); return; }
+      const blob = new Blob([ttf], { type: "font/ttf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `${project.font_family}.ttf`; a.click();
+      URL.revokeObjectURL(url);
+      showToast("字体下载成功", "success");
+    } finally {
+      downloadLoading.value = null;
+    }
   });
 
   const handleDownloadPackage = $(async () => {
     const selected = icons.list.filter((i) => selectedIds.ids.has(i.id));
     if (selected.length === 0) { showToast("请先选择图标", "error"); return; }
-    const JSZip = (await import("jszip")).default;
-    const zip = new JSZip();
-    zip.file(`${project.font_family}.css`, generateCSS(project.font_family, project.prefix, selected));
-    zip.file(`${project.font_family}-symbol.svg`, generateSymbolSVG(selected, project.prefix));
-    zip.file("demo.html", generateDemoHTML(project.font_family, project.prefix, selected));
-    const ttf = await generateTTFFont(project.font_family, selected, project.prefix);
-    if (ttf) zip.file(`${project.font_family}.ttf`, new Uint8Array(ttf));
-    const content = await zip.generateAsync({ type: "blob" });
-    const url = URL.createObjectURL(content);
-    const a = document.createElement("a");
-    a.href = url; a.download = `${project.font_family}-iconfont.zip`; a.click();
-    URL.revokeObjectURL(url);
+    downloadLoading.value = "package";
+    try {
+      const JSZip = (await import("jszip")).default;
+      const zip = new JSZip();
+      zip.file(`${project.font_family}.css`, generateCSS(project.font_family, project.prefix, selected));
+      zip.file(`${project.font_family}-symbol.svg`, generateSymbolSVG(selected, project.prefix));
+      zip.file("demo.html", generateDemoHTML(project.font_family, project.prefix, selected));
+      const ttf = await generateTTFFont(project.font_family, selected, project.prefix);
+      if (ttf) zip.file(`${project.font_family}.ttf`, new Uint8Array(ttf));
+      const content = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(content);
+      const a = document.createElement("a");
+      a.href = url; a.download = `${project.font_family}-iconfont.zip`; a.click();
+      URL.revokeObjectURL(url);
+      showToast("打包下载成功", "success");
+    } finally {
+      downloadLoading.value = null;
+    }
   });
 
   useTask$(async ({ track }) => {
@@ -374,9 +387,13 @@ export default component$(() => {
         {/* Desktop actions */}
         <div class="hidden md:flex flex-none gap-2 flex-wrap justify-end">
           <button class="btn btn-outline btn-sm" onClick$={() => showSettings.value = true}>项目设置</button>
-          <button class="btn btn-outline btn-sm" onClick$={handleDownloadFont}>下载字体</button>
+          <button class="btn btn-outline btn-sm" onClick$={handleDownloadFont} disabled={downloadLoading.value === "font"}>
+            {downloadLoading.value === "font" ? <span class="loading loading-spinner loading-xs" /> : "下载字体"}
+          </button>
           <button class="btn btn-primary btn-sm" onClick$={async () => { showCode.value = true; generatedCode.value = await buildCode(); }}>生成代码</button>
-          <button class="btn btn-secondary btn-sm" onClick$={handleDownloadPackage}>打包下载</button>
+          <button class="btn btn-secondary btn-sm" onClick$={handleDownloadPackage} disabled={downloadLoading.value === "package"}>
+            {downloadLoading.value === "package" ? <span class="loading loading-spinner loading-xs" /> : "打包下载"}
+          </button>
         </div>
         {/* Mobile actions dropdown */}
         <div class="dropdown dropdown-end md:hidden">
@@ -385,9 +402,13 @@ export default component$(() => {
           </button>
           <ul tabIndex={0} class="dropdown-content menu z-[1] p-2 shadow bg-base-100 rounded-box w-40">
             <li><button onClick$={() => showSettings.value = true}>项目设置</button></li>
-            <li><button onClick$={handleDownloadFont}>下载字体</button></li>
+            <li><button onClick$={handleDownloadFont} disabled={downloadLoading.value === "font"}>
+              {downloadLoading.value === "font" ? <span class="loading loading-spinner loading-xs mr-1" /> : null}下载字体
+            </button></li>
             <li><button onClick$={async () => { showCode.value = true; generatedCode.value = await buildCode(); }}>生成代码</button></li>
-            <li><button onClick$={handleDownloadPackage}>打包下载</button></li>
+            <li><button onClick$={handleDownloadPackage} disabled={downloadLoading.value === "package"}>
+              {downloadLoading.value === "package" ? <span class="loading loading-spinner loading-xs mr-1" /> : null}打包下载
+            </button></li>
           </ul>
         </div>
       </div>
