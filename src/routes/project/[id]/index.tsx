@@ -117,6 +117,7 @@ export default component$(() => {
   const showBatchRename = useSignal(false);
   const confirmDeleteIcon = useStore<{ show: boolean; iconId: number; iconName: string }>({ show: false, iconId: 0, iconName: "" });
   const confirmBatchDelete = useStore<{ show: boolean; count: number }>({ show: false, count: 0 });
+  const renameForm = useStore({ prefix: "", suffix: "", find: "", replace: "" });
   const editingIcon = useStore<Partial<Icon>>({});
   const previewIcon = useStore<Partial<Icon>>({});
   const codeMode = useSignal<"symbol" | "fontclass" | "unicode">("fontclass");
@@ -211,6 +212,17 @@ export default component$(() => {
       searchInput?.focus();
     }
   }));
+
+  const renamePreview = useComputed$(() => {
+    const selected = icons.list.filter((i) => selectedIds.ids.has(i.id)).slice(0, 3);
+    return selected.map((icon) => {
+      let newName = icon.name;
+      if (renameForm.find) newName = newName.split(renameForm.find).join(renameForm.replace);
+      newName = renameForm.prefix + newName + renameForm.suffix;
+      newName = newName.replace(/[^a-zA-Z0-9_-]/g, "-");
+      return { oldName: icon.name, newName };
+    });
+  });
 
   const filteredIcons = useComputed$(() => {
     let list = [...icons.list];
@@ -742,56 +754,70 @@ export default component$(() => {
         <div class="modal modal-open">
           <div class="modal-box max-w-lg">
             <h3 class="font-bold text-lg mb-4">批量重命名 ({selectedIds.ids.size} 个图标)</h3>
-            <form onSubmit$={async (ev: any) => {
-              ev.preventDefault();
-              const fd = new FormData(ev.target);
+            <form onSubmit$={async () => {
               const ids = Array.from(selectedIds.ids).join(",");
               await batchRenameIcons.submit({
                 ids,
-                prefix: fd.get("prefix") as string,
-                suffix: fd.get("suffix") as string,
-                find: fd.get("find") as string,
-                replace: fd.get("replace") as string,
+                prefix: renameForm.prefix,
+                suffix: renameForm.suffix,
+                find: renameForm.find,
+                replace: renameForm.replace,
               });
-              // Update local state
-              const prefix = (fd.get("prefix") as string) || "";
-              const suffix = (fd.get("suffix") as string) || "";
-              const find = (fd.get("find") as string) || "";
-              const replace = (fd.get("replace") as string) || "";
               for (let i = 0; i < icons.list.length; i++) {
                 const icon = icons.list[i];
                 if (!selectedIds.ids.has(icon.id)) continue;
                 let newName = icon.name;
-                if (find) newName = newName.split(find).join(replace);
-                newName = prefix + newName + suffix;
+                if (renameForm.find) newName = newName.split(renameForm.find).join(renameForm.replace);
+                newName = renameForm.prefix + newName + renameForm.suffix;
                 newName = newName.replace(/[^a-zA-Z0-9_-]/g, "-");
                 icons.list[i] = { ...icon, name: newName };
               }
+              renameForm.prefix = "";
+              renameForm.suffix = "";
+              renameForm.find = "";
+              renameForm.replace = "";
               showBatchRename.value = false;
               showToast("批量重命名完成", "success");
             }}>
               <div class="grid grid-cols-2 gap-3 mb-3">
                 <div class="form-control">
                   <label class="label"><span class="label-text">前缀</span></label>
-                  <input name="prefix" type="text" class="input input-bordered input-sm" placeholder="例如: icon-" />
+                  <input type="text" class="input input-bordered input-sm" placeholder="例如: icon-" value={renameForm.prefix} onInput$={(ev: any) => renameForm.prefix = ev.target.value} />
                 </div>
                 <div class="form-control">
                   <label class="label"><span class="label-text">后缀</span></label>
-                  <input name="suffix" type="text" class="input input-bordered input-sm" placeholder="例如: -new" />
+                  <input type="text" class="input input-bordered input-sm" placeholder="例如: -new" value={renameForm.suffix} onInput$={(ev: any) => renameForm.suffix = ev.target.value} />
                 </div>
               </div>
-              <div class="grid grid-cols-2 gap-3 mb-4">
+              <div class="grid grid-cols-2 gap-3 mb-3">
                 <div class="form-control">
                   <label class="label"><span class="label-text">查找</span></label>
-                  <input name="find" type="text" class="input input-bordered input-sm" placeholder="要替换的文本" />
+                  <input type="text" class="input input-bordered input-sm" placeholder="要替换的文本" value={renameForm.find} onInput$={(ev: any) => renameForm.find = ev.target.value} />
                 </div>
                 <div class="form-control">
                   <label class="label"><span class="label-text">替换为</span></label>
-                  <input name="replace" type="text" class="input input-bordered input-sm" placeholder="新文本" />
+                  <input type="text" class="input input-bordered input-sm" placeholder="新文本" value={renameForm.replace} onInput$={(ev: any) => renameForm.replace = ev.target.value} />
                 </div>
               </div>
+
+              {/* Live preview */}
+              {renamePreview.value.length > 0 && (
+                <div class="bg-base-200 rounded-lg p-3 mb-4">
+                  <p class="text-xs text-gray-500 mb-2">预览 ({renamePreview.value.length} 个示例)</p>
+                  <div class="space-y-1 text-sm">
+                    {renamePreview.value.map((p, idx) => (
+                      <div key={idx} class="flex items-center gap-2">
+                        <span class="text-gray-400 line-through truncate flex-1">{p.oldName}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gray-400 flex-shrink-0"><path d="m9 18 6-6-6-6"/></svg>
+                        <span class="text-primary truncate flex-1 font-medium">{p.newName}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div class="modal-action">
-                <button type="button" class="btn" onClick$={() => showBatchRename.value = false}>取消</button>
+                <button type="button" class="btn" onClick$={() => { renameForm.prefix = ""; renameForm.suffix = ""; renameForm.find = ""; renameForm.replace = ""; showBatchRename.value = false; }}>取消</button>
                 <button type="submit" class="btn btn-primary">应用</button>
               </div>
             </form>
