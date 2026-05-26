@@ -784,6 +784,43 @@ ${classes}`;
               </div>
             )}
 
+            {/* Symbol usage preview */}
+            {codeMode.value === "symbol" && selectedIds.ids.size > 0 && (
+              <div class="mb-4 p-4 bg-base-200 rounded-lg">
+                <p class="text-xs text-gray-500 mb-2">Symbol 引用示例</p>
+                <div class="flex flex-wrap gap-3">
+                  {icons.list.filter((i) => selectedIds.ids.has(i.id)).slice(0, 8).map((icon) => (
+                    <div key={icon.id} class="flex flex-col items-center gap-1">
+                      <svg class="w-6 h-6" aria-hidden="true">
+                        <use href={`#${project.prefix}${icon.name}`} />
+                      </svg>
+                      <span class="text-[10px] text-gray-400">{icon.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Unicode preview */}
+            {codeMode.value === "unicode" && selectedIds.ids.size > 0 && (
+              <div class="mb-4 p-4 bg-base-200 rounded-lg">
+                <p class="text-xs text-gray-500 mb-2">Unicode 预览</p>
+                <div class="flex flex-wrap gap-3">
+                  {icons.list.filter((i) => selectedIds.ids.has(i.id)).slice(0, 8).map((icon, idx) => {
+                    const code = icon.unicode
+                      ? parseInt(icon.unicode.replace(/^&#x?|^\\|^U\+/i, "").replace(/;$/, ""), 16)
+                      : 0xe000 + idx;
+                    return (
+                      <div key={icon.id} class="flex flex-col items-center gap-1">
+                        <span class="text-2xl">{String.fromCharCode(code)}</span>
+                        <span class="text-[10px] text-gray-400">{icon.name}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div class="bg-base-300 rounded-lg p-4 relative group">
               <pre class="text-sm overflow-auto max-h-80 whitespace-pre-wrap"><code>{generatedCode.value}</code></pre>
               <button class={`absolute top-2 right-2 btn btn-xs ${copied.value ? "btn-success" : "btn-ghost md:opacity-0 md:group-hover:opacity-100 transition-opacity"}`} onClick$={copyToClipboard}>
