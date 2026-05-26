@@ -3,6 +3,7 @@ import { routeLoader$, routeAction$, useLocation, useNavigate } from "@builder.i
 import type { Project, Icon } from "~/lib/types";
 import { generateTTFFont, generateCSS, generateSymbolSVG, generateDemoHTML } from "~/lib/font-gen";
 import { SvgPreview } from "~/components/svg-preview/svg-preview";
+import { ToastContainer, type ToastItem } from "~/components/toast/toast";
 
 export const useProject = routeLoader$(async ({ params, platform }) => {
   const { getDB, initDB } = await import("~/lib/db");
@@ -120,6 +121,17 @@ export default component$(() => {
   const sortBy = useSignal<"name" | "time" | "unicode">("time");
   const copied = useSignal(false);
 
+  // Toast state
+  const toasts = useStore<{ items: ToastItem[] }>({ items: [] });
+  const toastId = useSignal(0);
+  const showToast = $((message: string, type: ToastItem["type"] = "info") => {
+    const id = ++toastId.value;
+    toasts.items = [...toasts.items, { id, message, type }];
+    setTimeout(() => {
+      toasts.items = toasts.items.filter((t) => t.id !== id);
+    }, 3000);
+  });
+
   const filteredIcons = useComputed$(() => {
     let list = [...icons.list];
     if (searchQuery.value) {
@@ -157,6 +169,7 @@ export default component$(() => {
       }
     }
     uploadLoading.value = false;
+    showToast("上传完成", "success");
   });
 
   const handleDelete = $(async (iconId: number) => {
@@ -224,9 +237,9 @@ export default component$(() => {
 
   const handleDownloadFont = $(async () => {
     const selected = icons.list.filter((i) => selectedIds.ids.has(i.id));
-    if (selected.length === 0) { alert("请先选择图标"); return; }
+    if (selected.length === 0) { showToast("请先选择图标", "error"); return; }
     const ttf = await generateTTFFont(project.font_family, selected, project.prefix);
-    if (!ttf) { alert("字体生成失败"); return; }
+    if (!ttf) { showToast("字体生成失败", "error"); return; }
     const blob = new Blob([ttf], { type: "font/ttf" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -236,7 +249,7 @@ export default component$(() => {
 
   const handleDownloadPackage = $(async () => {
     const selected = icons.list.filter((i) => selectedIds.ids.has(i.id));
-    if (selected.length === 0) { alert("请先选择图标"); return; }
+    if (selected.length === 0) { showToast("请先选择图标", "error"); return; }
     const JSZip = (await import("jszip")).default;
     const zip = new JSZip();
     zip.file(`${project.font_family}.css`, generateCSS(project.font_family, project.prefix, selected));
@@ -261,6 +274,7 @@ export default component$(() => {
   const copyToClipboard = $(async () => {
     await navigator.clipboard.writeText(generatedCode.value);
     copied.value = true;
+    showToast("代码已复制到剪贴板", "success");
     setTimeout(() => copied.value = false, 2000);
   });
 
@@ -268,6 +282,8 @@ export default component$(() => {
 
   return (
     <div class="min-h-screen bg-base-200">
+      <ToastContainer toasts={toasts.items} />
+
       {/* Header */}
       <div class="navbar bg-base-100 shadow-sm px-4">
         <div class="flex-none">
@@ -349,13 +365,20 @@ export default component$(() => {
 
         {/* Drop zone */}
         <div
-          class={`p-6 border-2 border-dashed rounded-lg text-center text-sm transition-colors ${dragOver.value ? "border-primary bg-primary/10 text-primary" : "border-base-300 text-gray-500"}`}
+          class={`relative p-8 border-2 border-dashed rounded-xl text-center transition-all duration-200 ${dragOver.value ? "border-primary bg-primary/5 text-primary scale-[1.01] shadow-lg" : "border-base-300 text-gray-500 hover:border-primary/50 hover:bg-base-100"}`}
           onDragOver$={(ev: any) => { ev.preventDefault(); dragOver.value = true; }}
           onDragLeave$={() => dragOver.value = false}
           onDrop$={(ev: any) => { ev.preventDefault(); handleFileUpload(ev.dataTransfer.files); }}
         >
-          <svg class="mx-auto mb-2 text-current" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
-          {dragOver.value ? "松开鼠标上传 SVG 文件" : "拖拽 SVG 文件到此处上传"}
+          <div class={`transition-transform duration-200 ${dragOver.value ? "scale-110" : ""}`}>
+            <svg class="mx-auto mb-3 text-current" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" x2="12" y1="3" y2="15"/>
+            </svg>
+            <p class="font-medium">{dragOver.value ? "松开鼠标上传 SVG 文件" : "拖拽 SVG 文件到此处上传"}</p>
+            <p class="text-xs mt-1 opacity-70">或点击上方「上传图标」按钮</p>
+          </div>
         </div>
       </div>
 

@@ -1,6 +1,7 @@
-import { component$, useSignal, $, useStore } from "@builder.io/qwik";
+import { component$, useSignal, $, useStore, useTask$ } from "@builder.io/qwik";
 import { routeLoader$, routeAction$, useNavigate } from "@builder.io/qwik-city";
 import type { Project } from "~/lib/types";
+import { ToastContainer, type ToastItem } from "~/components/toast/toast";
 
 export const useProjects = routeLoader$(async ({ platform }) => {
   const { getDB, initDB } = await import("~/lib/db");
@@ -56,25 +57,57 @@ export default component$(() => {
   const nav = useNavigate();
   const showModal = useSignal(false);
   const searchQuery = useSignal("");
+  const debouncedQuery = useSignal("");
   const deleting = useStore({ id: 0 });
 
-  const filtered = () => {
-    if (!searchQuery.value) return projects.value;
-    const q = searchQuery.value.toLowerCase();
-    return projects.value.filter((p) => p.name.toLowerCase().includes(q) || (p.description || "").toLowerCase().includes(q));
-  };
+  // Toast state
+  const toasts = useStore<{ items: ToastItem[] }>({ items: [] });
+  const toastId = useSignal(0);
+  const showToast = $((message: string, type: ToastItem["type"] = "info") => {
+    const id = ++toastId.value;
+    toasts.items = [...toasts.items, { id, message, type }];
+    setTimeout(() => {
+      toasts.items = toasts.items.filter((t) => t.id !== id);
+    }, 3000);
+  });
 
-  const handleDelete = $(async (project: Project) => {
-    if (!confirm(`确定要删除项目 "${project.name}" 吗？此操作将删除项目下的所有图标。`)) return;
+  // Confirm dialog state
+  const confirmState = useStore<{ show: boolean; project: Project | null }>({ show: false, project: null });
+  const confirmDelete = $(async () => {
+    const project = confirmState.project;
+    if (!project) return;
+    confirmState.show = false;
     deleting.id = project.id;
     await deleteProject.submit({ id: String(project.id) });
     deleting.id = 0;
-    // Refresh by navigation
+    showToast(`项目 "${project.name}" 已删除`, "success");
     nav("/", { replaceState: true });
+  });
+
+  // Debounce search
+  useTask$(({ track }) => {
+    track(() => searchQuery.value);
+    const timer = setTimeout(() => {
+      debouncedQuery.value = searchQuery.value;
+    }, 200);
+    return () => clearTimeout(timer);
+  });
+
+  const filtered = () => {
+    if (!debouncedQuery.value) return projects.value;
+    const q = debouncedQuery.value.toLowerCase();
+    return projects.value.filter((p) => p.name.toLowerCase().includes(q) || (p.description || "").toLowerCase().includes(q));
+  };
+
+  const handleDelete = $((project: Project) => {
+    confirmState.project = project;
+    confirmState.show = true;
   });
 
   return (
     <div class="min-h-screen bg-base-200">
+      <ToastContainer toasts={toasts.items} />
+
       {/* Header */}
       <div class="navbar bg-base-100 shadow-sm px-4">
         <div class="flex-1 flex items-center gap-3">
@@ -116,8 +149,8 @@ export default component$(() => {
               <svg class="text-gray-300 mb-4" xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
               </svg>
-              <h2 class="card-title text-lg">{searchQuery.value ? "未找到匹配的项目" : "还没有项目"}</h2>
-              <p class="text-gray-500">{searchQuery.value ? "尝试其他关键词" : `点击右上角「新建项目」开始创建你的第一个图标库`}</p>
+              <h2 class="card-title text-lg">{debouncedQuery.value ? "未找到匹配的项目" : "还没有项目"}</h2>
+              <p class="text-gray-500">{debouncedQuery.value ? "尝试其他关键词" : `点击右上角「新建项目」开始创建你的第一个图标库`}</p>
             </div>
           </div>
         ) : (
@@ -163,13 +196,18 @@ export default component$(() => {
               onSubmit$={async (ev: any) => {
                 ev.preventDefault();
                 const fd = new FormData(ev.target);
-                await createProject.submit({
+                const result = await createProject.submit({
                   name: fd.get("name"),
                   description: fd.get("description"),
                   font_family: fd.get("font_family"),
                   prefix: fd.get("prefix"),
                 });
                 showModal.value = false;
+                if (result.value.success) {
+                  showToast(`项目 "${fd.get("name")}" 创建成功`, "success");
+                } else {
+                  showToast("项目创建失败", "error");
+                }
                 nav("/", { replaceState: true });
               }}
             >
@@ -196,6 +234,23 @@ export default component$(() => {
             </form>
           </div>
           <div class="modal-backdrop" onClick$={() => (showModal.value = false)} />
+        </div>
+      )}
+
+      {/* Confirm Delete Modal */}
+      {confirmState.show && (
+        <div class="modal modal-open">
+          <div class="modal-box max-w-sm">
+            <h3 class="font-bold text-lg mb-2">确认删除</h3>
+            <p class="text-gray-500 mb-4">
+              确定要删除项目 "{confirmState.project?.name}" 吗？此操作将删除项目下的所有图标，不可恢复。
+            </p>
+            <div class="modal-action">
+              <button class="btn" onClick$={() => { confirmState.show = false; confirmState.project = null; }}>取消</button>
+              <button class="btn btn-error" onClick$={confirmDelete}>删除</button>
+            </div>
+          </div>
+          <div class="modal-backdrop" onClick$={() => { confirmState.show = false; confirmState.project = null; }} />
         </div>
       )}
     </div>
