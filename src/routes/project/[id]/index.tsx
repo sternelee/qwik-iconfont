@@ -61,6 +61,38 @@ export const useUpdateIcon = routeAction$(async (data, { platform }) => {
   return { success: true };
 });
 
+export const useBatchRenameIcons = routeAction$(async (data, { platform }) => {
+  const { getDB, initDB } = await import("~/lib/db");
+  const db = getDB(platform);
+  await initDB(db);
+
+  const ids = (data.ids as string).split(",").map((id) => parseInt(id, 10));
+  const prefix = (data.prefix as string) || "";
+  const suffix = (data.suffix as string) || "";
+  const find = (data.find as string) || "";
+  const replace = (data.replace as string) || "";
+
+  for (const id of ids) {
+    const currentStmt = db.prepare("SELECT name FROM icons WHERE id = ?").bind(id);
+    const current = await currentStmt.first<{ name: string }>();
+    if (!current) continue;
+
+    let newName = current.name;
+    if (find) {
+      newName = newName.split(find).join(replace);
+    }
+    newName = prefix + newName + suffix;
+    // Clean name
+    newName = newName.replace(/[^a-zA-Z0-9_-]/g, "-");
+
+    const stmt = db.prepare("UPDATE icons SET name = ? WHERE id = ?");
+    stmt.bind(newName, id);
+    await stmt.run();
+  }
+
+  return { success: true };
+});
+
 export default component$(() => {
   const data = useProject();
   const loc = useLocation();
@@ -68,6 +100,7 @@ export default component$(() => {
   const deleteIcon = useDeleteIcon();
   const updateProject = useUpdateProject();
   const updateIcon = useUpdateIcon();
+  const batchRenameIcons = useBatchRenameIcons();
 
   const project = useStore({ ...data.value.project });
   const icons = useStore({ list: [...data.value.icons] });
@@ -78,6 +111,7 @@ export default component$(() => {
   const showCode = useSignal(false);
   const showEdit = useSignal(false);
   const showPreview = useSignal(false);
+  const showBatchRename = useSignal(false);
   const editingIcon = useStore<Partial<Icon>>({});
   const previewIcon = useStore<Partial<Icon>>({});
   const codeMode = useSignal<"symbol" | "fontclass" | "unicode">("fontclass");
@@ -276,12 +310,15 @@ export default component$(() => {
               <span class="label-text text-sm">全选 ({selectedIds.ids.size}/{icons.list.length})</span>
             </label>
             {selectedIds.ids.size > 0 && (
-              <button class="btn btn-error btn-sm" onClick$={async () => {
-                if (!confirm(`确定删除选中的 ${selectedIds.ids.size} 个图标？`)) return;
-                for (const id of Array.from(selectedIds.ids)) await deleteIcon.submit({ id: String(id) });
-                icons.list = icons.list.filter((i) => !selectedIds.ids.has(i.id));
-                selectedIds.ids = new Set();
-              }}>删除选中</button>
+              <>
+                <button class="btn btn-error btn-sm" onClick$={async () => {
+                  if (!confirm(`确定删除选中的 ${selectedIds.ids.size} 个图标？`)) return;
+                  for (const id of Array.from(selectedIds.ids)) await deleteIcon.submit({ id: String(id) });
+                  icons.list = icons.list.filter((i) => !selectedIds.ids.has(i.id));
+                  selectedIds.ids = new Set();
+                }}>删除选中</button>
+                <button class="btn btn-outline btn-sm" onClick$={() => showBatchRename.value = true}>批量重命名</button>
+              </>
             )}
           </div>
           <div class="flex gap-2">
@@ -464,6 +501,68 @@ export default component$(() => {
             </div>
           </div>
           <div class="modal-backdrop" onClick$={() => showCode.value = false} />
+        </div>
+      )}
+
+      {/* Batch Rename Modal */}
+      {showBatchRename.value && (
+        <div class="modal modal-open">
+          <div class="modal-box max-w-lg">
+            <h3 class="font-bold text-lg mb-4">批量重命名 ({selectedIds.ids.size} 个图标)</h3>
+            <form onSubmit$={async (ev: any) => {
+              ev.preventDefault();
+              const fd = new FormData(ev.target);
+              const ids = Array.from(selectedIds.ids).join(",");
+              await batchRenameIcons.submit({
+                ids,
+                prefix: fd.get("prefix") as string,
+                suffix: fd.get("suffix") as string,
+                find: fd.get("find") as string,
+                replace: fd.get("replace") as string,
+              });
+              // Update local state
+              const prefix = (fd.get("prefix") as string) || "";
+              const suffix = (fd.get("suffix") as string) || "";
+              const find = (fd.get("find") as string) || "";
+              const replace = (fd.get("replace") as string) || "";
+              for (let i = 0; i < icons.list.length; i++) {
+                const icon = icons.list[i];
+                if (!selectedIds.ids.has(icon.id)) continue;
+                let newName = icon.name;
+                if (find) newName = newName.split(find).join(replace);
+                newName = prefix + newName + suffix;
+                newName = newName.replace(/[^a-zA-Z0-9_-]/g, "-");
+                icons.list[i] = { ...icon, name: newName };
+              }
+              showBatchRename.value = false;
+            }}>
+              <div class="grid grid-cols-2 gap-3 mb-3">
+                <div class="form-control">
+                  <label class="label"><span class="label-text">前缀</span></label>
+                  <input name="prefix" type="text" class="input input-bordered input-sm" placeholder="例如: icon-" />
+                </div>
+                <div class="form-control">
+                  <label class="label"><span class="label-text">后缀</span></label>
+                  <input name="suffix" type="text" class="input input-bordered input-sm" placeholder="例如: -new" />
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="form-control">
+                  <label class="label"><span class="label-text">查找</span></label>
+                  <input name="find" type="text" class="input input-bordered input-sm" placeholder="要替换的文本" />
+                </div>
+                <div class="form-control">
+                  <label class="label"><span class="label-text">替换为</span></label>
+                  <input name="replace" type="text" class="input input-bordered input-sm" placeholder="新文本" />
+                </div>
+              </div>
+              <div class="modal-action">
+                <button type="button" class="btn" onClick$={() => showBatchRename.value = false}>取消</button>
+                <button type="submit" class="btn btn-primary">应用</button>
+              </div>
+            </form>
+          </div>
+          <div class="modal-backdrop" onClick$={() => showBatchRename.value = false} />
         </div>
       )}
     </div>
