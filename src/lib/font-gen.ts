@@ -9,32 +9,90 @@ async function loadOpentype() {
   return opentypeModule;
 }
 
+function shapeToPath(el: Element): string {
+  const tag = el.tagName.toLowerCase();
+  switch (tag) {
+    case "path":
+      return el.getAttribute("d") || "";
+    case "circle": {
+      const cx = parseFloat(el.getAttribute("cx") || "0");
+      const cy = parseFloat(el.getAttribute("cy") || "0");
+      const r = parseFloat(el.getAttribute("r") || "0");
+      if (!r) return "";
+      return `M ${cx - r} ${cy} A ${r} ${r} 0 1 0 ${cx + r} ${cy} A ${r} ${r} 0 1 0 ${cx - r} ${cy} Z`;
+    }
+    case "rect": {
+      const x = parseFloat(el.getAttribute("x") || "0");
+      const y = parseFloat(el.getAttribute("y") || "0");
+      const w = parseFloat(el.getAttribute("width") || "0");
+      const h = parseFloat(el.getAttribute("height") || "0");
+      const rx = parseFloat(el.getAttribute("rx") || "0");
+      if (!w || !h) return "";
+      if (rx) {
+        return `M ${x + rx} ${y} H ${x + w - rx} A ${rx} ${rx} 0 0 1 ${x + w} ${y + rx} V ${y + h - rx} A ${rx} ${rx} 0 0 1 ${x + w - rx} ${y + h} H ${x + rx} A ${rx} ${rx} 0 0 1 ${x} ${y + h - rx} V ${y + rx} A ${rx} ${rx} 0 0 1 ${x + rx} ${y} Z`;
+      }
+      return `M ${x} ${y} H ${x + w} V ${y + h} H ${x} Z`;
+    }
+    case "ellipse": {
+      const cx = parseFloat(el.getAttribute("cx") || "0");
+      const cy = parseFloat(el.getAttribute("cy") || "0");
+      const rx = parseFloat(el.getAttribute("rx") || "0");
+      const ry = parseFloat(el.getAttribute("ry") || "0");
+      if (!rx || !ry) return "";
+      return `M ${cx - rx} ${cy} A ${rx} ${ry} 0 1 0 ${cx + rx} ${cy} A ${rx} ${ry} 0 1 0 ${cx - rx} ${cy} Z`;
+    }
+    case "line": {
+      const x1 = parseFloat(el.getAttribute("x1") || "0");
+      const y1 = parseFloat(el.getAttribute("y1") || "0");
+      const x2 = parseFloat(el.getAttribute("x2") || "0");
+      const y2 = parseFloat(el.getAttribute("y2") || "0");
+      return `M ${x1} ${y1} L ${x2} ${y2}`;
+    }
+    case "polyline":
+    case "polygon": {
+      const points = el.getAttribute("points") || "";
+      const nums = points.trim().split(/[\s,]+/).filter(Boolean);
+      if (nums.length < 4) return "";
+      const cmds: string[] = [`M ${nums[0]} ${nums[1]}`];
+      for (let i = 2; i < nums.length; i += 2) {
+        cmds.push(`L ${nums[i]} ${nums[i + 1]}`);
+      }
+      if (tag === "polygon") cmds.push("Z");
+      return cmds.join(" ");
+    }
+    default:
+      return "";
+  }
+}
+
+function flattenSVG(svg: SVGElement): { d: string; viewBox: string } | null {
+  const viewBox = svg.getAttribute("viewBox") || "0 0 1024 1024";
+  const parts: string[] = [];
+
+  const traverse = (el: Element) => {
+    const tag = el.tagName.toLowerCase();
+    if (["path", "circle", "rect", "ellipse", "line", "polyline", "polygon"].includes(tag)) {
+      const pd = shapeToPath(el);
+      if (pd) parts.push(pd);
+    }
+    for (const child of Array.from(el.children)) {
+      traverse(child);
+    }
+  };
+
+  traverse(svg);
+
+  if (parts.length === 0) return null;
+  return { d: parts.join(" "), viewBox };
+}
+
 function extractSVGPath(svgContent: string): { d: string; viewBox: string } | null {
-  // Parse SVG using DOM
   const parser = new DOMParser();
   const doc = parser.parseFromString(svgContent, "image/svg+xml");
   const svg = doc.querySelector("svg");
   if (!svg) return null;
 
-  // Try to get path data from <path> element
-  const pathEl = svg.querySelector("path");
-  let d = pathEl?.getAttribute("d") || "";
-
-  // If no path, try to combine multiple paths
-  if (!d) {
-    const paths = svg.querySelectorAll("path");
-    const parts: string[] = [];
-    paths.forEach((p) => {
-      const pd = p.getAttribute("d");
-      if (pd) parts.push(pd);
-    });
-    d = parts.join(" ");
-  }
-
-  if (!d) return null;
-
-  const viewBox = svg.getAttribute("viewBox") || "0 0 1024 1024";
-  return { d, viewBox };
+  return flattenSVG(svg as SVGElement);
 }
 
 function parseViewBox(viewBox: string): { minX: number; minY: number; width: number; height: number } {
