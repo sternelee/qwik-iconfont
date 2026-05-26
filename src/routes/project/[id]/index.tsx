@@ -214,14 +214,17 @@ export default component$(() => {
   }));
 
   const renamePreview = useComputed$(() => {
-    const selected = icons.list.filter((i) => selectedIds.ids.has(i.id)).slice(0, 3);
-    return selected.map((icon) => {
-      let newName = icon.name;
-      if (renameForm.find) newName = newName.split(renameForm.find).join(renameForm.replace);
-      newName = renameForm.prefix + newName + renameForm.suffix;
-      newName = newName.replace(/[^a-zA-Z0-9_-]/g, "-");
-      return { oldName: icon.name, newName };
-    });
+    const selected = icons.list.filter((i) => selectedIds.ids.has(i.id));
+    return {
+      items: selected.slice(0, 5).map((icon) => {
+        let newName = icon.name;
+        if (renameForm.find) newName = newName.split(renameForm.find).join(renameForm.replace);
+        newName = renameForm.prefix + newName + renameForm.suffix;
+        newName = newName.replace(/[^a-zA-Z0-9_-]/g, "-");
+        return { oldName: icon.name, newName };
+      }),
+      total: selected.length,
+    };
   });
 
   const filteredIcons = useComputed$(() => {
@@ -602,7 +605,7 @@ export default component$(() => {
                     </button>
                   )}
                   {/* Action buttons */}
-                  <div class="flex gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div class="flex gap-1 mt-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                     <button class="btn btn-ghost btn-xs btn-square" title="编辑" onClick$={() => { editingIcon.id = icon.id; editingIcon.name = icon.name; editingIcon.unicode = icon.unicode; editingIcon.view_box = icon.view_box; editingIcon.content = icon.content; showEdit.value = true; }}>
                       <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     </button>
@@ -810,11 +813,16 @@ export default component$(() => {
               </div>
 
               {/* Live preview */}
-              {renamePreview.value.length > 0 && (
+              {renamePreview.value.items.length > 0 && (
                 <div class="bg-base-200 rounded-lg p-3 mb-4">
-                  <p class="text-xs text-gray-500 mb-2">预览 ({renamePreview.value.length} 个示例)</p>
+                  <p class="text-xs text-gray-500 mb-2">
+                    预览
+                    {renamePreview.value.total > renamePreview.value.items.length && (
+                      <span class="text-gray-400">（前 {renamePreview.value.items.length} 个，共 {renamePreview.value.total} 个）</span>
+                    )}
+                  </p>
                   <div class="space-y-1 text-sm">
-                    {renamePreview.value.map((p, idx) => (
+                    {renamePreview.value.items.map((p, idx) => (
                       <div key={idx} class="flex items-center gap-2">
                         <span class="text-gray-400 line-through truncate flex-1">{p.oldName}</span>
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gray-400 flex-shrink-0"><path d="m9 18 6-6-6-6"/></svg>

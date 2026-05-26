@@ -221,7 +221,7 @@ export default component$(() => {
                       <HighlightText text={project.name} query={debouncedQuery.value} />
                     </h2>
                     <button
-                      class="btn btn-ghost btn-xs opacity-0 group-hover:opacity-100 transition-opacity text-error"
+                      class="btn btn-ghost btn-xs md:opacity-0 md:group-hover:opacity-100 transition-opacity text-error"
                       onClick$={(ev: any) => { ev.stopPropagation(); handleDelete(project); }}
                       disabled={deleting.id === project.id}
                     >
