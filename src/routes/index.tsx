@@ -182,7 +182,13 @@ export default component$(() => {
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
               </svg>
               <h2 class="card-title text-lg">{debouncedQuery.value ? "未找到匹配的项目" : "还没有项目"}</h2>
-              <p class="text-gray-500">{debouncedQuery.value ? "尝试其他关键词" : `点击右上角「新建项目」开始创建你的第一个图标库`}</p>
+              <p class="text-gray-500 mb-4">{debouncedQuery.value ? "尝试其他关键词" : "创建你的第一个图标库，开始管理和生成 iconfont"}</p>
+              {!debouncedQuery.value && (
+                <button class="btn btn-primary btn-sm gap-1" onClick$={() => showModal.value = true}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+                  新建项目
+                </button>
+              )}
             </div>
           </div>
         ) : (

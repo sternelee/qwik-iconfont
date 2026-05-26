@@ -121,8 +121,8 @@ export default component$(() => {
   const previewIcon = useStore<Partial<Icon>>({});
   const codeMode = useSignal<"symbol" | "fontclass" | "unicode">("fontclass");
   const generatedCode = useSignal("");
-  const searchQuery = useSignal("");
-  const sortBy = useSignal<"name" | "time" | "unicode">("time");
+  const searchQuery = useSignal(loc.url.searchParams.get("search") || "");
+  const sortBy = useSignal<"name" | "time" | "unicode">((loc.url.searchParams.get("sort") as any) || "time");
   const copied = useSignal(false);
   const previewColor = useSignal("#333333");
   const downloadLoading = useSignal<"font" | "package" | null>(null);
@@ -137,6 +137,20 @@ export default component$(() => {
     setTimeout(() => {
       toasts.items = toasts.items.filter((t) => t.id !== id);
     }, 3000);
+  });
+
+  // Sync search/sort to URL query params
+  useTask$(({ track }) => {
+    track(() => searchQuery.value);
+    track(() => sortBy.value);
+    const url = new URL(loc.url.href);
+    if (searchQuery.value) url.searchParams.set("search", searchQuery.value);
+    else url.searchParams.delete("search");
+    if (sortBy.value !== "time") url.searchParams.set("sort", sortBy.value);
+    else url.searchParams.delete("sort");
+    if (url.search !== loc.url.search) {
+      window.history.replaceState({}, "", url.toString());
+    }
   });
 
   // Dynamic page title
