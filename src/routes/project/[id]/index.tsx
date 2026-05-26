@@ -113,6 +113,7 @@ export default component$(() => {
   const showEdit = useSignal(false);
   const showPreview = useSignal(false);
   const showBatchRename = useSignal(false);
+  const confirmDeleteIcon = useStore<{ show: boolean; iconId: number; iconName: string }>({ show: false, iconId: 0, iconName: "" });
   const editingIcon = useStore<Partial<Icon>>({});
   const previewIcon = useStore<Partial<Icon>>({});
   const codeMode = useSignal<"symbol" | "fontclass" | "unicode">("fontclass");
@@ -172,13 +173,21 @@ export default component$(() => {
     showToast("上传完成", "success");
   });
 
-  const handleDelete = $(async (iconId: number) => {
-    if (!confirm("确定要删除这个图标吗？")) return;
+  const handleDelete = $((iconId: number, iconName: string) => {
+    confirmDeleteIcon.show = true;
+    confirmDeleteIcon.iconId = iconId;
+    confirmDeleteIcon.iconName = iconName;
+  });
+
+  const doDeleteIcon = $(async () => {
+    const iconId = confirmDeleteIcon.iconId;
+    confirmDeleteIcon.show = false;
     await deleteIcon.submit({ id: String(iconId) });
     icons.list = icons.list.filter((i) => i.id !== iconId);
     const next = new Set(selectedIds.ids);
     next.delete(iconId);
     selectedIds.ids = next;
+    showToast(`图标 "${confirmDeleteIcon.iconName}" 已删除`, "success");
   });
 
   const toggleSelect = $((id: number) => {
@@ -396,29 +405,44 @@ export default component$(() => {
             {displayList.map((icon) => (
               <div
                 key={icon.id}
-                class={`card bg-base-100 shadow hover:shadow-lg cursor-pointer transition-all group ${selectedIds.ids.has(icon.id) ? "ring-2 ring-primary bg-primary/5" : ""}`}
-                onClick$={() => toggleSelect(icon.id)}
+                class={`card bg-base-100 shadow hover:shadow-lg transition-all group ${selectedIds.ids.has(icon.id) ? "ring-2 ring-primary bg-primary/5" : ""}`}
               >
                 <div class="card-body p-3 items-center text-center relative">
-                  {/* Selection indicator */}
-                  <div class={`absolute top-2 left-2 w-4 h-4 rounded border ${selectedIds.ids.has(icon.id) ? "bg-primary border-primary" : "border-base-300 group-hover:border-primary"}`}>
+                  {/* Selection checkbox */}
+                  <button
+                    class={`absolute top-2 left-2 w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedIds.ids.has(icon.id) ? "bg-primary border-primary" : "border-base-300 bg-base-100 hover:border-primary"}`}
+                    onClick$={() => toggleSelect(icon.id)}
+                    title={selectedIds.ids.has(icon.id) ? "取消选择" : "选择"}
+                  >
                     {selectedIds.ids.has(icon.id) && (
-                      <svg class="text-white w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      <svg class="text-white w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     )}
-                  </div>
-                  <div class="w-14 h-14 flex items-center justify-center mt-1">
+                  </button>
+                  {/* Preview click area */}
+                  <button
+                    class="w-14 h-14 flex items-center justify-center mt-1 hover:scale-110 transition-transform"
+                    onClick$={() => { previewIcon.id = icon.id; previewIcon.name = icon.name; previewIcon.content = icon.content; previewIcon.unicode = icon.unicode; showPreview.value = true; }}
+                    title="点击预览"
+                  >
                     {icon.content ? (
                       <SvgPreview content={icon.content} class="w-full h-full" />
                     ) : (
                       <span class="text-xs text-gray-400">无预览</span>
                     )}
-                  </div>
+                  </button>
                   <p class="text-xs truncate w-full font-medium" title={icon.name}>{icon.name}</p>
                   {icon.unicode && <span class="text-[10px] text-gray-400 font-mono">{icon.unicode}</span>}
+                  {/* Action buttons */}
                   <div class="flex gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button class="btn btn-ghost btn-xs" onClick$={(ev: any) => { ev.stopPropagation(); previewIcon.id = icon.id; previewIcon.name = icon.name; previewIcon.content = icon.content; previewIcon.unicode = icon.unicode; showPreview.value = true; }}>预览</button>
-                    <button class="btn btn-ghost btn-xs" onClick$={(ev: any) => { ev.stopPropagation(); editingIcon.id = icon.id; editingIcon.name = icon.name; editingIcon.unicode = icon.unicode; editingIcon.view_box = icon.view_box; editingIcon.content = icon.content; showEdit.value = true; }}>编辑</button>
-                    <button class="btn btn-ghost btn-xs text-error" onClick$={(ev: any) => { ev.stopPropagation(); handleDelete(icon.id); }}>删除</button>
+                    <button class="btn btn-ghost btn-xs btn-square" title="编辑" onClick$={() => { editingIcon.id = icon.id; editingIcon.name = icon.name; editingIcon.unicode = icon.unicode; editingIcon.view_box = icon.view_box; editingIcon.content = icon.content; showEdit.value = true; }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button class="btn btn-ghost btn-xs btn-square" title="下载 SVG" onClick$={() => { const blob = new Blob([icon.content || ""], { type: "image/svg+xml" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `${icon.name}.svg`; a.click(); URL.revokeObjectURL(url); showToast(`已下载 ${icon.name}.svg`, "success"); }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                    </button>
+                    <button class="btn btn-ghost btn-xs btn-square text-error" title="删除" onClick$={() => handleDelete(icon.id, icon.name)}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -586,6 +610,23 @@ export default component$(() => {
             </form>
           </div>
           <div class="modal-backdrop" onClick$={() => showBatchRename.value = false} />
+        </div>
+      )}
+
+      {/* Confirm Delete Icon Modal */}
+      {confirmDeleteIcon.show && (
+        <div class="modal modal-open">
+          <div class="modal-box max-w-sm">
+            <h3 class="font-bold text-lg mb-2">确认删除</h3>
+            <p class="text-gray-500 mb-4">
+              确定要删除图标 "{confirmDeleteIcon.iconName}" 吗？此操作不可恢复。
+            </p>
+            <div class="modal-action">
+              <button class="btn" onClick$={() => { confirmDeleteIcon.show = false; confirmDeleteIcon.iconId = 0; }}>取消</button>
+              <button class="btn btn-error" onClick$={doDeleteIcon}>删除</button>
+            </div>
+          </div>
+          <div class="modal-backdrop" onClick$={() => { confirmDeleteIcon.show = false; confirmDeleteIcon.iconId = 0; }} />
         </div>
       )}
     </div>
