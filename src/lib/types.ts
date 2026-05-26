@@ -4,6 +4,7 @@ export interface Project {
   description: string | null;
   font_family: string;
   prefix: string;
+  icon_count?: number;
   created_at: string;
   updated_at: string;
 }

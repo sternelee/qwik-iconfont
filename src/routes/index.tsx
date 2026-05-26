@@ -6,8 +6,14 @@ export const useProjects = routeLoader$(async ({ platform }) => {
   const { getDB, initDB } = await import("~/lib/db");
   const db = getDB(platform);
   await initDB(db);
-  const stmt = db.prepare("SELECT * FROM projects ORDER BY updated_at DESC");
-  const result = await stmt.all<Project>();
+  const stmt = db.prepare(`
+    SELECT p.*, COUNT(i.id) as icon_count
+    FROM projects p
+    LEFT JOIN icons i ON p.id = i.project_id
+    GROUP BY p.id
+    ORDER BY p.updated_at DESC
+  `);
+  const result = await stmt.all<Project & { icon_count: number }>();
   return result.results ?? [];
 });
 
@@ -136,6 +142,7 @@ export default component$(() => {
                     <p class="text-sm text-gray-500 line-clamp-2">{project.description}</p>
                   )}
                   <div class="flex flex-wrap gap-2 mt-2">
+                    <span class="badge badge-outline badge-sm">{project.icon_count ?? 0} 个图标</span>
                     <span class="badge badge-outline badge-sm">Font: {project.font_family}</span>
                     <span class="badge badge-outline badge-sm">Prefix: {project.prefix}</span>
                   </div>

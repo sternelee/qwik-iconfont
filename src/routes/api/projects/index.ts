@@ -5,8 +5,14 @@ import type { Project } from "~/lib/types";
 export const onGet: RequestHandler = async ({ platform, json }) => {
   const db = getDB(platform);
   await initDB(db);
-  const stmt = db.prepare("SELECT * FROM projects ORDER BY updated_at DESC");
-  const result = await stmt.all<Project>();
+  const stmt = db.prepare(`
+    SELECT p.*, COUNT(i.id) as icon_count
+    FROM projects p
+    LEFT JOIN icons i ON p.id = i.project_id
+    GROUP BY p.id
+    ORDER BY p.updated_at DESC
+  `);
+  const result = await stmt.all<Project & { icon_count: number }>();
   json(200, { projects: result.results ?? [] });
 };
 

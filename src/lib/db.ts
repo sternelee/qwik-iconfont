@@ -122,6 +122,16 @@ class MockDB implements D1Database {
         return { success: true, meta: { duration: 0 } };
       },
       async all() {
+        // Handle LEFT JOIN with COUNT: SELECT p.*, COUNT(i.id) as icon_count FROM projects p LEFT JOIN icons i ON p.id = i.project_id GROUP BY p.id ORDER BY p.updated_at DESC
+        const joinMatch = query.match(/SELECT\s+p\.\*,\s*COUNT\(i\.id\)\s+as\s+icon_count\s+FROM\s+projects\s+p\s+LEFT\s+JOIN\s+icons\s+i\s+ON\s+p\.id\s*=\s*i\.project_id\s+GROUP\s+BY\s+p\.id\s+ORDER\s+BY\s+p\.updated_at\s+DESC/i);
+        if (joinMatch) {
+          const results = self.projects.map((p: any) => {
+            const iconCount = self.icons.filter((i: any) => i.project_id === p.id).length;
+            return { ...p, icon_count: iconCount };
+          });
+          results.sort((a: any, b: any) => (b.updated_at ?? "").localeCompare(a.updated_at ?? ""));
+          return { results, success: true };
+        }
         const m = query.match(/SELECT\s+(.+?)\s+FROM\s+(\w+)(?:\s+WHERE\s+(.+?))?(?:\s+ORDER\s+BY\s+(.+))?/i);
         if (!m) return { results: [], success: true };
         const table = m[2];
