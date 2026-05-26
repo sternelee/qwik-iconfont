@@ -632,7 +632,7 @@ export default component$(() => {
               <div class="form-control mb-3"><label class="label"><span class="label-text">项目名称</span></label><input name="name" type="text" class="input input-bordered" value={project.name} required /></div>
               <div class="form-control mb-3"><label class="label"><span class="label-text">描述</span></label><input name="description" type="text" class="input input-bordered" value={project.description || ""} /></div>
               <div class="form-control mb-3"><label class="label"><span class="label-text">Font Family</span></label><input name="font_family" type="text" class="input input-bordered" value={project.font_family} /></div>
-              <div class="form-control mb-4"><label class="label"><span class="label-text">Class 前缀</span></label><input name="prefix" type="text" class="input input-bordered" value={project.prefix} /></div>
+              <div class="form-control mb-4"><label class="label"><span class="label-text">Class 前缀</span></label><input name="prefix" type="text" class="input input-bordered" value={project.prefix} /><label class="label"><span class="label-text-alt text-gray-400 font-mono">示例: <span class="text-primary">{project.prefix}</span>example</span></label></div>
               <div class="modal-action"><button type="button" class="btn" onClick$={() => showSettings.value = false}>取消</button><button type="submit" class="btn btn-primary">保存</button></div>
             </form>
           </div>
@@ -711,7 +711,11 @@ export default component$(() => {
                     <button type="button" class="btn btn-outline btn-sm" onClick$={autoUnicode}>自动生成</button>
                   </div>
                 </div>
-                <div class="form-control mb-4"><label class="label"><span class="label-text">ViewBox</span></label><input name="view_box" type="text" class="input input-bordered" value={editingIcon.view_box || "0 0 1024 1024"} /></div>
+                <div class="form-control mb-4">
+                  <label class="label"><span class="label-text">ViewBox</span></label>
+                  <input name="view_box" type="text" class="input input-bordered" value={editingIcon.view_box || "0 0 1024 1024"} />
+                  <label class="label"><span class="label-text-alt text-gray-400">控制 SVG 的坐标系，影响字体生成时的缩放比例</span></label>
+                </div>
                 <div class="modal-action"><button type="button" class="btn" onClick$={() => showEdit.value = false}>取消</button><button type="submit" class="btn btn-primary">保存</button></div>
               </form>
             </div>

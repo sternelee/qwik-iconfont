@@ -287,6 +287,7 @@ export default component$(() => {
               <div class="form-control mb-4">
                 <label class="label"><span class="label-text">Class 前缀</span></label>
                 <input name="prefix" type="text" class="input input-bordered" placeholder="icon-" value="icon-" />
+                <label class="label"><span class="label-text-alt text-gray-400 font-mono">示例: <span class="text-primary">icon-</span>home</span></label>
               </div>
               <div class="modal-action">
                 <button type="button" class="btn" onClick$={() => (showModal.value = false)}>取消</button>
