@@ -4,6 +4,7 @@ import type { Project, Icon } from "~/lib/types";
 import { generateTTFFont, generateCSS, generateSymbolSVG, generateDemoHTML } from "~/lib/font-gen";
 import { SvgPreview } from "~/components/svg-preview/svg-preview";
 import { ToastContainer, type ToastItem } from "~/components/toast/toast";
+import { SkeletonIconCard } from "~/components/skeleton/skeleton";
 
 export const useProject = routeLoader$(async ({ params, platform }) => {
   const { getDB, initDB } = await import("~/lib/db");
@@ -402,6 +403,14 @@ export default component$(() => {
           </div>
         ) : (
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+            {/* Skeleton cards shown while uploading */}
+            {uploadLoading.value && (
+              <>
+                <SkeletonIconCard />
+                <SkeletonIconCard />
+                <SkeletonIconCard />
+              </>
+            )}
             {displayList.map((icon) => (
               <div
                 key={icon.id}

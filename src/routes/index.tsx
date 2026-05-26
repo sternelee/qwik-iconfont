@@ -2,6 +2,7 @@ import { component$, useSignal, $, useStore, useTask$ } from "@builder.io/qwik";
 import { routeLoader$, routeAction$, useNavigate } from "@builder.io/qwik-city";
 import type { Project } from "~/lib/types";
 import { ToastContainer, type ToastItem } from "~/components/toast/toast";
+import { SkeletonProjectCard } from "~/components/skeleton/skeleton";
 
 export const useProjects = routeLoader$(async ({ platform }) => {
   const { getDB, initDB } = await import("~/lib/db");
@@ -155,10 +156,16 @@ export default component$(() => {
           </div>
         ) : (
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Skeleton cards shown while creating a project */}
+            {createProject.isRunning && (
+              <>
+                <SkeletonProjectCard />
+              </>
+            )}
             {filtered().map((project) => (
               <div
                 key={project.id}
-                class="card bg-base-100 shadow hover:shadow-lg transition-shadow group"
+                class={`card bg-base-100 shadow hover:shadow-lg transition-shadow group ${deleting.id === project.id ? "opacity-50 pointer-events-none" : ""}`}
               >
                 <div class="card-body cursor-pointer" onClick$={() => nav(`/project/${project.id}`)}>
                   <div class="flex items-start justify-between">
@@ -168,7 +175,9 @@ export default component$(() => {
                       onClick$={(ev: any) => { ev.stopPropagation(); handleDelete(project); }}
                       disabled={deleting.id === project.id}
                     >
-                      {deleting.id === project.id ? "删除中..." : "删除"}
+                      {deleting.id === project.id ? (
+                        <span class="loading loading-spinner loading-xs" />
+                      ) : "删除"}
                     </button>
                   </div>
                   {project.description && (
