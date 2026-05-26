@@ -128,6 +128,7 @@ export default component$(() => {
   const previewColor = useSignal("#333333");
   const downloadLoading = useSignal<"font" | "package" | null>(null);
   const showShortcuts = useSignal(false);
+  const fontPreviewBase64 = useSignal("");
 
   // Toast state
   const toasts = useStore<{ items: ToastItem[] }>({ items: [] });
@@ -407,6 +408,38 @@ export default component$(() => {
     track(() => selectedIds.ids.size);
     track(() => icons.list.length);
     generatedCode.value = await buildCode();
+  });
+
+  useTask$(async ({ track }) => {
+    track(() => showCode.value);
+    track(() => codeMode.value);
+    track(() => selectedIds.ids.size);
+    if (!showCode.value || codeMode.value !== "fontclass" || selectedIds.ids.size === 0) {
+      fontPreviewBase64.value = "";
+      return;
+    }
+    const selected = icons.list.filter((i) => selectedIds.ids.has(i.id));
+    const ttf = await generateTTFFont(project.font_family, selected, project.prefix);
+    if (ttf) {
+      const bytes = new Uint8Array(ttf);
+      let binary = "";
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      fontPreviewBase64.value = btoa(binary);
+    }
+  });
+
+  const fontPreviewCSS = useComputed$(() => {
+    if (!fontPreviewBase64.value) return "";
+    const selected = icons.list.filter((i) => selectedIds.ids.has(i.id)).slice(0, 8);
+    const classes = selected.map((icon, i) => {
+      const unicode = icon.unicode || `\\${(0xe000 + i).toString(16)}`;
+      return `.${project.prefix}${icon.name}:before { content: "${unicode}"; }`;
+    }).join("\n");
+    return `@font-face { font-family: "${project.font_family}"; src: url("data:font/truetype;charset=utf-8;base64,${fontPreviewBase64.value}") format("truetype"); font-weight: normal; font-style: normal; }
+.${project.prefix} { font-family: "${project.font_family}" !important; font-style: normal; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+${classes}`;
   });
 
   const copyToClipboard = $(async () => {
@@ -738,11 +771,12 @@ export default component$(() => {
             {/* Font preview for fontclass mode */}
             {codeMode.value === "fontclass" && selectedIds.ids.size > 0 && (
               <div class="mb-4 p-4 bg-base-200 rounded-lg">
-                <p class="text-xs text-gray-500 mb-2">预览效果</p>
+                <p class="text-xs text-gray-500 mb-2">字体预览</p>
+                {fontPreviewCSS.value && <style>{fontPreviewCSS.value}</style>}
                 <div class="flex flex-wrap gap-3">
                   {icons.list.filter((i) => selectedIds.ids.has(i.id)).slice(0, 8).map((icon) => (
                     <div key={icon.id} class="flex flex-col items-center gap-1">
-                      <SvgPreview content={icon.content} class="w-6 h-6" />
+                      <i class={`${project.prefix} ${project.prefix}${icon.name}`} style="font-size: 24px;"></i>
                       <span class="text-[10px] text-gray-400">{icon.name}</span>
                     </div>
                   ))}
