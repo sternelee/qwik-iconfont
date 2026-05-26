@@ -1,4 +1,4 @@
-import { component$, useSignal, $, useStore, useTask$ } from "@builder.io/qwik";
+import { component$, useSignal, $, useStore, useTask$, useOnDocument, useVisibleTask$ } from "@builder.io/qwik";
 import { routeLoader$, routeAction$, useNavigate } from "@builder.io/qwik-city";
 import type { Project } from "~/lib/types";
 import { ToastContainer, type ToastItem } from "~/components/toast/toast";
@@ -71,6 +71,30 @@ export default component$(() => {
       toasts.items = toasts.items.filter((t) => t.id !== id);
     }, 3000);
   });
+
+  // Dynamic page title
+  // eslint-disable-next-line qwik/no-use-visible-task
+  useVisibleTask$(() => {
+    document.title = "Iconfont - 我的项目";
+  });
+
+  // Keyboard shortcuts
+  useOnDocument("keydown", $((ev: KeyboardEvent) => {
+    const target = ev.target as HTMLElement;
+    if (target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable) return;
+
+    if (ev.key === "Escape" && showModal.value) {
+      showModal.value = false;
+      return;
+    }
+
+    if (ev.key === "/") {
+      // eslint-disable-next-line qwik/no-async-prevent-default
+      ev.preventDefault();
+      const searchInput = document.querySelector('input[placeholder="搜索项目..."]') as HTMLInputElement;
+      searchInput?.focus();
+    }
+  }));
 
   // Confirm dialog state
   const confirmState = useStore<{ show: boolean; project: Project | null }>({ show: false, project: null });

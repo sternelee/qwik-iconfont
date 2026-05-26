@@ -1,4 +1,4 @@
-import { component$, useSignal, $, useStore, useTask$, useComputed$ } from "@builder.io/qwik";
+import { component$, useSignal, $, useStore, useTask$, useComputed$, useOnDocument, useVisibleTask$ } from "@builder.io/qwik";
 import { routeLoader$, routeAction$, useLocation, useNavigate } from "@builder.io/qwik-city";
 import type { Project, Icon } from "~/lib/types";
 import { generateTTFFont, generateCSS, generateSymbolSVG, generateDemoHTML } from "~/lib/font-gen";
@@ -133,6 +133,64 @@ export default component$(() => {
       toasts.items = toasts.items.filter((t) => t.id !== id);
     }, 3000);
   });
+
+  // Dynamic page title
+  // eslint-disable-next-line qwik/no-use-visible-task
+  useVisibleTask$(({ track }) => {
+    track(() => project.name);
+    document.title = `${project.name} - Iconfont`;
+  });
+
+  // Keyboard shortcuts
+  useOnDocument("keydown", $((ev: KeyboardEvent) => {
+    // Ignore if typing in an input
+    const target = ev.target as HTMLElement;
+    if (target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable) return;
+
+    // Esc: close any open modal
+    if (ev.key === "Escape") {
+      if (showPreview.value) { showPreview.value = false; return; }
+      if (showEdit.value) { showEdit.value = false; return; }
+      if (showCode.value) { showCode.value = false; return; }
+      if (showSettings.value) { showSettings.value = false; return; }
+      if (showBatchRename.value) { showBatchRename.value = false; return; }
+      if (confirmDeleteIcon.show) { confirmDeleteIcon.show = false; return; }
+    }
+
+    // Ctrl+A / Cmd+A: select all visible icons
+    if ((ev.ctrlKey || ev.metaKey) && ev.key === "a") {
+      // eslint-disable-next-line qwik/no-async-prevent-default
+      ev.preventDefault();
+      selectAll();
+      return;
+    }
+
+    // Delete: delete selected icons
+    if (ev.key === "Delete" && selectedIds.ids.size > 0) {
+      const visible = filteredIcons.value.map((i) => i.id);
+      const selectedVisible = visible.filter((id) => selectedIds.ids.has(id));
+      if (selectedVisible.length > 0) {
+        const count = selectedIds.ids.size;
+        if (confirm(`确定删除选中的 ${count} 个图标？`)) {
+          for (const id of Array.from(selectedIds.ids)) {
+            deleteIcon.submit({ id: String(id) });
+          }
+          icons.list = icons.list.filter((i) => !selectedIds.ids.has(i.id));
+          selectedIds.ids = new Set();
+          showToast(`已删除 ${count} 个图标`, "success");
+        }
+      }
+      return;
+    }
+
+    // / : focus search
+    if (ev.key === "/") {
+      // eslint-disable-next-line qwik/no-async-prevent-default
+      ev.preventDefault();
+      const searchInput = document.querySelector('input[placeholder="搜索图标..."]') as HTMLInputElement;
+      searchInput?.focus();
+    }
+  }));
 
   const filteredIcons = useComputed$(() => {
     let list = [...icons.list];
