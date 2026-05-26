@@ -246,17 +246,30 @@ export default component$(() => {
           <h1 class="text-xl font-bold truncate">{project.name}</h1>
           <p class="text-xs text-gray-500">{icons.list.length} 个图标 · Font: {project.font_family}</p>
         </div>
-        <div class="flex-none gap-2 flex flex-wrap justify-end">
+        {/* Desktop actions */}
+        <div class="hidden md:flex flex-none gap-2 flex-wrap justify-end">
           <button class="btn btn-outline btn-sm" onClick$={() => showSettings.value = true}>项目设置</button>
           <button class="btn btn-outline btn-sm" onClick$={handleDownloadFont}>下载字体</button>
           <button class="btn btn-primary btn-sm" onClick$={async () => { showCode.value = true; generatedCode.value = await buildCode(); }}>生成代码</button>
           <button class="btn btn-secondary btn-sm" onClick$={handleDownloadPackage}>打包下载</button>
         </div>
+        {/* Mobile actions dropdown */}
+        <div class="dropdown dropdown-end md:hidden">
+          <button tabIndex={0} class="btn btn-ghost btn-sm btn-square">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+          </button>
+          <ul tabIndex={0} class="dropdown-content menu z-[1] p-2 shadow bg-base-100 rounded-box w-40">
+            <li><button onClick$={() => showSettings.value = true}>项目设置</button></li>
+            <li><button onClick$={handleDownloadFont}>下载字体</button></li>
+            <li><button onClick$={async () => { showCode.value = true; generatedCode.value = await buildCode(); }}>生成代码</button></li>
+            <li><button onClick$={handleDownloadPackage}>打包下载</button></li>
+          </ul>
+        </div>
       </div>
 
       {/* Toolbar */}
       <div class="container mx-auto px-4 py-4">
-        <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
           <div class="flex items-center gap-3">
             <label class="label cursor-pointer gap-2">
               <input type="checkbox" class="checkbox checkbox-sm" checked={displayList.length > 0 && displayList.every((i) => selectedIds.ids.has(i.id))} onChange$={selectAll} />
