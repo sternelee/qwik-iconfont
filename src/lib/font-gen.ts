@@ -73,13 +73,154 @@ function multiplyMatrix(a: number[], b: number[]): number[] {
   ];
 }
 
+/** Convert SVG elliptical arc (A/a) commands to cubic Bézier (C) curves.
+ *  opentype.js does not support the A command; this approximates arcs
+ *  by splitting them into <= 90° segments and fitting cubic Beziers.
+ */
+function arcsToCubics(pathData: string): string {
+  const tokens = pathData.match(/[MmLlHhVvCcSsQqTtAaZz][^MmLlHhVvCcSsQqTtAaZz]*/g);
+  if (!tokens) return pathData;
+
+  const out: string[] = [];
+  let cx = 0, cy = 0; // current point
+  let sx = 0, sy = 0; // subpath start point
+
+  for (const tok of tokens) {
+    const cmd = tok[0];
+    const nums = tok.slice(1).trim().split(/[\s,]+/).filter(Boolean).map(Number);
+
+    if (cmd === 'A' || cmd === 'a') {
+      const isRel = cmd === 'a';
+      for (let i = 0; i < nums.length; i += 7) {
+        let rx = Math.abs(nums[i]);
+        let ry = Math.abs(nums[i + 1]);
+        const phi = (nums[i + 2] * Math.PI) / 180;
+        const largeArc = nums[i + 3] !== 0;
+        const sweep = nums[i + 4] !== 0;
+        let x2 = nums[i + 5];
+        let y2 = nums[i + 6];
+        if (isRel) { x2 += cx; y2 += cy; }
+
+        if (rx === 0 || ry === 0 || (cx === x2 && cy === y2)) {
+          out.push(`L ${x2.toFixed(3)} ${y2.toFixed(3)}`);
+          cx = x2; cy = y2;
+          continue;
+        }
+
+        const x1 = cx, y1 = cy;
+        const cosP = Math.cos(phi), sinP = Math.sin(phi);
+
+        // Transform to ellipse-centered coordinates
+        const dx = (x1 - x2) / 2;
+        const dy = (y1 - y2) / 2;
+        const x1_ = cosP * dx + sinP * dy;
+        const y1_ = -sinP * dx + cosP * dy;
+
+        // Ensure radii are large enough
+        const check = (x1_ * x1_) / (rx * rx) + (y1_ * y1_) / (ry * ry);
+        if (check > 1) {
+          const scale = Math.sqrt(check);
+          rx *= scale;
+          ry *= scale;
+        }
+
+        // Compute center in transformed space
+        const sq = Math.max(0,
+          ((rx * rx * ry * ry) - (rx * rx * y1_ * y1_) - (ry * ry * x1_ * x1_)) /
+          ((rx * rx * y1_ * y1_) + (ry * ry * x1_ * x1_))
+        );
+        const coef = (largeArc === sweep ? -1 : 1) * Math.sqrt(sq);
+        const cx_ = coef * (rx * y1_) / ry;
+        const cy_ = coef * -(ry * x1_) / rx;
+
+        // Center in original space
+        const cX = cosP * cx_ - sinP * cy_ + (x1 + x2) / 2;
+        const cY = sinP * cx_ + cosP * cy_ + (y1 + y2) / 2;
+
+        // Start and end angles on unit circle in transformed space
+        let theta1 = Math.atan2((y1_ - cy_) / ry, (x1_ - cx_) / rx);
+        let theta2 = Math.atan2((-y1_ - cy_) / ry, (-x1_ - cx_) / rx);
+
+        let delta = theta2 - theta1;
+        if (sweep && delta < 0) delta += 2 * Math.PI;
+        if (!sweep && delta > 0) delta -= 2 * Math.PI;
+
+        // Split into <= 90° segments
+        const segments = Math.ceil(Math.abs(delta) / (Math.PI / 2));
+        const step = delta / segments;
+
+        for (let s = 0; s < segments; s++) {
+          const a1 = theta1 + s * step;
+          const a2 = a1 + step;
+          const k = (4 / 3) * Math.tan(Math.abs(step) / 4);
+
+          const u1 = Math.cos(a1), v1 = Math.sin(a1);
+          const u2 = Math.cos(a2), v2 = Math.sin(a2);
+
+          // Control points on unit circle
+          const pu1 = u1 - k * v1, pv1 = v1 + k * u1;
+          const pu2 = u2 + k * v2, pv2 = v2 - k * u2;
+
+          // Map from unit circle to ellipse space
+          const cp1x = cX + rx * pu1 * cosP - ry * pv1 * sinP;
+          const cp1y = cY + rx * pu1 * sinP + ry * pv1 * cosP;
+          const cp2x = cX + rx * pu2 * cosP - ry * pv2 * sinP;
+          const cp2y = cY + rx * pu2 * sinP + ry * pv2 * cosP;
+          const ex = cX + rx * u2 * cosP - ry * v2 * sinP;
+          const ey = cY + rx * u2 * sinP + ry * v2 * cosP;
+
+          out.push(`C ${cp1x.toFixed(3)} ${cp1y.toFixed(3)} ${cp2x.toFixed(3)} ${cp2y.toFixed(3)} ${ex.toFixed(3)} ${ey.toFixed(3)}`);
+        }
+        cx = x2; cy = y2;
+      }
+      continue;
+    }
+
+    // Pass through non-arc commands and track current point
+    out.push(tok.trim());
+
+    if (cmd === 'M') {
+      cx = nums[nums.length - 2]; cy = nums[nums.length - 1];
+      sx = cx; sy = cy;
+    } else if (cmd === 'm') {
+      cx += nums[nums.length - 2]; cy += nums[nums.length - 1];
+      sx = cx; sy = cy;
+    } else if (cmd === 'L' || cmd === 'T') {
+      cx = nums[nums.length - 2]; cy = nums[nums.length - 1];
+    } else if (cmd === 'l' || cmd === 't') {
+      cx += nums[nums.length - 2]; cy += nums[nums.length - 1];
+    } else if (cmd === 'H') {
+      cx = nums[nums.length - 1];
+    } else if (cmd === 'h') {
+      cx += nums[nums.length - 1];
+    } else if (cmd === 'V') {
+      cy = nums[nums.length - 1];
+    } else if (cmd === 'v') {
+      cy += nums[nums.length - 1];
+    } else if (cmd === 'C') {
+      cx = nums[nums.length - 2]; cy = nums[nums.length - 1];
+    } else if (cmd === 'c') {
+      cx += nums[nums.length - 2]; cy += nums[nums.length - 1];
+    } else if (cmd === 'S' || cmd === 'Q') {
+      cx = nums[nums.length - 2]; cy = nums[nums.length - 1];
+    } else if (cmd === 's' || cmd === 'q') {
+      cx += nums[nums.length - 2]; cy += nums[nums.length - 1];
+    } else if (cmd === 'Z' || cmd === 'z') {
+      cx = sx; cy = sy;
+    }
+  }
+
+  return out.join(' ');
+}
+
 /** Apply 2x3 matrix to a path data string by transforming the path via opentype.js */
 function transformPathData(pathData: string, matrix: number[], opentype: any): string {
   if (!matrix || (matrix[0] === 1 && matrix[1] === 0 && matrix[2] === 0 && matrix[3] === 1 && matrix[4] === 0 && matrix[5] === 0)) {
     return pathData;
   }
   try {
-    const path = opentype.Path.fromSVG(pathData);
+    const noArcs = arcsToCubics(pathData);
+    const path = opentype.Path.fromSVG(noArcs);
     path.transform(matrix[0], matrix[1], matrix[2], matrix[3], matrix[4], matrix[5]);
     return path.toPathData(2);
   } catch {
@@ -239,7 +380,8 @@ export async function generateTTFFont(
     const scale = unitsPerEm / Math.max(vb.width, vb.height);
 
     try {
-      const path = opentype.Path.fromSVG(d);
+      const noArcs = arcsToCubics(d);
+      const path = opentype.Path.fromSVG(noArcs);
       // Scale and flip Y (SVG Y-down to font Y-up)
       // Map SVG (minX, minY) to font (0, unitsPerEm)
       const scaleMatrix = [scale, 0, 0, -scale, -vb.minX * scale, unitsPerEm + vb.minY * scale];
