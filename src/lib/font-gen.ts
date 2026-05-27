@@ -73,6 +73,28 @@ function multiplyMatrix(a: number[], b: number[]): number[] {
   ];
 }
 
+/** Extract all numbers from an SVG path command token using regex.
+ *  SVG numbers can be separated by whitespace, comma, or nothing (if signed).
+ */
+function extractNumbers(tok: string): number[] {
+  const numRe = /[+-]?(?:\d*\.\d+|\d+\.?)(?:[eE][+-]?\d+)?/g;
+  return tok.match(numRe)?.map(Number) ?? [];
+}
+
+/** Sanitize path data for opentype.js compatibility.
+ *  - Replace `.5` with `0.5` (opentype.js may not accept leading-dot numbers)
+ *  - Replace `-0.000` with `0.000` to avoid parser issues
+ *  - Ensure single spaces between commands and values
+ */
+function sanitizePathData(pathData: string): string {
+  return pathData
+    .replace(/([^\d])\.(\d)/g, "$10.$2")
+    .replace(/(^|\s)\.(\d)/g, "$10.$2")
+    .replace(/-0\.0+\b/g, "0")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 /** Convert SVG elliptical arc (A/a) commands to cubic Bézier (C) curves.
  *  opentype.js does not support the A command; this approximates arcs
  *  by splitting them into <= 90° segments and fitting cubic Beziers.
@@ -87,11 +109,12 @@ function arcsToCubics(pathData: string): string {
 
   for (const tok of tokens) {
     const cmd = tok[0];
-    const nums = tok.slice(1).trim().split(/[\s,]+/).filter(Boolean).map(Number);
+    const nums = extractNumbers(tok);
 
     if (cmd === 'A' || cmd === 'a') {
       const isRel = cmd === 'a';
       for (let i = 0; i < nums.length; i += 7) {
+        if (i + 6 >= nums.length) break; // incomplete arc params
         let rx = Math.abs(nums[i]);
         let ry = Math.abs(nums[i + 1]);
         const phi = (nums[i + 2] * Math.PI) / 180;
@@ -102,7 +125,7 @@ function arcsToCubics(pathData: string): string {
         if (isRel) { x2 += cx; y2 += cy; }
 
         if (rx === 0 || ry === 0 || (cx === x2 && cy === y2)) {
-          out.push(`L ${x2.toFixed(3)} ${y2.toFixed(3)}`);
+          out.push(`L ${fmt(x2)} ${fmt(y2)}`);
           cx = x2; cy = y2;
           continue;
         }
@@ -169,7 +192,7 @@ function arcsToCubics(pathData: string): string {
           const ex = cX + rx * u2 * cosP - ry * v2 * sinP;
           const ey = cY + rx * u2 * sinP + ry * v2 * cosP;
 
-          out.push(`C ${cp1x.toFixed(3)} ${cp1y.toFixed(3)} ${cp2x.toFixed(3)} ${cp2y.toFixed(3)} ${ex.toFixed(3)} ${ey.toFixed(3)}`);
+          out.push(`C ${fmt(cp1x)} ${fmt(cp1y)} ${fmt(cp2x)} ${fmt(cp2y)} ${fmt(ex)} ${fmt(ey)}`);
         }
         cx = x2; cy = y2;
       }
@@ -180,37 +203,43 @@ function arcsToCubics(pathData: string): string {
     out.push(tok.trim());
 
     if (cmd === 'M') {
-      cx = nums[nums.length - 2]; cy = nums[nums.length - 1];
-      sx = cx; sy = cy;
+      if (nums.length >= 2) { cx = nums[nums.length - 2]; cy = nums[nums.length - 1]; sx = cx; sy = cy; }
     } else if (cmd === 'm') {
-      cx += nums[nums.length - 2]; cy += nums[nums.length - 1];
-      sx = cx; sy = cy;
+      if (nums.length >= 2) { cx += nums[nums.length - 2]; cy += nums[nums.length - 1]; sx = cx; sy = cy; }
     } else if (cmd === 'L' || cmd === 'T') {
-      cx = nums[nums.length - 2]; cy = nums[nums.length - 1];
+      if (nums.length >= 2) { cx = nums[nums.length - 2]; cy = nums[nums.length - 1]; }
     } else if (cmd === 'l' || cmd === 't') {
-      cx += nums[nums.length - 2]; cy += nums[nums.length - 1];
+      if (nums.length >= 2) { cx += nums[nums.length - 2]; cy += nums[nums.length - 1]; }
     } else if (cmd === 'H') {
-      cx = nums[nums.length - 1];
+      if (nums.length >= 1) cx = nums[nums.length - 1];
     } else if (cmd === 'h') {
-      cx += nums[nums.length - 1];
+      if (nums.length >= 1) cx += nums[nums.length - 1];
     } else if (cmd === 'V') {
-      cy = nums[nums.length - 1];
+      if (nums.length >= 1) cy = nums[nums.length - 1];
     } else if (cmd === 'v') {
-      cy += nums[nums.length - 1];
+      if (nums.length >= 1) cy += nums[nums.length - 1];
     } else if (cmd === 'C') {
-      cx = nums[nums.length - 2]; cy = nums[nums.length - 1];
+      if (nums.length >= 2) { cx = nums[nums.length - 2]; cy = nums[nums.length - 1]; }
     } else if (cmd === 'c') {
-      cx += nums[nums.length - 2]; cy += nums[nums.length - 1];
+      if (nums.length >= 2) { cx += nums[nums.length - 2]; cy += nums[nums.length - 1]; }
     } else if (cmd === 'S' || cmd === 'Q') {
-      cx = nums[nums.length - 2]; cy = nums[nums.length - 1];
+      if (nums.length >= 2) { cx = nums[nums.length - 2]; cy = nums[nums.length - 1]; }
     } else if (cmd === 's' || cmd === 'q') {
-      cx += nums[nums.length - 2]; cy += nums[nums.length - 1];
+      if (nums.length >= 2) { cx += nums[nums.length - 2]; cy += nums[nums.length - 1]; }
     } else if (cmd === 'Z' || cmd === 'z') {
       cx = sx; cy = sy;
     }
   }
 
-  return out.join(' ');
+  return sanitizePathData(out.join(' '));
+}
+
+/** Format a number for SVG path data: 3 decimal places, no trailing zeros. */
+function fmt(n: number): string {
+  if (!isFinite(n)) return "0";
+  const s = n.toFixed(3);
+  // Remove trailing zeros and possible trailing dot
+  return s.replace(/\.?0+$/, "");
 }
 
 /** Apply 2x3 matrix to a path data string by transforming the path via opentype.js */
@@ -222,7 +251,7 @@ function transformPathData(pathData: string, matrix: number[], opentype: any): s
     const noArcs = arcsToCubics(pathData);
     const path = opentype.Path.fromSVG(noArcs);
     path.transform(matrix[0], matrix[1], matrix[2], matrix[3], matrix[4], matrix[5]);
-    return path.toPathData(2);
+    return sanitizePathData(path.toPathData(2));
   } catch {
     return pathData;
   }
@@ -398,8 +427,16 @@ export async function generateTTFFont(
         path: path,
       });
       glyphs.push(glyph);
-    } catch (e) {
+    } catch (e: any) {
       console.warn(`Failed to process icon ${icon.name}:`, e);
+      // Log path data for debugging — truncated to avoid flooding console
+      if (e?.message?.includes("Unexpected character")) {
+        console.warn(`  Original path (first 500 chars):`, d.slice(0, 500));
+        try {
+          const noArcs = arcsToCubics(d);
+          console.warn(`  Converted path (first 500 chars):`, noArcs.slice(0, 500));
+        } catch {}
+      }
     }
   }
 
