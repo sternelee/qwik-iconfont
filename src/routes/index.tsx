@@ -417,8 +417,8 @@ export default component$(() => {
           <div class="modal-box max-w-lg animate-modal-box">
             <h3 class="mb-4 text-lg font-bold">新建项目</h3>
             <form
+              preventdefault:submit
               onSubmit$={async (ev: any) => {
-                ev.preventDefault();
                 const fd = new FormData(ev.target);
                 const result = await createProject.submit({
                   name: fd.get("name"),

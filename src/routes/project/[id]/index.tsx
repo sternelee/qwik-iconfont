@@ -1168,8 +1168,8 @@ ${classes}`;
           <div class="modal-box max-w-lg animate-modal-box">
             <h3 class="mb-4 text-lg font-bold">项目设置</h3>
             <form
+              preventdefault:submit
               onSubmit$={async (ev: any) => {
-                ev.preventDefault();
                 const fd = new FormData(ev.target);
                 await updateProject.submit({
                   id: loc.params.id,
@@ -1363,8 +1363,8 @@ ${classes}`;
               </div>
               <form
                 class="flex-1"
+                preventdefault:submit
                 onSubmit$={async (ev: any) => {
-                  ev.preventDefault();
                   const fd = new FormData(ev.target);
                   const iconId = editingIcon.id;
                   const newContent = fd.get("content") as string;
@@ -1658,6 +1658,7 @@ ${classes}`;
               批量重命名 ({selectedIds.ids.size} 个图标)
             </h3>
             <form
+              preventdefault:submit
               onSubmit$={async () => {
                 const ids = Array.from(selectedIds.ids).join(",");
                 await batchRenameIcons.submit({
