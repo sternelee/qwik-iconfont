@@ -22,24 +22,26 @@ function applyColor(svg: string, color: string): string {
  * This prevents XSS from malicious SVG content (scripts, event handlers).
  * Optional `color` prop overrides SVG fill/stroke colors.
  */
-export const SvgPreview = component$((props: { content: string | null; class?: string; color?: string }) => {
-  const svg = props.content || "";
-  let sanitized = sanitizeSVG(svg);
+export const SvgPreview = component$(
+  (props: { content: string | null; class?: string; color?: string }) => {
+    const svg = props.content || "";
+    let sanitized = sanitizeSVG(svg);
 
-  if (props.color) {
-    sanitized = applyColor(sanitized, props.color);
-  }
+    if (props.color) {
+      sanitized = applyColor(sanitized, props.color);
+    }
 
-  const dataUrl = `data:image/svg+xml,${encodeURIComponent(sanitized)}`;
+    const dataUrl = `data:image/svg+xml,${encodeURIComponent(sanitized)}`;
 
-  return (
-    <img
-      src={dataUrl}
-      alt="icon"
-      width="100"
-      height="100"
-      class={props.class || "w-full h-full object-contain"}
-      loading="lazy"
-    />
-  );
-});
+    return (
+      <img
+        src={dataUrl}
+        alt="icon"
+        width="100"
+        height="100"
+        class={props.class || "h-full w-full object-contain"}
+        loading="lazy"
+      />
+    );
+  },
+);
