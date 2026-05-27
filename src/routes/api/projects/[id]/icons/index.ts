@@ -1,6 +1,8 @@
 import type { RequestHandler } from "@builder.io/qwik-city";
 import { getDB, initDB } from "~/lib/db";
 import { uploadSVG } from "~/lib/storage";
+import { icons } from "~/lib/schema";
+import { eq } from "drizzle-orm";
 import type { Icon } from "~/lib/types";
 
 export const onGet: RequestHandler = async ({ params, platform, json }) => {
@@ -8,15 +10,21 @@ export const onGet: RequestHandler = async ({ params, platform, json }) => {
   await initDB(db);
   const projectId = parseInt(params.id, 10);
 
-  const stmt = db
-    .prepare("SELECT * FROM icons WHERE project_id = ? ORDER BY created_at ASC")
-    .bind(projectId);
-  const result = await stmt.all<Icon>();
+  const result = await db
+    .select()
+    .from(icons)
+    .where(eq(icons.project_id, projectId))
+    .orderBy(icons.created_at);
 
-  json(200, { icons: result.results ?? [] });
+  json(200, { icons: result as Icon[] });
 };
 
-export const onPost: RequestHandler = async ({ params, platform, request, json }) => {
+export const onPost: RequestHandler = async ({
+  params,
+  platform,
+  request,
+  json,
+}) => {
   const db = getDB(platform);
   await initDB(db);
   const projectId = parseInt(params.id, 10);
@@ -32,32 +40,20 @@ export const onPost: RequestHandler = async ({ params, platform, request, json }
     return;
   }
 
-  // Clean SVG name
   const cleanName = name.replace(/\.svg$/i, "").replace(/[^a-zA-Z0-9_-]/g, "-");
-
-  // Upload SVG to R2
   const svgPath = await uploadSVG(platform, projectId, cleanName, content);
 
-  const stmt = db.prepare(
-    "INSERT INTO icons (project_id, name, unicode, svg_path, view_box, content) VALUES (?, ?, ?, ?, ?, ?)"
-  );
-  stmt.bind(projectId, cleanName, unicode, svgPath, viewBox, content);
-  const result = await stmt.run();
-
-  if (!result.success) {
-    json(500, { error: "Failed to create icon" });
-    return;
-  }
-
-  json(201, {
-    icon: {
-      id: result.meta?.last_row_id,
+  const result = await db
+    .insert(icons)
+    .values({
       project_id: projectId,
       name: cleanName,
       unicode,
       svg_path: svgPath,
       view_box: viewBox,
       content,
-    },
-  });
+    })
+    .returning();
+
+  json(201, { icon: result[0] });
 };

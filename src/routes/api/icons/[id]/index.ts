@@ -1,6 +1,8 @@
 import type { RequestHandler } from "@builder.io/qwik-city";
 import { getDB, initDB } from "~/lib/db";
 import { getBucket, uploadSVG } from "~/lib/storage";
+import { icons } from "~/lib/schema";
+import { eq } from "drizzle-orm";
 import type { Icon } from "~/lib/types";
 
 export const onGet: RequestHandler = async ({ params, platform, json }) => {
@@ -8,8 +10,8 @@ export const onGet: RequestHandler = async ({ params, platform, json }) => {
   await initDB(db);
   const id = parseInt(params.id, 10);
 
-  const stmt = db.prepare("SELECT * FROM icons WHERE id = ?").bind(id);
-  const icon = await stmt.first<Icon>();
+  const result = await db.select().from(icons).where(eq(icons.id, id));
+  const icon = result[0] as Icon | undefined;
 
   if (!icon) {
     json(404, { error: "Icon not found" });
@@ -19,16 +21,20 @@ export const onGet: RequestHandler = async ({ params, platform, json }) => {
   json(200, { icon });
 };
 
-export const onPut: RequestHandler = async ({ params, platform, request, json }) => {
+export const onPut: RequestHandler = async ({
+  params,
+  platform,
+  request,
+  json,
+}) => {
   const db = getDB(platform);
   await initDB(db);
   const id = parseInt(params.id, 10);
   const body = await request.json();
   const { name, unicode, view_box, content } = body;
 
-  // Get current icon
-  const currentStmt = db.prepare("SELECT * FROM icons WHERE id = ?").bind(id);
-  const current = await currentStmt.first<Icon>();
+  const result = await db.select().from(icons).where(eq(icons.id, id));
+  const current = result[0] as Icon | undefined;
 
   if (!current) {
     json(404, { error: "Icon not found" });
@@ -36,32 +42,32 @@ export const onPut: RequestHandler = async ({ params, platform, request, json })
   }
 
   let svgPath = current.svg_path;
+  const newName = (name as string) || current.name;
+  const newContent = content as string | undefined;
 
-  // If content changed, re-upload to R2
-  if (content && content !== current.content) {
-    const cleanName = name
-      ? name.replace(/\.svg$/i, "").replace(/[^a-zA-Z0-9_-]/g, "-")
-      : current.name;
-    svgPath = await uploadSVG(platform, current.project_id, cleanName, content);
+  if (newContent && newContent !== current.content) {
+    const cleanName = newName
+      .replace(/\.svg$/i, "")
+      .replace(/[^a-zA-Z0-9_-]/g, "-");
+    svgPath = await uploadSVG(
+      platform,
+      current.project_id,
+      cleanName,
+      newContent,
+    );
   }
 
-  const stmt = db.prepare(
-    "UPDATE icons SET name = ?, unicode = ?, view_box = ?, content = ?, svg_path = ? WHERE id = ?"
-  );
-  stmt.bind(
-    name ?? current.name,
-    unicode !== undefined ? unicode : current.unicode,
-    view_box ?? current.view_box,
-    content ?? current.content,
-    svgPath,
-    id
-  );
-  const result = await stmt.run();
-
-  if (!result.success || (result.meta?.changes ?? 0) === 0) {
-    json(404, { error: "Icon not found" });
-    return;
-  }
+  await db
+    .update(icons)
+    .set({
+      name: newName,
+      unicode: unicode !== undefined ? unicode : current.unicode,
+      view_box: view_box ?? current.view_box,
+      content: newContent ?? current.content,
+      svg_path: svgPath,
+      updated_at: new Date().toISOString(),
+    })
+    .where(eq(icons.id, id));
 
   json(200, { success: true });
 };
@@ -72,16 +78,17 @@ export const onDelete: RequestHandler = async ({ params, platform, json }) => {
   const bucket = getBucket(platform);
   const id = parseInt(params.id, 10);
 
-  // Get SVG path before deleting
-  const currentStmt = db.prepare("SELECT svg_path FROM icons WHERE id = ?").bind(id);
-  const current = await currentStmt.first<{ svg_path: string }>();
+  const result = await db
+    .select({ svg_path: icons.svg_path })
+    .from(icons)
+    .where(eq(icons.id, id));
+  const current = result[0];
 
   if (current) {
     await bucket.delete(current.svg_path);
   }
 
-  const stmt = db.prepare("DELETE FROM icons WHERE id = ?").bind(id);
-  await stmt.run();
+  await db.delete(icons).where(eq(icons.id, id));
 
   json(200, { success: true });
 };

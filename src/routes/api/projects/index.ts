@@ -1,19 +1,30 @@
 import type { RequestHandler } from "@builder.io/qwik-city";
 import { getDB, initDB } from "~/lib/db";
+import { projects, icons } from "~/lib/schema";
+import { eq, desc, count } from "drizzle-orm";
 import type { Project } from "~/lib/types";
 
 export const onGet: RequestHandler = async ({ platform, json }) => {
   const db = getDB(platform);
   await initDB(db);
-  const stmt = db.prepare(`
-    SELECT p.*, COUNT(i.id) as icon_count
-    FROM projects p
-    LEFT JOIN icons i ON p.id = i.project_id
-    GROUP BY p.id
-    ORDER BY p.updated_at DESC
-  `);
-  const result = await stmt.all<Project & { icon_count: number }>();
-  json(200, { projects: result.results ?? [] });
+
+  const result = await db
+    .select({
+      id: projects.id,
+      name: projects.name,
+      description: projects.description,
+      font_family: projects.font_family,
+      prefix: projects.prefix,
+      created_at: projects.created_at,
+      updated_at: projects.updated_at,
+      icon_count: count(icons.id),
+    })
+    .from(projects)
+    .leftJoin(icons, eq(projects.id, icons.project_id))
+    .groupBy(projects.id)
+    .orderBy(desc(projects.updated_at));
+
+  json(200, { projects: result as (Project & { icon_count: number })[] });
 };
 
 export const onPost: RequestHandler = async ({ platform, request, json }) => {
@@ -27,25 +38,15 @@ export const onPost: RequestHandler = async ({ platform, request, json }) => {
     return;
   }
 
-  const stmt = db.prepare(
-    "INSERT INTO projects (name, description, font_family, prefix) VALUES (?, ?, ?, ?)"
-  );
-  stmt.bind(name, description ?? null, font_family ?? "iconfont", prefix ?? "icon-");
-  const result = await stmt.run();
-
-  if (!result.success) {
-    json(500, { error: "Failed to create project" });
-    return;
-  }
-
-  const id = result.meta?.last_row_id;
-  json(201, {
-    project: {
-      id,
+  const result = await db
+    .insert(projects)
+    .values({
       name,
       description: description ?? null,
       font_family: font_family ?? "iconfont",
       prefix: prefix ?? "icon-",
-    },
-  });
+    })
+    .returning();
+
+  json(201, { project: result[0] });
 };

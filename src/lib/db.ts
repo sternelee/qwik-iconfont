@@ -1,4 +1,7 @@
-import type { Project, Icon } from "./types";
+import { drizzle as drizzleD1 } from "drizzle-orm/d1";
+import { drizzle as drizzleProxy } from "drizzle-orm/sqlite-proxy";
+import * as schema from "./schema";
+import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 
 // D1Database interface matching Cloudflare D1
 interface D1Database {
@@ -27,193 +30,299 @@ interface D1ExecResult {
   duration: number;
 }
 
-// In-memory mock for local dev when D1 is not available
-class MockDB implements D1Database {
-  private projects: Project[] = [];
-  private icons: Icon[] = [];
-  private projectId = 1;
-  private iconId = 1;
+function unquote(s: string): string {
+  return s.replace(/^"|"$/g, "").replace(/"/g, "");
+}
 
-  prepare(query: string): D1PreparedStatement {
-    const params: unknown[] = [];
-    const self = this;
-    const stmt: D1PreparedStatement = {
-      bind(...values: unknown[]) {
-        params.push(...values);
-        return stmt;
-      },
-      async first() {
-        const m = query.match(/SELECT\s+(.+?)\s+FROM\s+(\w+)(?:\s+WHERE\s+(.+))?/i);
-        if (!m) return null;
-        const table = m[2];
-        const where = m[3];
-        const items = table === "projects" ? self.projects : self.icons;
-        if (where) {
-          const w = where.replace(/\?/g, () => JSON.stringify(params.shift()));
-          const idMatch = w.match(/id\s*=\s*(\d+)/);
-          if (idMatch) {
-            return (items as any[]).find((i: any) => i.id === +idMatch[1]) ?? null;
-          }
-        }
-        return (items as any[])[0] ?? null;
-      },
-      async run() {
-        const insertMatch = query.match(/INSERT\s+INTO\s+(\w+)\s+\(([^)]+)\)\s+VALUES\s+\(([^)]+)\)/i);
-        if (insertMatch) {
-          const table = insertMatch[1];
-          const cols = insertMatch[2].split(",").map((c) => c.trim());
-          const values = [...params];
-          const obj: any = {};
-          cols.forEach((col, i) => {
-            obj[col] = values[i];
-          });
-          if (table === "projects") {
-            obj.id = self.projectId++;
-            obj.created_at = new Date().toISOString();
-            obj.updated_at = new Date().toISOString();
-            self.projects.push(obj);
-            return { success: true, meta: { duration: 0, last_row_id: obj.id } };
-          }
-          if (table === "icons") {
-            obj.id = self.iconId++;
-            obj.created_at = new Date().toISOString();
-            obj.updated_at = new Date().toISOString();
-            self.icons.push(obj);
-            return { success: true, meta: { duration: 0, last_row_id: obj.id } };
-          }
-        }
-        const updateMatch = query.match(/UPDATE\s+(\w+)\s+SET\s+(.+?)\s+WHERE\s+id\s*=\s*\?/i);
-        if (updateMatch) {
-          const table = updateMatch[1];
-          const setClause = updateMatch[2];
-          const id = params.pop() as number;
-          const items = table === "projects" ? self.projects : self.icons;
-          const item = (items as any[]).find((i: any) => i.id === id);
-          if (item) {
-            const sets = setClause.split(",").map((s) => s.trim());
-            const vals = [...params];
-            sets.forEach((s, i) => {
-              const [col] = s.split("=");
-              (item as any)[col.trim()] = vals[i];
-            });
-            (item as any).updated_at = new Date().toISOString();
-          }
-          return { success: true, meta: { duration: 0, changes: 1 } };
-        }
-        const deleteMatch = query.match(/DELETE\s+FROM\s+(\w+)\s+WHERE\s+(.+)/i);
-        if (deleteMatch) {
-          const table = deleteMatch[1];
-          const where = deleteMatch[2];
-          const items = table === "projects" ? self.projects : self.icons;
-          const w = where.replace(/\?/g, () => JSON.stringify(params.shift()));
-          const idMatch = w.match(/id\s*=\s*(\d+)/);
-          if (idMatch) {
-            const id = +idMatch[1];
-            const idx = (items as any[]).findIndex((i: any) => i.id === id);
-            if (idx >= 0) {
-              items.splice(idx, 1);
-              if (table === "projects") {
-                self.icons = self.icons.filter((i) => i.project_id !== id);
+function parseColumns(selectPart: string): string[] {
+  const cols: string[] = [];
+  let depth = 0;
+  let current = "";
+  for (const char of selectPart) {
+    if (char === "(") depth++;
+    else if (char === ")") depth--;
+    else if (char === "," && depth === 0) {
+      cols.push(current.trim());
+      current = "";
+      continue;
+    }
+    current += char;
+  }
+  if (current.trim()) cols.push(current.trim());
+  return cols;
+}
+
+function extractAlias(colExpr: string): string {
+  const asMatch = colExpr.match(/as\s+"?([^"]+)"?$/i);
+  if (asMatch) return asMatch[1];
+  const quoteMatch = colExpr.match(/"([^"]+)"/);
+  if (quoteMatch) return quoteMatch[1];
+  return colExpr.trim();
+}
+
+class MockExecutor {
+  private projects: any[] = [];
+  private icons: any[] = [];
+  private nextProjectId = 1;
+  private nextIconId = 1;
+
+  async execute(
+    sql: string,
+    params: any[],
+    _method: string,
+  ): Promise<{ rows: any[] }> {
+    const lower = sql.trim().toLowerCase();
+
+    if (lower.startsWith("select")) {
+      return { rows: this.select(sql, [...params]) };
+    }
+    if (lower.startsWith("insert")) {
+      return { rows: this.insert(sql, [...params]) };
+    }
+    if (lower.startsWith("update")) {
+      return { rows: this.update(sql, [...params]) };
+    }
+    if (lower.startsWith("delete")) {
+      return { rows: this.delete(sql, [...params]) };
+    }
+
+    return { rows: [] };
+  }
+
+  private select(sql: string, params: any[]): any[] {
+    const fromMatch = sql.match(/SELECT\s+(.+?)\s+FROM\s+"?(\w+)"?\s*/i);
+    if (!fromMatch) return [];
+    const colsExpr = fromMatch[1];
+    const table = fromMatch[2];
+
+    const whereMatch = sql.match(
+      /WHERE\s+(.+?)(?:\s+GROUP\s+BY|\s+ORDER\s+BY|$)/i,
+    );
+    const whereClause = whereMatch ? whereMatch[1] : null;
+
+    const joinMatch = sql.match(
+      /LEFT\s+JOIN\s+"?(\w+)"?\s+ON\s+(.+?)(?:\s+WHERE|\s+GROUP\s+BY|\s+ORDER\s+BY|$)/i,
+    );
+
+    const orderMatch = sql.match(/ORDER\s+BY\s+(.+?)$/i);
+
+    let items: any[] =
+      table === "projects" ? [...this.projects] : [...this.icons];
+
+    // Apply WHERE
+    if (whereClause) {
+      items = items.filter((item) =>
+        this.matchesWhere(whereClause, item, params),
+      );
+    }
+
+    // Handle JOIN
+    let results: any[] = [];
+    if (joinMatch) {
+      const joinTable = joinMatch[1];
+      const joinItems =
+        joinTable === "icons" ? [...this.icons] : [...this.projects];
+      const joinColExpr = joinMatch[2];
+      const joinParts = joinColExpr.match(
+        /"?\w+"?\."?(\w+)"?\s*=\s*"?(\w+)"?\."?(\w+)"?/,
+      );
+
+      for (const item of items) {
+        const joined = joinItems.filter((j) => {
+          if (!joinParts) return false;
+          return item[joinParts[1]] === j[joinParts[3]];
+        });
+        const cols = parseColumns(colsExpr);
+        const row: any = {};
+        for (const col of cols) {
+          const alias = extractAlias(col);
+          if (col.toLowerCase().includes("count(")) {
+            row[alias] = joined.length;
+          } else if (col.includes(".")) {
+            const parts = col.match(/"?\w+"?\."?(\w+)"?/);
+            if (parts) {
+              const tableName = col.match(/"?(\w+)"?\./)?.[1];
+              if (tableName === table) {
+                row[alias] = item[parts[1]];
+              } else {
+                row[alias] = joined[0]?.[parts[1]] ?? null;
               }
             }
-          }
-          return { success: true, meta: { duration: 0, changes: 1 } };
-        }
-        return { success: true, meta: { duration: 0 } };
-      },
-      async all() {
-        // Handle LEFT JOIN with COUNT: SELECT p.*, COUNT(i.id) as icon_count FROM projects p LEFT JOIN icons i ON p.id = i.project_id GROUP BY p.id ORDER BY p.updated_at DESC
-        const joinMatch = query.match(/SELECT\s+p\.\*,\s*COUNT\(i\.id\)\s+as\s+icon_count\s+FROM\s+projects\s+p\s+LEFT\s+JOIN\s+icons\s+i\s+ON\s+p\.id\s*=\s*i\.project_id\s+GROUP\s+BY\s+p\.id\s+ORDER\s+BY\s+p\.updated_at\s+DESC/i);
-        if (joinMatch) {
-          const results = self.projects.map((p: any) => {
-            const iconCount = self.icons.filter((i: any) => i.project_id === p.id).length;
-            return { ...p, icon_count: iconCount };
-          });
-          results.sort((a: any, b: any) => (b.updated_at ?? "").localeCompare(a.updated_at ?? ""));
-          return { results, success: true };
-        }
-        const m = query.match(/SELECT\s+(.+?)\s+FROM\s+(\w+)(?:\s+WHERE\s+(.+?))?(?:\s+ORDER\s+BY\s+(.+))?/i);
-        if (!m) return { results: [], success: true };
-        const table = m[2];
-        const where = m[3];
-        let items: any[] = table === "projects" ? [...self.projects] : [...self.icons];
-        if (where) {
-          const w = where.replace(/\?/g, () => JSON.stringify(params.shift()));
-          const projectMatch = w.match(/project_id\s*=\s*(\d+)/);
-          if (projectMatch) {
-            items = items.filter((i: any) => i.project_id === +projectMatch[1]);
-          }
-          const idMatch = w.match(/id\s*=\s*(\d+)/);
-          if (idMatch) {
-            items = items.filter((i: any) => i.id === +idMatch[1]);
+          } else {
+            row[alias] = item[alias];
           }
         }
-        if (m[4]) {
-          items.sort((a: any, b: any) => {
-            const col = m[4].trim().split(/\s+/)[0];
-            return (a[col] ?? "").localeCompare(b[col] ?? "");
-          });
+        results.push(row);
+      }
+    } else {
+      const cols = parseColumns(colsExpr);
+      for (const item of items) {
+        const row: any = {};
+        for (const col of cols) {
+          const alias = extractAlias(col);
+          if (col.includes(".")) {
+            const parts = col.match(/"?\w+"?\."?(\w+)"?/);
+            if (parts) {
+              row[alias] = item[parts[1]];
+            }
+          } else {
+            row[alias] = item[alias];
+          }
         }
-        return { results: items, success: true };
-      },
-      async raw() {
-        const r = await stmt.all();
-        return (r.results ?? []).map((row: any) => Object.values(row)) as any;
-      },
-    };
-    return stmt;
+        results.push(row);
+      }
+    }
+
+    // Apply ORDER BY
+    if (orderMatch) {
+      const orderExpr = orderMatch[1];
+      const desc = orderExpr.toLowerCase().includes("desc");
+      const colMatch = orderExpr.match(/"?\w+"?\."?(\w+)"?/);
+      if (colMatch) {
+        const col = colMatch[1];
+        results.sort((a, b) => {
+          const av = a[col] ?? "";
+          const bv = b[col] ?? "";
+          const cmp = String(av).localeCompare(String(bv));
+          return desc ? -cmp : cmp;
+        });
+      }
+    }
+
+    return results;
   }
 
-  batch(statements: D1PreparedStatement[]): Promise<D1Result[]> {
-    return Promise.all(statements.map((s) => s.run()));
+  private matchesWhere(whereClause: string, item: any, params: any[]): boolean {
+    // "projects"."id" = ?
+    const eqMatch = whereClause.match(/"?\w+"?\."?(\w+)"?\s*=\s*\?/);
+    if (eqMatch) {
+      const col = eqMatch[1];
+      const val = params.shift();
+      return item[col] === val;
+    }
+    // "icons"."id" IN (?, ?, ...)
+    const inMatch = whereClause.match(
+      /"?\w+"?\."?(\w+)"?\s+IN\s+\(([^)]+)\)/,
+    );
+    if (inMatch) {
+      const col = inMatch[1];
+      const count = inMatch[2].split(",").length;
+      const vals = params.splice(0, count);
+      return vals.includes(item[col]);
+    }
+    return true;
   }
 
-  exec(query: string): Promise<D1ExecResult> {
-    return Promise.resolve({ count: 0, duration: 0 });
+  private insert(sql: string, params: any[]): any[] {
+    const match = sql.match(
+      /INSERT\s+INTO\s+"?(\w+)"?\s+\(([^)]+)\)\s+VALUES\s+\(([^)]+)\)(?:\s+RETURNING\s+(.+))?/i,
+    );
+    if (!match) return [];
+    const table = match[1];
+    const cols = match[2]
+      .split(",")
+      .map((c) => c.trim().replace(/"/g, ""));
+    const values = [...params];
+    const obj: any = {};
+    cols.forEach((col, i) => {
+      obj[col] = values[i];
+    });
+
+    if (table === "projects") {
+      obj.id = this.nextProjectId++;
+      obj.created_at = new Date().toISOString();
+      obj.updated_at = new Date().toISOString();
+      this.projects.push(obj);
+      return [obj];
+    }
+    if (table === "icons") {
+      obj.id = this.nextIconId++;
+      obj.created_at = new Date().toISOString();
+      obj.updated_at = new Date().toISOString();
+      this.icons.push(obj);
+      return [obj];
+    }
+    return [];
+  }
+
+  private update(sql: string, params: any[]): any[] {
+    const match = sql.match(
+      /UPDATE\s+"?(\w+)"?\s+SET\s+(.+?)\s+WHERE\s+(.+)$/i,
+    );
+    if (!match) return [];
+    const table = match[1];
+    const setClause = match[2];
+    const whereClause = match[3];
+    const items = table === "projects" ? this.projects : this.icons;
+
+    const idMatch = whereClause.match(/"?\w+"?\."?(\w+)"?\s*=\s*\?/);
+    const id = params.pop();
+    const item = items.find((i) => i[idMatch?.[1] ?? "id"] === id);
+    if (!item) return [];
+
+    const setParts = setClause.split(",").map((s) => s.trim());
+    const vals = [...params];
+    setParts.forEach((part, i) => {
+      const colMatch = part.match(/"?\w+"?\s*=\s*\?/);
+      if (colMatch) {
+        const col =
+          colMatch[0].match(/"?\w+"?/)?.[0].replace(/"/g, "") ?? "";
+        item[col] = vals[i];
+      }
+    });
+    item.updated_at = new Date().toISOString();
+
+    return [{ changes: 1 }];
+  }
+
+  private delete(sql: string, params: any[]): any[] {
+    const match = sql.match(
+      /DELETE\s+FROM\s+"?(\w+)"?\s+WHERE\s+(.+)$/i,
+    );
+    if (!match) return [];
+    const table = match[1];
+    const whereClause = match[2];
+    const items = table === "projects" ? this.projects : this.icons;
+
+    const idMatch = whereClause.match(/"?\w+"?\."?(\w+)"?\s*=\s*\?/);
+    const id = params[0];
+    const idx = items.findIndex((i) => i[idMatch?.[1] ?? "id"] === id);
+    if (idx >= 0) {
+      items.splice(idx, 1);
+      if (table === "projects") {
+        this.icons = this.icons.filter((i) => i.project_id !== id);
+      }
+    }
+    return [{ changes: 1 }];
   }
 }
 
-let mockDb: MockDB | null = null;
+let mockExecutor: MockExecutor | null = null;
 
-export function getDB(platform: any): D1Database {
+function getMockExecutor(): MockExecutor {
+  if (!mockExecutor) {
+    mockExecutor = new MockExecutor();
+  }
+  return mockExecutor;
+}
+
+export type AppDatabase = BaseSQLiteDatabase<"async", any, typeof schema>;
+
+export function getDB(platform: any): AppDatabase {
   if (platform?.env?.DB) {
-    return platform.env.DB as D1Database;
+    return drizzleD1(platform.env.DB as D1Database, {
+      schema,
+    }) as AppDatabase;
   }
-  if (!mockDb) {
-    mockDb = new MockDB();
-  }
-  return mockDb;
+  const executor = getMockExecutor();
+  return drizzleProxy(
+    async (sql, params, method) => {
+      return executor.execute(sql, params, method);
+    },
+    { schema },
+  ) as AppDatabase;
 }
 
-export async function initDB(db: D1Database) {
-  const schema = `
-    CREATE TABLE IF NOT EXISTS projects (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      description TEXT,
-      font_family TEXT NOT NULL DEFAULT 'iconfont',
-      prefix TEXT NOT NULL DEFAULT 'icon-',
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-    CREATE TABLE IF NOT EXISTS icons (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      project_id INTEGER NOT NULL,
-      name TEXT NOT NULL,
-      unicode TEXT,
-      svg_path TEXT NOT NULL,
-      view_box TEXT DEFAULT '0 0 1024 1024',
-      width INTEGER,
-      height INTEGER,
-      content TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
-    );
-    CREATE INDEX IF NOT EXISTS idx_icons_project ON icons(project_id);
-    CREATE INDEX IF NOT EXISTS idx_icons_unicode ON icons(unicode);
-  `;
-  for (const stmt of schema.split(";").filter((s) => s.trim())) {
-    await db.exec(stmt);
-  }
+export async function initDB(_db: AppDatabase) {
+  // Schema is already ensured via drizzle migrations or init above
 }
