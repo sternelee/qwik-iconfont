@@ -11,7 +11,7 @@ export const onGet: RequestHandler = async ({
   error,
 }) => {
   const db = getDB(platform);
-  await initDB(db);
+  await initDB(db, platform);
   const id = parseInt(params.id, 10);
 
   const result = await db

@@ -1,4 +1,5 @@
 {
+  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "iconfont",
   "main": "./dist/_worker.js",
   "compatibility_date": "2025-01-01",
@@ -15,7 +16,8 @@
       "binding": "DB",
       "database_name": "iconfont-db",
       "database_id": "local",
-    },
+      "migrations_dir": "drizzle"
+    }
   ],
   "r2_buckets": [
     {

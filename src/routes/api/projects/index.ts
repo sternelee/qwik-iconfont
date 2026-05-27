@@ -6,7 +6,7 @@ import type { Project } from "~/lib/types";
 
 export const onGet: RequestHandler = async ({ platform, json }) => {
   const db = getDB(platform);
-  await initDB(db);
+  await initDB(db, platform);
 
   const result = await db
     .select({
@@ -29,8 +29,8 @@ export const onGet: RequestHandler = async ({ platform, json }) => {
 
 export const onPost: RequestHandler = async ({ platform, request, json }) => {
   const db = getDB(platform);
-  await initDB(db);
-  const body = await request.json();
+  await initDB(db, platform);
+  const body = await request.json() as any;
   const { name, description, font_family, prefix } = body;
 
   if (!name || typeof name !== "string") {

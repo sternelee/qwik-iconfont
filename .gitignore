@@ -37,6 +37,9 @@ lerna-debug.log*
 *.sln
 *.sw?
 
+# Wrangler
+.wrangler
+
 # Yarn
 .yarn/*
 !.yarn/releases

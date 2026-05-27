@@ -7,7 +7,7 @@ import type { Icon } from "~/lib/types";
 
 export const onGet: RequestHandler = async ({ params, platform, json }) => {
   const db = getDB(platform);
-  await initDB(db);
+  await initDB(db, platform);
   const id = parseInt(params.id, 10);
 
   const result = await db.select().from(icons).where(eq(icons.id, id));
@@ -28,9 +28,9 @@ export const onPut: RequestHandler = async ({
   json,
 }) => {
   const db = getDB(platform);
-  await initDB(db);
+  await initDB(db, platform);
   const id = parseInt(params.id, 10);
-  const body = await request.json();
+  const body = await request.json() as any;
   const { name, unicode, view_box, content } = body;
 
   const result = await db.select().from(icons).where(eq(icons.id, id));
@@ -74,7 +74,7 @@ export const onPut: RequestHandler = async ({
 
 export const onDelete: RequestHandler = async ({ params, platform, json }) => {
   const db = getDB(platform);
-  await initDB(db);
+  await initDB(db, platform);
   const bucket = getBucket(platform);
   const id = parseInt(params.id, 10);
 

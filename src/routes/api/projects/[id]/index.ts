@@ -7,7 +7,7 @@ import type { Project, Icon } from "~/lib/types";
 
 export const onGet: RequestHandler = async ({ params, platform, json }) => {
   const db = getDB(platform);
-  await initDB(db);
+  await initDB(db, platform);
   const id = parseInt(params.id, 10);
 
   const projectResult = await db
@@ -42,9 +42,9 @@ export const onPut: RequestHandler = async ({
   json,
 }) => {
   const db = getDB(platform);
-  await initDB(db);
+  await initDB(db, platform);
   const id = parseInt(params.id, 10);
-  const body = await request.json();
+  const body = await request.json() as any;
   const { name, description, font_family, prefix } = body;
 
   const existing = await db.select().from(projects).where(eq(projects.id, id));
@@ -69,7 +69,7 @@ export const onPut: RequestHandler = async ({
 
 export const onDelete: RequestHandler = async ({ params, platform, json }) => {
   const db = getDB(platform);
-  await initDB(db);
+  await initDB(db, platform);
   const bucket = getBucket(platform);
   const id = parseInt(params.id, 10);
 

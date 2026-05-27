@@ -16,7 +16,7 @@ import { HighlightText } from "~/components/highlight-text/highlight-text";
 export const useProjects = routeLoader$(async ({ platform }) => {
   const { getDB, initDB } = await import("~/lib/db");
   const db = getDB(platform);
-  await initDB(db);
+  await initDB(db, platform);
   const { projects, icons } = await import("~/lib/schema");
   const { eq, desc, count } = await import("drizzle-orm");
 
@@ -42,7 +42,7 @@ export const useProjects = routeLoader$(async ({ platform }) => {
 export const useCreateProject = routeAction$(async (data, { platform }) => {
   const { getDB, initDB } = await import("~/lib/db");
   const db = getDB(platform);
-  await initDB(db);
+  await initDB(db, platform);
   const { projects } = await import("~/lib/schema");
 
   const result = await db
@@ -62,7 +62,7 @@ export const useDeleteProject = routeAction$(async (data, { platform }) => {
   const { getDB, initDB } = await import("~/lib/db");
   const { getBucket } = await import("~/lib/storage");
   const db = getDB(platform);
-  await initDB(db);
+  await initDB(db, platform);
   const { icons } = await import("~/lib/schema");
   const { eq } = await import("drizzle-orm");
   const bucket = getBucket(platform);

@@ -3,33 +3,6 @@ import { drizzle as drizzleProxy } from "drizzle-orm/sqlite-proxy";
 import * as schema from "./schema";
 import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 
-// D1Database interface matching Cloudflare D1
-interface D1Database {
-  prepare(query: string): D1PreparedStatement;
-  batch(statements: D1PreparedStatement[]): Promise<D1Result[]>;
-  exec(query: string): Promise<D1ExecResult>;
-}
-
-interface D1PreparedStatement {
-  bind(...values: unknown[]): D1PreparedStatement;
-  first<T = unknown>(): Promise<T | null>;
-  run<T = unknown>(): Promise<D1Result<T>>;
-  all<T = unknown>(): Promise<D1Result<T>>;
-  raw<T = unknown>(): Promise<T[]>;
-}
-
-interface D1Result<T = unknown> {
-  results?: T[];
-  success: boolean;
-  meta?: { duration: number; changes?: number; last_row_id?: number };
-  error?: string;
-}
-
-interface D1ExecResult {
-  count: number;
-  duration: number;
-}
-
 function unquote(s: string): string {
   return s.replace(/^"|"$/g, "").replace(/"/g, "");
 }
@@ -55,9 +28,34 @@ function parseColumns(selectPart: string): string[] {
 function extractAlias(colExpr: string): string {
   const asMatch = colExpr.match(/as\s+"?([^"]+)"?$/i);
   if (asMatch) return asMatch[1];
+  // Handle "table"."column" → return "column"
+  const tableColMatch = colExpr.match(/"?\w+"?\."?([^"]+)"?$/);
+  if (tableColMatch) return tableColMatch[1];
+  // Handle single "column"
   const quoteMatch = colExpr.match(/"([^"]+)"/);
   if (quoteMatch) return quoteMatch[1];
   return colExpr.trim();
+}
+
+/** Extract ordered column aliases from SELECT or RETURNING clause */
+function extractResultColumns(sql: string): string[] {
+  const lower = sql.toLowerCase();
+  let colsPart: string | null = null;
+
+  // SELECT col1, col2 FROM ...
+  const selectMatch = sql.match(/SELECT\s+(.+?)\s+FROM\s/i);
+  if (selectMatch) {
+    colsPart = selectMatch[1];
+  }
+
+  // INSERT ... RETURNING col1, col2
+  const returningMatch = sql.match(/RETURNING\s+(.+)$/i);
+  if (returningMatch) {
+    colsPart = returningMatch[1];
+  }
+
+  if (!colsPart) return [];
+  return parseColumns(colsPart).map(extractAlias);
 }
 
 class MockExecutor {
@@ -69,24 +67,36 @@ class MockExecutor {
   async execute(
     sql: string,
     params: any[],
-    _method: string,
+    method: string,
   ): Promise<{ rows: any[] }> {
     const lower = sql.trim().toLowerCase();
+    let results: any[] = [];
 
     if (lower.startsWith("select")) {
-      return { rows: this.select(sql, [...params]) };
-    }
-    if (lower.startsWith("insert")) {
-      return { rows: this.insert(sql, [...params]) };
-    }
-    if (lower.startsWith("update")) {
-      return { rows: this.update(sql, [...params]) };
-    }
-    if (lower.startsWith("delete")) {
-      return { rows: this.delete(sql, [...params]) };
+      results = this.select(sql, [...params]);
+    } else if (lower.startsWith("insert")) {
+      results = this.insert(sql, [...params]);
+    } else if (lower.startsWith("update")) {
+      results = this.update(sql, [...params]);
+    } else if (lower.startsWith("delete")) {
+      results = this.delete(sql, [...params]);
     }
 
-    return { rows: [] };
+    // Drizzle ORM sqlite-proxy expects array-of-arrays for "all"/"get"/"values"
+    if (method === "all" || method === "get" || method === "values") {
+      const columns = extractResultColumns(sql);
+      if (columns.length > 0) {
+        const arrayResults = results.map((row) =>
+          columns.map((col) => (row[col] !== undefined ? row[col] : null)),
+        );
+        if (method === "get") {
+          return { rows: arrayResults[0] ?? [] };
+        }
+        return { rows: arrayResults };
+      }
+    }
+
+    return { rows: results };
   }
 
   private select(sql: string, params: any[]): any[] {
@@ -222,27 +232,64 @@ class MockExecutor {
     const cols = match[2]
       .split(",")
       .map((c) => c.trim().replace(/"/g, ""));
-    const values = [...params];
+    // Parse VALUES expressions: handle "?" as param placeholder, literals as-is
+    const rawValues = this.splitValues(match[3]);
+    const paramQueue = [...params];
     const obj: any = {};
     cols.forEach((col, i) => {
-      obj[col] = values[i];
+      const valExpr = rawValues[i]?.trim().toLowerCase();
+      if (valExpr === "?") {
+        obj[col] = paramQueue.shift();
+      } else if (valExpr === "null") {
+        obj[col] = null;
+      } else if (valExpr === "current_timestamp") {
+        obj[col] = new Date().toISOString();
+      } else if (valExpr === "true") {
+        obj[col] = true;
+      } else if (valExpr === "false") {
+        obj[col] = false;
+      } else if (valExpr && !isNaN(Number(valExpr))) {
+        obj[col] = Number(valExpr);
+      } else if (valExpr?.startsWith("'") && valExpr?.endsWith("'")) {
+        obj[col] = valExpr.slice(1, -1);
+      } else {
+        obj[col] = rawValues[i]?.trim() ?? null;
+      }
     });
 
     if (table === "projects") {
-      obj.id = this.nextProjectId++;
-      obj.created_at = new Date().toISOString();
-      obj.updated_at = new Date().toISOString();
+      if (obj.id == null) obj.id = this.nextProjectId++;
+      if (!obj.created_at) obj.created_at = new Date().toISOString();
+      if (!obj.updated_at) obj.updated_at = new Date().toISOString();
       this.projects.push(obj);
       return [obj];
     }
     if (table === "icons") {
-      obj.id = this.nextIconId++;
-      obj.created_at = new Date().toISOString();
-      obj.updated_at = new Date().toISOString();
+      if (obj.id == null) obj.id = this.nextIconId++;
+      if (!obj.created_at) obj.created_at = new Date().toISOString();
+      if (!obj.updated_at) obj.updated_at = new Date().toISOString();
       this.icons.push(obj);
       return [obj];
     }
     return [];
+  }
+
+  private splitValues(valuesExpr: string): string[] {
+    const vals: string[] = [];
+    let depth = 0;
+    let current = "";
+    for (const char of valuesExpr) {
+      if (char === "(") depth++;
+      else if (char === ")") depth--;
+      else if (char === "," && depth === 0) {
+        vals.push(current.trim());
+        current = "";
+        continue;
+      }
+      current += char;
+    }
+    if (current.trim()) vals.push(current.trim());
+    return vals;
   }
 
   private update(sql: string, params: any[]): any[] {
@@ -310,7 +357,7 @@ export type AppDatabase = BaseSQLiteDatabase<"async", any, typeof schema>;
 
 export function getDB(platform: any): AppDatabase {
   if (platform?.env?.DB) {
-    return drizzleD1(platform.env.DB as D1Database, {
+    return drizzleD1(platform.env.DB, {
       schema,
     }) as AppDatabase;
   }
@@ -323,6 +370,37 @@ export function getDB(platform: any): AppDatabase {
   ) as AppDatabase;
 }
 
-export async function initDB(_db: AppDatabase) {
-  // Schema is already ensured via drizzle migrations or init above
+export async function initDB(_db: AppDatabase, platform?: any) {
+  // Auto-create tables on D1 as a fallback when migrations haven't been applied
+  if (platform?.env?.DB) {
+    const d1 = platform.env.DB;
+    try {
+      await d1.exec(
+        `CREATE TABLE IF NOT EXISTS projects (` +
+          `id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, ` +
+          `name TEXT NOT NULL, ` +
+          `description TEXT, ` +
+          `font_family TEXT DEFAULT 'iconfont' NOT NULL, ` +
+          `prefix TEXT DEFAULT 'icon-' NOT NULL, ` +
+          `created_at TEXT DEFAULT CURRENT_TIMESTAMP, ` +
+          `updated_at TEXT DEFAULT CURRENT_TIMESTAMP` +
+          `);` +
+          `CREATE TABLE IF NOT EXISTS icons (` +
+          `id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, ` +
+          `project_id INTEGER NOT NULL, ` +
+          `name TEXT NOT NULL, ` +
+          `unicode TEXT, ` +
+          `svg_path TEXT NOT NULL, ` +
+          `view_box TEXT DEFAULT '0 0 1024 1024', ` +
+          `width INTEGER, ` +
+          `height INTEGER, ` +
+          `content TEXT, ` +
+          `created_at TEXT DEFAULT CURRENT_TIMESTAMP, ` +
+          `updated_at TEXT DEFAULT CURRENT_TIMESTAMP` +
+          `);`,
+      );
+    } catch {
+      // Tables may already exist or migrations have been applied; ignore errors
+    }
+  }
 }

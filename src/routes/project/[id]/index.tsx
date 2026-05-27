@@ -29,7 +29,7 @@ import { HighlightText } from "~/components/highlight-text/highlight-text";
 export const useProject = routeLoader$(async ({ params, platform }) => {
   const { getDB, initDB } = await import("~/lib/db");
   const db = getDB(platform);
-  await initDB(db);
+  await initDB(db, platform);
   const { projects, icons } = await import("~/lib/schema");
   const { eq } = await import("drizzle-orm");
   const id = parseInt(params.id, 10);
@@ -54,7 +54,7 @@ export const useDeleteIcon = routeAction$(async (data, { platform }) => {
   const { getDB, initDB } = await import("~/lib/db");
   const { getBucket } = await import("~/lib/storage");
   const db = getDB(platform);
-  await initDB(db);
+  await initDB(db, platform);
   const { icons } = await import("~/lib/schema");
   const { eq } = await import("drizzle-orm");
   const bucket = getBucket(platform);
@@ -75,7 +75,7 @@ export const useDeleteIcon = routeAction$(async (data, { platform }) => {
 export const useUpdateProject = routeAction$(async (data, { platform }) => {
   const { getDB, initDB } = await import("~/lib/db");
   const db = getDB(platform);
-  await initDB(db);
+  await initDB(db, platform);
   const { projects } = await import("~/lib/schema");
   const { eq } = await import("drizzle-orm");
   const id = parseInt(data.id as string, 10);
@@ -98,7 +98,7 @@ export const useUpdateIcon = routeAction$(async (data, { platform }) => {
   const { getDB, initDB } = await import("~/lib/db");
   const { uploadSVG } = await import("~/lib/storage");
   const db = getDB(platform);
-  await initDB(db);
+  await initDB(db, platform);
   const { icons } = await import("~/lib/schema");
   const { eq } = await import("drizzle-orm");
   const id = parseInt(data.id as string, 10);
@@ -136,7 +136,7 @@ export const useUpdateIcon = routeAction$(async (data, { platform }) => {
 export const useBatchRenameIcons = routeAction$(async (data, { platform }) => {
   const { getDB, initDB } = await import("~/lib/db");
   const db = getDB(platform);
-  await initDB(db);
+  await initDB(db, platform);
   const { icons } = await import("~/lib/schema");
   const { eq, inArray } = await import("drizzle-orm");
 
@@ -383,8 +383,8 @@ export default component$(() => {
         body: formData,
       });
       if (res.ok) {
-        const result = await res.json();
-        return result.icon as Icon;
+        const result = await res.json() as { icon: Icon };
+        return result.icon;
       }
       return null;
     };

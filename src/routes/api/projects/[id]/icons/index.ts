@@ -7,7 +7,7 @@ import type { Icon } from "~/lib/types";
 
 export const onGet: RequestHandler = async ({ params, platform, json }) => {
   const db = getDB(platform);
-  await initDB(db);
+  await initDB(db, platform);
   const projectId = parseInt(params.id, 10);
 
   const result = await db
@@ -26,7 +26,7 @@ export const onPost: RequestHandler = async ({
   json,
 }) => {
   const db = getDB(platform);
-  await initDB(db);
+  await initDB(db, platform);
   const projectId = parseInt(params.id, 10);
 
   const formData = await request.formData();
