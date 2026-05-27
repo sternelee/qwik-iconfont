@@ -974,7 +974,7 @@ ${classes}`;
           <div class="card bg-base-100 shadow">
             <div class="card-body items-center py-12 text-center">
               <svg
-                class="mb-3 text-gray-300"
+                class="mb-3 animate-empty-float text-gray-300"
                 xmlns="http://www.w3.org/2000/svg"
                 width="48"
                 height="48"
@@ -1006,21 +1006,22 @@ ${classes}`;
                 <SkeletonIconCard />
               </>
             )}
-            {displayList.map((icon) => (
+            {displayList.map((icon, idx) => (
               <div
                 key={icon.id}
-                class={`card bg-base-100 group shadow transition-all hover:shadow-lg ${selectedIds.ids.has(icon.id) ? "ring-primary bg-primary/5 ring-2" : ""}`}
+                class={`card bg-base-100 group shadow card-hover-lift hover:shadow-lg animate-icon-pop icon-selected ${selectedIds.ids.has(icon.id) ? "ring-primary bg-primary/5 ring-2" : ""}`}
+                style={`animation-delay: ${(idx % 12) * 0.02}s`}
               >
                 <div class="card-body relative items-center p-3 text-center">
                   {/* Selection checkbox */}
                   <button
-                    class={`absolute top-2 left-2 flex h-5 w-5 items-center justify-center rounded border transition-colors ${selectedIds.ids.has(icon.id) ? "bg-primary border-primary" : "border-base-300 bg-base-100 hover:border-primary"}`}
+                    class={`absolute top-2 left-2 flex h-5 w-5 items-center justify-center rounded border checkbox-smooth ${selectedIds.ids.has(icon.id) ? "bg-primary border-primary" : "border-base-300 bg-base-100 hover:border-primary"}`}
                     onClick$={() => toggleSelect(icon.id)}
                     title={selectedIds.ids.has(icon.id) ? "取消选择" : "选择"}
                   >
                     {selectedIds.ids.has(icon.id) && (
                       <svg
-                        class="h-3.5 w-3.5 text-white"
+                        class="h-3.5 w-3.5 animate-check-pop text-white"
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
                         fill="none"
@@ -1164,7 +1165,7 @@ ${classes}`;
       {/* Settings Modal */}
       {showSettings.value && (
         <div class="modal modal-open">
-          <div class="modal-box max-w-lg">
+          <div class="modal-box max-w-lg animate-modal-box">
             <h3 class="mb-4 text-lg font-bold">项目设置</h3>
             <form
               onSubmit$={async (ev: any) => {
@@ -1251,7 +1252,7 @@ ${classes}`;
             </form>
           </div>
           <div
-            class="modal-backdrop"
+            class="modal-backdrop animate-modal-backdrop"
             onClick$={() => (showSettings.value = false)}
           />
         </div>
@@ -1260,7 +1261,7 @@ ${classes}`;
       {/* Preview Icon Modal */}
       {showPreview.value && (
         <div class="modal modal-open">
-          <div class="modal-box max-w-sm text-center">
+          <div class="modal-box max-w-sm text-center animate-modal-box">
             <h3 class="mb-4 text-lg font-bold">{previewIcon.name}</h3>
             <div class="bg-base-200 mx-auto mb-4 flex h-32 w-32 items-center justify-center rounded-lg p-4">
               {previewIcon.content && (
@@ -1310,7 +1311,7 @@ ${classes}`;
             </div>
           </div>
           <div
-            class="modal-backdrop"
+            class="modal-backdrop animate-modal-backdrop"
             onClick$={() => (showPreview.value = false)}
           />
         </div>
@@ -1319,7 +1320,7 @@ ${classes}`;
       {/* Edit Icon Modal */}
       {showEdit.value && (
         <div class="modal modal-open">
-          <div class="modal-box max-w-lg">
+          <div class="modal-box max-w-lg animate-modal-box">
             <h3 class="mb-4 text-lg font-bold">编辑图标</h3>
             <div class="flex gap-4">
               <div class="flex flex-shrink-0 flex-col items-center gap-2">
@@ -1476,7 +1477,7 @@ ${classes}`;
             </div>
           </div>
           <div
-            class="modal-backdrop"
+            class="modal-backdrop animate-modal-backdrop"
             onClick$={() => (showEdit.value = false)}
           />
         </div>
@@ -1485,7 +1486,7 @@ ${classes}`;
       {/* Code Generation Modal */}
       {showCode.value && (
         <div class="modal modal-open">
-          <div class="modal-box max-w-3xl">
+          <div class="modal-box max-w-3xl animate-modal-box">
             <h3 class="mb-4 text-lg font-bold">生成代码</h3>
             <div class="tabs tabs-boxed mb-4">
               <button
@@ -1643,7 +1644,7 @@ ${classes}`;
             </div>
           </div>
           <div
-            class="modal-backdrop"
+            class="modal-backdrop animate-modal-backdrop"
             onClick$={() => (showCode.value = false)}
           />
         </div>
@@ -1652,7 +1653,7 @@ ${classes}`;
       {/* Batch Rename Modal */}
       {showBatchRename.value && (
         <div class="modal modal-open">
-          <div class="modal-box max-w-lg">
+          <div class="modal-box max-w-lg animate-modal-box">
             <h3 class="mb-4 text-lg font-bold">
               批量重命名 ({selectedIds.ids.size} 个图标)
             </h3>
@@ -1807,7 +1808,7 @@ ${classes}`;
             </form>
           </div>
           <div
-            class="modal-backdrop"
+            class="modal-backdrop animate-modal-backdrop"
             onClick$={() => (showBatchRename.value = false)}
           />
         </div>
@@ -1816,7 +1817,7 @@ ${classes}`;
       {/* Confirm Delete Icon Modal */}
       {confirmDeleteIcon.show && (
         <div class="modal modal-open">
-          <div class="modal-box max-w-sm">
+          <div class="modal-box max-w-sm animate-modal-box">
             <h3 class="mb-2 text-lg font-bold">确认删除</h3>
             <p class="mb-4 text-gray-500">
               确定要删除图标 "{confirmDeleteIcon.iconName}" 吗？此操作不可恢复。
@@ -1837,7 +1838,7 @@ ${classes}`;
             </div>
           </div>
           <div
-            class="modal-backdrop"
+            class="modal-backdrop animate-modal-backdrop"
             onClick$={() => {
               confirmDeleteIcon.show = false;
               confirmDeleteIcon.iconId = 0;
@@ -1849,7 +1850,7 @@ ${classes}`;
       {/* Confirm Batch Delete Modal */}
       {confirmBatchDelete.show && (
         <div class="modal modal-open">
-          <div class="modal-box max-w-sm">
+          <div class="modal-box max-w-sm animate-modal-box">
             <h3 class="mb-2 text-lg font-bold">确认批量删除</h3>
             <p class="mb-4 text-gray-500">
               确定要删除选中的 {confirmBatchDelete.count}{" "}
@@ -1871,7 +1872,7 @@ ${classes}`;
             </div>
           </div>
           <div
-            class="modal-backdrop"
+            class="modal-backdrop animate-modal-backdrop"
             onClick$={() => {
               confirmBatchDelete.show = false;
               confirmBatchDelete.count = 0;
@@ -1883,7 +1884,7 @@ ${classes}`;
       {/* Keyboard Shortcuts Help */}
       {showShortcuts.value && (
         <div class="modal modal-open">
-          <div class="modal-box max-w-md">
+          <div class="modal-box max-w-md animate-modal-box">
             <h3 class="mb-4 text-lg font-bold">键盘快捷键</h3>
             <div class="space-y-2 text-sm">
               <div class="border-base-200 flex items-center justify-between border-b py-1">
@@ -1920,7 +1921,7 @@ ${classes}`;
             </div>
           </div>
           <div
-            class="modal-backdrop"
+            class="modal-backdrop animate-modal-backdrop"
             onClick$={() => (showShortcuts.value = false)}
           />
         </div>

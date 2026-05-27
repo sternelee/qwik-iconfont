@@ -71,7 +71,7 @@ export const ToastContainer = component$((props: { toasts: ToastItem[] }) => {
       {props.toasts.map((toast) => (
         <div
           key={toast.id}
-          class={`alert ${alertClass[toast.type]} pointer-events-auto min-w-[240px] shadow-lg transition-all duration-300`}
+          class={`alert ${alertClass[toast.type]} pointer-events-auto min-w-[240px] shadow-lg animate-toast-in`}
         >
           <div class="flex items-center gap-2">
             {iconMap[toast.type]}

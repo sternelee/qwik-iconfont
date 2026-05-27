@@ -32,3 +32,164 @@ body {
     "Segoe UI Symbol",
     "Noto Color Emoji";
 }
+
+/* ===== UI Animation Keyframes ===== */
+
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes toast-slide-out {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%) scale(0.95);
+  }
+}
+
+@keyframes modal-box-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modal-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes empty-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes check-pop {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes card-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes icon-card-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ===== Animation Utilities ===== */
+
+.animate-toast-in {
+  animation: toast-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-toast-out {
+  animation: toast-slide-out 0.2s ease-in forwards;
+}
+
+.animate-modal-box {
+  animation: modal-box-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-modal-backdrop {
+  animation: modal-backdrop-in 0.15s ease-out forwards;
+}
+
+.animate-empty-float {
+  animation: empty-float 3s ease-in-out infinite;
+}
+
+.animate-check-pop {
+  animation: check-pop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-card-fade-in {
+  animation: card-fade-in 0.3s ease-out forwards;
+}
+
+.animate-icon-pop {
+  animation: icon-card-pop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Stagger delays for grid items */
+.stagger-1 { animation-delay: 0.03s; }
+.stagger-2 { animation-delay: 0.06s; }
+.stagger-3 { animation-delay: 0.09s; }
+.stagger-4 { animation-delay: 0.12s; }
+.stagger-5 { animation-delay: 0.15s; }
+.stagger-6 { animation-delay: 0.18s; }
+.stagger-7 { animation-delay: 0.21s; }
+.stagger-8 { animation-delay: 0.24s; }
+
+/* Modal backdrop opacity transition */
+.modal-backdrop {
+  transition: opacity 0.15s ease-out;
+}
+
+/* Smooth card hover lift */
+.card-hover-lift {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+}
+.card-hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+/* Icon card selection glow */
+.icon-selected {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Checkbox smooth transition */
+.checkbox-smooth {
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+/* Button press feedback */
+.btn-press:active {
+  transform: scale(0.97);
+}

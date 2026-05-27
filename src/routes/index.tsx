@@ -217,7 +217,7 @@ export default component$(() => {
         </div>
         <div class="flex-none gap-2">
           <button
-            class="btn btn-primary btn-sm gap-1"
+            class="btn btn-primary btn-sm gap-1 btn-press"
             onClick$={() => (showModal.value = true)}
           >
             <svg
@@ -296,7 +296,7 @@ export default component$(() => {
           <div class="card bg-base-100 shadow">
             <div class="card-body items-center py-16 text-center">
               <svg
-                class="mb-4 text-gray-300"
+                class="mb-4 animate-empty-float text-gray-300"
                 xmlns="http://www.w3.org/2000/svg"
                 width="64"
                 height="64"
@@ -351,10 +351,10 @@ export default component$(() => {
                 <SkeletonProjectCard />
               </>
             )}
-            {filtered().map((project) => (
+            {filtered().map((project, idx) => (
               <div
                 key={project.id}
-                class={`card bg-base-100 group shadow transition-shadow hover:shadow-lg ${deleting.id === project.id ? "pointer-events-none opacity-50" : ""}`}
+                class={`card bg-base-100 group shadow card-hover-lift hover:shadow-lg animate-card-fade-in stagger-${(idx % 8) + 1} ${deleting.id === project.id ? "pointer-events-none opacity-50" : ""}`}
               >
                 <div
                   class="card-body cursor-pointer"
@@ -414,7 +414,7 @@ export default component$(() => {
       {/* Create Project Modal */}
       {showModal.value && (
         <div class="modal modal-open">
-          <div class="modal-box max-w-lg">
+          <div class="modal-box max-w-lg animate-modal-box">
             <h3 class="mb-4 text-lg font-bold">新建项目</h3>
             <form
               onSubmit$={async (ev: any) => {
@@ -503,7 +503,7 @@ export default component$(() => {
             </form>
           </div>
           <div
-            class="modal-backdrop"
+            class="modal-backdrop animate-modal-backdrop"
             onClick$={() => (showModal.value = false)}
           />
         </div>
@@ -512,7 +512,7 @@ export default component$(() => {
       {/* Confirm Delete Modal */}
       {confirmState.show && (
         <div class="modal modal-open">
-          <div class="modal-box max-w-sm">
+          <div class="modal-box max-w-sm animate-modal-box">
             <h3 class="mb-2 text-lg font-bold">确认删除</h3>
             <p class="mb-4 text-gray-500">
               确定要删除项目 "{confirmState.project?.name}"
@@ -534,7 +534,7 @@ export default component$(() => {
             </div>
           </div>
           <div
-            class="modal-backdrop"
+            class="modal-backdrop animate-modal-backdrop"
             onClick$={() => {
               confirmState.show = false;
               confirmState.project = null;
@@ -546,7 +546,7 @@ export default component$(() => {
       {/* Keyboard Shortcuts Help */}
       {showShortcuts.value && (
         <div class="modal modal-open">
-          <div class="modal-box max-w-md">
+          <div class="modal-box max-w-md animate-modal-box">
             <h3 class="mb-4 text-lg font-bold">键盘快捷键</h3>
             <div class="space-y-2 text-sm">
               <div class="border-base-200 flex items-center justify-between border-b py-1">
@@ -572,7 +572,7 @@ export default component$(() => {
             </div>
           </div>
           <div
-            class="modal-backdrop"
+            class="modal-backdrop animate-modal-backdrop"
             onClick$={() => (showShortcuts.value = false)}
           />
         </div>
