@@ -1,11 +1,23 @@
 import type { RequestHandler } from "@builder.io/qwik-city";
 import { getDB, initDB } from "~/lib/db";
 import { getBucket } from "~/lib/storage";
+import { getSessionFromRequest } from "~/lib/session";
 import { projects, icons } from "~/lib/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import type { Project, Icon } from "~/lib/types";
 
-export const onGet: RequestHandler = async ({ params, platform, json }) => {
+export const onGet: RequestHandler = async ({
+  params,
+  platform,
+  request,
+  json,
+}) => {
+  const session = await getSessionFromRequest(platform, request);
+  if (!session) {
+    json(401, { error: "Not authenticated" });
+    return;
+  }
+
   const db = getDB(platform);
   await initDB(db, platform);
   const id = parseInt(params.id, 10);
@@ -13,7 +25,7 @@ export const onGet: RequestHandler = async ({ params, platform, json }) => {
   const projectResult = await db
     .select()
     .from(projects)
-    .where(eq(projects.id, id));
+    .where(and(eq(projects.id, id), eq(projects.user_id, session.user.id)));
   const project = projectResult[0] as Project | undefined;
 
   if (!project) {
@@ -41,13 +53,22 @@ export const onPut: RequestHandler = async ({
   request,
   json,
 }) => {
+  const session = await getSessionFromRequest(platform, request);
+  if (!session) {
+    json(401, { error: "Not authenticated" });
+    return;
+  }
+
   const db = getDB(platform);
   await initDB(db, platform);
   const id = parseInt(params.id, 10);
-  const body = await request.json() as any;
+  const body = (await request.json()) as any;
   const { name, description, font_family, prefix } = body;
 
-  const existing = await db.select().from(projects).where(eq(projects.id, id));
+  const existing = await db
+    .select()
+    .from(projects)
+    .where(and(eq(projects.id, id), eq(projects.user_id, session.user.id)));
   if (!existing[0]) {
     json(404, { error: "Project not found" });
     return;
@@ -67,11 +88,32 @@ export const onPut: RequestHandler = async ({
   json(200, { success: true });
 };
 
-export const onDelete: RequestHandler = async ({ params, platform, json }) => {
+export const onDelete: RequestHandler = async ({
+  params,
+  platform,
+  request,
+  json,
+}) => {
+  const session = await getSessionFromRequest(platform, request);
+  if (!session) {
+    json(401, { error: "Not authenticated" });
+    return;
+  }
+
   const db = getDB(platform);
   await initDB(db, platform);
   const bucket = getBucket(platform);
   const id = parseInt(params.id, 10);
+
+  // Verify ownership
+  const existing = await db
+    .select()
+    .from(projects)
+    .where(and(eq(projects.id, id), eq(projects.user_id, session.user.id)));
+  if (!existing[0]) {
+    json(404, { error: "Project not found" });
+    return;
+  }
 
   const iconsResult = await db
     .select({ svg_path: icons.svg_path })

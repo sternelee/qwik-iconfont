@@ -12,78 +12,126 @@ import type { Project } from "~/lib/types";
 import { ToastContainer, type ToastItem } from "~/components/toast/toast";
 import { SkeletonProjectCard } from "~/components/skeleton/skeleton";
 import { HighlightText } from "~/components/highlight-text/highlight-text";
+import { getSessionFromRequest } from "~/lib/session";
+import {
+  getLocalProjects,
+  createLocalProject,
+  deleteLocalProject,
+  type LocalProject,
+} from "~/lib/local-storage";
 
-export const useProjects = routeLoader$(async ({ platform }) => {
-  const { getDB, initDB } = await import("~/lib/db");
-  const db = getDB(platform);
-  await initDB(db, platform);
-  const { projects, icons } = await import("~/lib/schema");
-  const { eq, desc, count } = await import("drizzle-orm");
+type LoadResult =
+  | { mode: "server"; projects: (Project & { icon_count: number })[] }
+  | { mode: "local"; projects: LocalProject[] };
 
-  const result = await db
-    .select({
-      id: projects.id,
-      name: projects.name,
-      description: projects.description,
-      font_family: projects.font_family,
-      prefix: projects.prefix,
-      created_at: projects.created_at,
-      updated_at: projects.updated_at,
-      icon_count: count(icons.id),
-    })
-    .from(projects)
-    .leftJoin(icons, eq(projects.id, icons.project_id))
-    .groupBy(projects.id)
-    .orderBy(desc(projects.updated_at));
+export const useProjects = routeLoader$(
+  async ({ platform, request }): Promise<LoadResult> => {
+    const session = await getSessionFromRequest(platform, request);
 
-  return result as (Project & { icon_count: number })[];
-});
+    if (session) {
+      // Authenticated — load from D1
+      const { getDB, initDB } = await import("~/lib/db");
+      const db = getDB(platform);
+      await initDB(db, platform);
+      const { projects, icons } = await import("~/lib/schema");
+      const { eq, desc, count } = await import("drizzle-orm");
 
-export const useCreateProject = routeAction$(async (data, { platform }) => {
-  const { getDB, initDB } = await import("~/lib/db");
-  const db = getDB(platform);
-  await initDB(db, platform);
-  const { projects } = await import("~/lib/schema");
+      const result = await db
+        .select({
+          id: projects.id,
+          name: projects.name,
+          description: projects.description,
+          font_family: projects.font_family,
+          prefix: projects.prefix,
+          created_at: projects.created_at,
+          updated_at: projects.updated_at,
+          icon_count: count(icons.id),
+        })
+        .from(projects)
+        .leftJoin(icons, eq(projects.id, icons.project_id))
+        .where(eq(projects.user_id, session.user.id))
+        .groupBy(projects.id)
+        .orderBy(desc(projects.updated_at));
 
-  const result = await db
-    .insert(projects)
-    .values({
-      name: data.name as string,
-      description: (data.description as string | undefined) ?? null,
-      font_family: (data.font_family as string | undefined) ?? "iconfont",
-      prefix: (data.prefix as string | undefined) ?? "icon-",
-    })
-    .returning();
+      return {
+        mode: "server",
+        projects: result as (Project & { icon_count: number })[],
+      };
+    }
 
-  return { success: true, id: result[0].id };
-});
+    // Anonymous — return empty, client will load from localStorage
+    return { mode: "local", projects: [] };
+  },
+);
 
-export const useDeleteProject = routeAction$(async (data, { platform }) => {
-  const { getDB, initDB } = await import("~/lib/db");
-  const { getBucket } = await import("~/lib/storage");
-  const db = getDB(platform);
-  await initDB(db, platform);
-  const { icons } = await import("~/lib/schema");
-  const { eq } = await import("drizzle-orm");
-  const bucket = getBucket(platform);
-  const id = parseInt(data.id as string, 10);
+export const useCreateProject = routeAction$(
+  async (data, { platform, request }) => {
+    const session = await getSessionFromRequest(platform, request);
 
-  const iconsResult = await db
-    .select({ svg_path: icons.svg_path })
-    .from(icons)
-    .where(eq(icons.project_id, id));
+    if (!session) {
+      return { success: false, error: "Not authenticated", mode: "local" };
+    }
 
-  for (const icon of iconsResult) {
-    await bucket.delete(icon.svg_path);
-  }
+    const { getDB, initDB } = await import("~/lib/db");
+    const db = getDB(platform);
+    await initDB(db, platform);
+    const { projects } = await import("~/lib/schema");
 
-  const { projects } = await import("~/lib/schema");
-  await db.delete(projects).where(eq(projects.id, id));
-  return { success: true };
-});
+    const result = await db
+      .insert(projects)
+      .values({
+        user_id: session.user.id,
+        name: data.name as string,
+        description: (data.description as string | undefined) ?? null,
+        font_family: (data.font_family as string | undefined) ?? "iconfont",
+        prefix: (data.prefix as string | undefined) ?? "icon-",
+      })
+      .returning();
+
+    return { success: true, id: result[0].id, mode: "server" };
+  },
+);
+
+export const useDeleteProject = routeAction$(
+  async (data, { platform, request }) => {
+    const session = await getSessionFromRequest(platform, request);
+
+    if (!session) {
+      return { success: false, error: "Not authenticated", mode: "local" };
+    }
+
+    const { getDB, initDB } = await import("~/lib/db");
+    const { getBucket } = await import("~/lib/storage");
+    const db = getDB(platform);
+    await initDB(db, platform);
+    const { icons, projects } = await import("~/lib/schema");
+    const { eq, and } = await import("drizzle-orm");
+    const bucket = getBucket(platform);
+    const id = parseInt(data.id as string, 10);
+
+    // Only delete if owned by this user
+    const iconsResult = await db
+      .select({ svg_path: icons.svg_path })
+      .from(icons)
+      .innerJoin(projects, eq(icons.project_id, projects.id))
+      .where(
+        and(eq(icons.project_id, id), eq(projects.user_id, session.user.id)),
+      );
+
+    for (const icon of iconsResult) {
+      await bucket.delete(icon.svg_path);
+    }
+
+    await db
+      .delete(projects)
+      .where(and(eq(projects.id, id), eq(projects.user_id, session.user.id)));
+
+    return { success: true, mode: "server" };
+  },
+);
 
 export default component$(() => {
-  const projects = useProjects();
+  const loaderData = useProjects();
   const createProject = useCreateProject();
   const deleteProject = useDeleteProject();
   const nav = useNavigate();
@@ -93,6 +141,24 @@ export default component$(() => {
   const sortProjects = useSignal<"date" | "name" | "count">("date");
   const deleting = useStore({ id: 0 });
   const showShortcuts = useSignal(false);
+
+  // Local projects state (for anonymous users)
+  const localProjects = useStore<{
+    items: LocalProject[];
+    loaded: false | true;
+  }>({
+    items: [],
+    loaded: false,
+  });
+
+  // Load from localStorage if anonymous
+  // eslint-disable-next-line qwik/no-use-visible-task
+  useVisibleTask$(() => {
+    if (loaderData.value.mode === "local") {
+      localProjects.items = getLocalProjects();
+      localProjects.loaded = true;
+    }
+  });
 
   // Toast state
   const toasts = useStore<{ items: ToastItem[] }>({ items: [] });
@@ -151,19 +217,28 @@ export default component$(() => {
   );
 
   // Confirm dialog state
-  const confirmState = useStore<{ show: boolean; project: Project | null }>({
+  const confirmState = useStore<{ show: boolean; project: any | null }>({
     show: false,
     project: null,
   });
+
   const confirmDelete = $(async () => {
     const project = confirmState.project;
     if (!project) return;
     confirmState.show = false;
     deleting.id = project.id;
-    await deleteProject.submit({ id: String(project.id) });
+
+    if (loaderData.value.mode === "local") {
+      deleteLocalProject(project.id);
+      localProjects.items = getLocalProjects();
+      showToast(`项目 "${project.name}" 已删除`, "success");
+    } else {
+      await deleteProject.submit({ id: String(project.id) });
+      showToast(`项目 "${project.name}" 已删除`, "success");
+      nav("/", { replaceState: true });
+    }
+
     deleting.id = 0;
-    showToast(`项目 "${project.name}" 已删除`, "success");
-    nav("/", { replaceState: true });
   });
 
   // Debounce search
@@ -175,32 +250,79 @@ export default component$(() => {
     return () => clearTimeout(timer);
   });
 
+  // Get active project list based on mode
+  const activeProjects = () => {
+    if (loaderData.value.mode === "local") {
+      return localProjects.loaded ? localProjects.items : [];
+    }
+    return loaderData.value.projects;
+  };
+
   const filtered = () => {
+    const source = activeProjects();
     let list = debouncedQuery.value
-      ? projects.value.filter(
-          (p) =>
+      ? source.filter(
+          (p: any) =>
             p.name.toLowerCase().includes(debouncedQuery.value.toLowerCase()) ||
             (p.description || "")
               .toLowerCase()
               .includes(debouncedQuery.value.toLowerCase()),
         )
-      : [...projects.value];
+      : [...source];
 
     if (sortProjects.value === "name") {
-      list = [...list].sort((a, b) => a.name.localeCompare(b.name));
+      list = [...list].sort((a: any, b: any) => a.name.localeCompare(b.name));
     } else if (sortProjects.value === "count") {
       list = [...list].sort(
-        (a, b) => (b.icon_count || 0) - (a.icon_count || 0),
+        (a: any, b: any) => (b.icon_count || 0) - (a.icon_count || 0),
       );
     }
-    // "date" keeps existing server order (desc updated_at)
     return list;
   };
 
-  const handleDelete = $((project: Project) => {
+  const handleDelete = $((project: any) => {
     confirmState.project = project;
     confirmState.show = true;
   });
+
+  const handleCreate = $(async (ev: any) => {
+    const fd = new FormData(ev.target);
+    const name = fd.get("name") as string;
+    const description = (fd.get("description") as string) || null;
+    const font_family = (fd.get("font_family") as string) || "iconfont";
+    const prefix = (fd.get("prefix") as string) || "icon-";
+
+    if (loaderData.value.mode === "local") {
+      const project = createLocalProject({
+        name,
+        description: description || undefined,
+        font_family,
+        prefix,
+      });
+      localProjects.items = getLocalProjects();
+      showModal.value = false;
+      showToast(`项目 "${name}" 创建成功`, "success");
+      nav(`/project/${project.id}`);
+    } else {
+      const result = await createProject.submit({
+        name,
+        description,
+        font_family,
+        prefix,
+      });
+      showModal.value = false;
+      if (result.value.success && result.value.id) {
+        showToast(`项目 "${name}" 创建成功`, "success");
+        nav(`/project/${result.value.id}`);
+      } else {
+        showToast("项目创建失败", "error");
+        nav("/", { replaceState: true });
+      }
+    }
+  });
+
+  const isLocal = loaderData.value.mode === "local";
+  const projectList = filtered();
 
   return (
     <div class="bg-base-200 min-h-screen">
@@ -227,8 +349,18 @@ export default component$(() => {
           </svg>
           <span class="text-xl font-bold">Iconfont</span>
           <span class="badge badge-sm badge-ghost">开源版</span>
+          {isLocal && (
+            <span class="badge badge-warning badge-sm">本地模式</span>
+          )}
         </div>
         <div class="flex-none gap-2">
+          {isLocal ? (
+            <a href="/login" class="btn btn-ghost btn-sm">
+              登录
+            </a>
+          ) : (
+            <UserMenu />
+          )}
           <button
             class="btn btn-primary btn-sm btn-press gap-1"
             onClick$={() => (showModal.value = true)}
@@ -258,8 +390,11 @@ export default component$(() => {
           <div class="flex items-center gap-3">
             <h1 class="text-2xl font-bold">我的项目</h1>
             <span class="text-base-content/60 text-sm">
-              {projects.value.length} 个项目 ·{" "}
-              {projects.value.reduce((s, p) => s + (p.icon_count || 0), 0)}{" "}
+              {projectList.length} 个项目 ·{" "}
+              {projectList.reduce(
+                (s: number, p: any) => s + (p.icon_count || 0),
+                0,
+              )}{" "}
               个图标
             </span>
           </div>
@@ -323,7 +458,7 @@ export default component$(() => {
           </div>
         </div>
 
-        {filtered().length === 0 ? (
+        {projectList.length === 0 ? (
           <div class="card bg-base-100 border-base-200 border shadow-sm">
             <div class="card-body items-center py-16 text-center">
               <svg
@@ -348,7 +483,9 @@ export default component$(() => {
               <p class="text-base-content/60 mb-4">
                 {debouncedQuery.value
                   ? "尝试其他关键词"
-                  : "创建你的第一个图标库，开始管理和生成 iconfont"}
+                  : isLocal
+                    ? "创建项目开始管理图标（数据保存在浏览器本地）"
+                    : "创建你的第一个图标库，开始管理和生成 iconfont"}
               </p>
               {!debouncedQuery.value && (
                 <button
@@ -376,13 +513,12 @@ export default component$(() => {
           </div>
         ) : (
           <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {/* Skeleton cards shown while creating a project */}
             {createProject.isRunning && (
               <>
                 <SkeletonProjectCard />
               </>
             )}
-            {filtered().map((project, idx) => (
+            {projectList.map((project: any, idx: number) => (
               <div
                 key={project.id}
                 class={`card bg-base-100 border-base-200 group card-hover-lift animate-card-fade-in border shadow-sm hover:shadow-lg stagger-${(idx % 8) + 1} ${deleting.id === project.id ? "pointer-events-none opacity-50" : ""}`}
@@ -453,26 +589,7 @@ export default component$(() => {
                 前缀，后续上传图标后会直接用于代码生成。
               </p>
             </div>
-            <form
-              preventdefault:submit
-              onSubmit$={async (ev: any) => {
-                const fd = new FormData(ev.target);
-                const result = await createProject.submit({
-                  name: fd.get("name"),
-                  description: fd.get("description"),
-                  font_family: fd.get("font_family"),
-                  prefix: fd.get("prefix"),
-                });
-                showModal.value = false;
-                if (result.value.success && result.value.id) {
-                  showToast(`项目 "${fd.get("name")}" 创建成功`, "success");
-                  nav(`/project/${result.value.id}`);
-                } else {
-                  showToast("项目创建失败", "error");
-                  nav("/", { replaceState: true });
-                }
-              }}
-            >
+            <form preventdefault:submit onSubmit$={handleCreate}>
               <div class="grid gap-4 px-6 py-5 md:grid-cols-2">
                 <div class="form-control md:col-span-2">
                   <label class="label justify-start pb-2">
@@ -618,6 +735,64 @@ export default component$(() => {
             onClick$={() => (showShortcuts.value = false)}
           />
         </div>
+      )}
+    </div>
+  );
+});
+
+/**
+ * User menu component — shown when user is authenticated.
+ * Displays user info and logout button.
+ */
+const UserMenu = component$(() => {
+  const showMenu = useSignal(false);
+  const nav = useNavigate();
+
+  const handleSignOut = $(async () => {
+    await fetch("/api/auth/sign-out", { method: "POST" });
+    nav("/");
+  });
+
+  return (
+    <div class="dropdown dropdown-end">
+      <label
+        class="btn btn-ghost btn-sm gap-1"
+        onClick$={() => (showMenu.value = !showMenu.value)}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </label>
+      {showMenu.value && (
+        <ul class="menu dropdown-content bg-base-100 rounded-box z-1 w-40 p-2 shadow">
+          <li>
+            <button onClick$={handleSignOut}>退出登录</button>
+          </li>
+        </ul>
       )}
     </div>
   );

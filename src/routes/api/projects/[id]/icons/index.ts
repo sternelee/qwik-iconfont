@@ -1,14 +1,38 @@
 import type { RequestHandler } from "@builder.io/qwik-city";
 import { getDB, initDB } from "~/lib/db";
 import { uploadSVG } from "~/lib/storage";
-import { icons } from "~/lib/schema";
-import { eq } from "drizzle-orm";
+import { getSessionFromRequest } from "~/lib/session";
+import { icons, projects } from "~/lib/schema";
+import { eq, and } from "drizzle-orm";
 import { resolveSvgViewBox, type Icon } from "~/lib/types";
 
-export const onGet: RequestHandler = async ({ params, platform, json }) => {
+export const onGet: RequestHandler = async ({
+  params,
+  platform,
+  request,
+  json,
+}) => {
+  const session = await getSessionFromRequest(platform, request);
+  if (!session) {
+    json(401, { error: "Not authenticated" });
+    return;
+  }
+
   const db = getDB(platform);
   await initDB(db, platform);
   const projectId = parseInt(params.id, 10);
+
+  // Verify project ownership
+  const projectResult = await db
+    .select()
+    .from(projects)
+    .where(
+      and(eq(projects.id, projectId), eq(projects.user_id, session.user.id)),
+    );
+  if (!projectResult[0]) {
+    json(404, { error: "Project not found" });
+    return;
+  }
 
   const result = await db
     .select()
@@ -25,9 +49,27 @@ export const onPost: RequestHandler = async ({
   request,
   json,
 }) => {
+  const session = await getSessionFromRequest(platform, request);
+  if (!session) {
+    json(401, { error: "Not authenticated" });
+    return;
+  }
+
   const db = getDB(platform);
   await initDB(db, platform);
   const projectId = parseInt(params.id, 10);
+
+  // Verify project ownership
+  const projectResult = await db
+    .select()
+    .from(projects)
+    .where(
+      and(eq(projects.id, projectId), eq(projects.user_id, session.user.id)),
+    );
+  if (!projectResult[0]) {
+    json(404, { error: "Project not found" });
+    return;
+  }
 
   const formData = await request.formData();
   const name = formData.get("name") as string;

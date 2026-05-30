@@ -28,30 +28,54 @@ import { HighlightText } from "~/components/highlight-text/highlight-text";
 import { SvgEditor } from "~/components/svg-editor/svg-editor";
 import { IconDetailPanel } from "~/components/icon-detail/icon-detail";
 import { parseTags, resolveSvgViewBox } from "~/lib/types";
+import { getSessionFromRequest } from "~/lib/session";
+import {
+  getLocalProject,
+  getLocalIcons,
+  createLocalIcon,
+  deleteLocalIcon,
+  updateLocalIcon,
+  type LocalProject,
+  type LocalIcon,
+} from "~/lib/local-storage";
 
-export const useProject = routeLoader$(async ({ params, platform }) => {
-  const { getDB, initDB } = await import("~/lib/db");
-  const db = getDB(platform);
-  await initDB(db, platform);
-  const { projects, icons } = await import("~/lib/schema");
-  const { eq } = await import("drizzle-orm");
-  const id = parseInt(params.id, 10);
+type ProjectLoadResult =
+  | { mode: "server"; project: Project; icons: Icon[] }
+  | { mode: "local"; project: LocalProject | null; icons: LocalIcon[] };
 
-  const projectResult = await db
-    .select()
-    .from(projects)
-    .where(eq(projects.id, id));
-  const project = projectResult[0] as Project | undefined;
-  if (!project) throw new Error("Project not found");
+export const useProject = routeLoader$(
+  async ({ params, platform, request }): Promise<ProjectLoadResult> => {
+    const id = parseInt(params.id, 10);
+    const session = await getSessionFromRequest(platform, request);
 
-  const iconsResult = await db
-    .select()
-    .from(icons)
-    .where(eq(icons.project_id, id))
-    .orderBy(icons.created_at);
+    if (session) {
+      // Authenticated — load from D1
+      const { getDB, initDB } = await import("~/lib/db");
+      const db = getDB(platform);
+      await initDB(db, platform);
+      const { projects, icons } = await import("~/lib/schema");
+      const { eq, and } = await import("drizzle-orm");
 
-  return { project, icons: iconsResult as Icon[] };
-});
+      const projectResult = await db
+        .select()
+        .from(projects)
+        .where(and(eq(projects.id, id), eq(projects.user_id, session.user.id)));
+      const project = projectResult[0] as Project | undefined;
+      if (!project) throw new Error("Project not found");
+
+      const iconsResult = await db
+        .select()
+        .from(icons)
+        .where(eq(icons.project_id, id))
+        .orderBy(icons.created_at);
+
+      return { mode: "server", project, icons: iconsResult as Icon[] };
+    }
+
+    // Anonymous — return null, client will load from localStorage
+    return { mode: "local", project: null, icons: [] };
+  },
+);
 
 export const useDeleteIcon = routeAction$(async (data, { platform }) => {
   const { getDB, initDB } = await import("~/lib/db");
@@ -224,8 +248,43 @@ export default component$(() => {
   const batchRenameIcons = useBatchRenameIcons();
   const batchUpdateTags = useBatchUpdateTags();
 
-  const project = useStore({ ...data.value.project });
-  const icons = useStore({ list: [...data.value.icons] });
+  const isLocal = data.value.mode === "local";
+  const localLoaded = useSignal(false);
+
+  const project = useStore<any>(
+    data.value.project
+      ? { ...data.value.project }
+      : {
+          id: 0,
+          name: "",
+          description: null,
+          font_family: "iconfont",
+          prefix: "icon-",
+          created_at: "",
+          updated_at: "",
+        },
+  );
+  const icons = useStore<{ list: any[] }>({
+    list: [...(data.value.icons || [])],
+  });
+
+  // Load from localStorage if anonymous
+  // eslint-disable-next-line qwik/no-use-visible-task
+  useVisibleTask$(() => {
+    if (isLocal) {
+      const id = parseInt(loc.params.id, 10);
+      const localProject = getLocalProject(id);
+      if (localProject) {
+        Object.assign(project, localProject);
+        icons.list = getLocalIcons(id);
+      } else {
+        // Project not found in localStorage — redirect to home
+        nav("/");
+      }
+      localLoaded.value = true;
+    }
+  });
+
   const selectedIds = useStore({ ids: new Set<number>() });
   const uploadLoading = useSignal(false);
   const dragOver = useSignal(false);
@@ -452,7 +511,9 @@ export default component$(() => {
     }
     if (activeTag.value) {
       list = list.filter((i) => {
-        const tags = i.tags ? i.tags.split(",").map((t) => t.trim()) : [];
+        const tags = i.tags
+          ? i.tags.split(",").map((t: string) => t.trim())
+          : [];
         return tags.includes(activeTag.value!);
       });
     }
@@ -468,7 +529,7 @@ export default component$(() => {
     if (!files) return;
     uploadLoading.value = true;
     dragOver.value = false;
-    const projectId = loc.params.id;
+    const projectId = parseInt(loc.params.id, 10);
 
     const svgFiles = Array.from(files).filter(
       (file) => file.name.endsWith(".svg") || file.type === "image/svg+xml",
@@ -477,8 +538,19 @@ export default component$(() => {
 
     const uploadOne = async (file: File) => {
       const content = await file.text();
+      const cleanName = file.name.replace(/\.svg$/i, "");
+
+      if (isLocal) {
+        // Save to localStorage
+        const icon = createLocalIcon(projectId, {
+          name: cleanName,
+          content,
+        });
+        return icon as any;
+      }
+
       const formData = new FormData();
-      formData.append("name", file.name.replace(/\.svg$/i, ""));
+      formData.append("name", cleanName);
       formData.append("content", content);
       const res = await fetch(`/api/projects/${projectId}/icons`, {
         method: "POST",
@@ -523,8 +595,15 @@ export default component$(() => {
 
   const doDeleteIcon = $(async () => {
     const iconId = confirmDeleteIcon.iconId;
+    const projectId = parseInt(loc.params.id, 10);
     confirmDeleteIcon.show = false;
-    await deleteIcon.submit({ id: String(iconId) });
+
+    if (isLocal) {
+      deleteLocalIcon(projectId, iconId);
+    } else {
+      await deleteIcon.submit({ id: String(iconId) });
+    }
+
     icons.list = icons.list.filter((i) => i.id !== iconId);
     const next = new Set(selectedIds.ids);
     next.delete(iconId);
@@ -534,12 +613,21 @@ export default component$(() => {
 
   const doBatchDelete = $(async () => {
     const count = confirmBatchDelete.count;
+    const projectId = parseInt(loc.params.id, 10);
     confirmBatchDelete.show = false;
-    await Promise.all(
-      Array.from(selectedIds.ids).map((id) =>
-        deleteIcon.submit({ id: String(id) }),
-      ),
-    );
+
+    if (isLocal) {
+      Array.from(selectedIds.ids).forEach((id) =>
+        deleteLocalIcon(projectId, id),
+      );
+    } else {
+      await Promise.all(
+        Array.from(selectedIds.ids).map((id) =>
+          deleteIcon.submit({ id: String(id) }),
+        ),
+      );
+    }
+
     icons.list = icons.list.filter((i) => !selectedIds.ids.has(i.id));
     selectedIds.ids = new Set();
     showToast(`已删除 ${count} 个图标`, "success");
@@ -1649,13 +1737,25 @@ ${classes}`;
                   const fd = new FormData(ev.target);
                   const iconId = editingIcon.id;
                   const newContent = fd.get("content") as string;
-                  await updateIcon.submit({
-                    id: String(iconId),
-                    name: fd.get("name"),
-                    unicode: fd.get("unicode") || null,
-                    view_box: fd.get("view_box") || "0 0 1024 1024",
-                    content: newContent || null,
-                  });
+                  const projectId = parseInt(loc.params.id, 10);
+
+                  if (isLocal) {
+                    updateLocalIcon(projectId, iconId!, {
+                      name: fd.get("name") as string,
+                      unicode: (fd.get("unicode") as string) || undefined,
+                      view_box: (fd.get("view_box") as string) || undefined,
+                      content: newContent || undefined,
+                    });
+                  } else {
+                    await updateIcon.submit({
+                      id: String(iconId),
+                      name: fd.get("name"),
+                      unicode: fd.get("unicode") || null,
+                      view_box: fd.get("view_box") || "0 0 1024 1024",
+                      content: newContent || null,
+                    });
+                  }
+
                   const idx = icons.list.findIndex((i) => i.id === iconId);
                   if (idx >= 0)
                     icons.list[idx] = {
@@ -2169,14 +2269,27 @@ ${classes}`;
         <SvgEditor
           icon={selectedIconForEdit}
           onSave$={async (icon) => {
-            await updateIcon.submit({
-              id: String(icon.id),
-              name: icon.name || "",
-              unicode: icon.unicode || null,
-              view_box: icon.view_box || "0 0 1024 1024",
-              content: icon.content || null,
-              tags: icon.tags || null,
-            });
+            const projectId = parseInt(loc.params.id, 10);
+
+            if (isLocal) {
+              updateLocalIcon(projectId, icon.id!, {
+                name: icon.name || undefined,
+                unicode: icon.unicode || undefined,
+                view_box: icon.view_box || undefined,
+                content: icon.content || undefined,
+                tags: icon.tags || undefined,
+              });
+            } else {
+              await updateIcon.submit({
+                id: String(icon.id),
+                name: icon.name || "",
+                unicode: icon.unicode || null,
+                view_box: icon.view_box || "0 0 1024 1024",
+                content: icon.content || null,
+                tags: icon.tags || null,
+              });
+            }
+
             const idx = icons.list.findIndex((i) => i.id === icon.id);
             if (idx >= 0) {
               icons.list[idx] = { ...icons.list[idx], ...icon } as Icon;

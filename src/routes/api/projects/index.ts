@@ -1,10 +1,17 @@
 import type { RequestHandler } from "@builder.io/qwik-city";
 import { getDB, initDB } from "~/lib/db";
+import { getSessionFromRequest } from "~/lib/session";
 import { projects, icons } from "~/lib/schema";
 import { eq, desc, count } from "drizzle-orm";
 import type { Project } from "~/lib/types";
 
-export const onGet: RequestHandler = async ({ platform, json }) => {
+export const onGet: RequestHandler = async ({ platform, request, json }) => {
+  const session = await getSessionFromRequest(platform, request);
+  if (!session) {
+    json(401, { error: "Not authenticated" });
+    return;
+  }
+
   const db = getDB(platform);
   await initDB(db, platform);
 
@@ -21,6 +28,7 @@ export const onGet: RequestHandler = async ({ platform, json }) => {
     })
     .from(projects)
     .leftJoin(icons, eq(projects.id, icons.project_id))
+    .where(eq(projects.user_id, session.user.id))
     .groupBy(projects.id)
     .orderBy(desc(projects.updated_at));
 
@@ -28,9 +36,15 @@ export const onGet: RequestHandler = async ({ platform, json }) => {
 };
 
 export const onPost: RequestHandler = async ({ platform, request, json }) => {
+  const session = await getSessionFromRequest(platform, request);
+  if (!session) {
+    json(401, { error: "Not authenticated" });
+    return;
+  }
+
   const db = getDB(platform);
   await initDB(db, platform);
-  const body = await request.json() as any;
+  const body = (await request.json()) as any;
   const { name, description, font_family, prefix } = body;
 
   if (!name || typeof name !== "string") {
@@ -41,6 +55,7 @@ export const onPost: RequestHandler = async ({ platform, request, json }) => {
   const result = await db
     .insert(projects)
     .values({
+      user_id: session.user.id,
       name,
       description: description ?? null,
       font_family: font_family ?? "iconfont",
@@ -48,5 +63,5 @@ export const onPost: RequestHandler = async ({ platform, request, json }) => {
     })
     .returning();
 
-  json(201, { project: result[0] });
+  json(201, { id: result[0].id, project: result[0] });
 };

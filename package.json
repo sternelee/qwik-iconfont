@@ -55,6 +55,8 @@
     "wrangler": "^4.94.0"
   },
   "dependencies": {
+    "@better-auth/drizzle-adapter": "^1.6.11",
+    "better-auth": "^1.6.11",
     "drizzle-orm": "^0.45.2",
     "opentype.js": "^2.0.0",
     "svg2ttf": "^6.1.0",

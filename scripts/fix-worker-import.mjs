@@ -14,7 +14,7 @@ try {
   const content = readFileSync(workerPath, "utf-8");
   const fixed = content.replace(
     'from "server/entry.cloudflare-pages"',
-    'from "./server/entry.cloudflare-pages"'
+    'from "./server/entry.cloudflare-pages"',
   );
   if (content !== fixed) {
     writeFileSync(workerPath, fixed);

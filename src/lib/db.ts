@@ -211,9 +211,7 @@ class MockExecutor {
       return item[col] === val;
     }
     // "icons"."id" IN (?, ?, ...)
-    const inMatch = whereClause.match(
-      /"?\w+"?\."?(\w+)"?\s+IN\s+\(([^)]+)\)/,
-    );
+    const inMatch = whereClause.match(/"?\w+"?\."?(\w+)"?\s+IN\s+\(([^)]+)\)/);
     if (inMatch) {
       const col = inMatch[1];
       const count = inMatch[2].split(",").length;
@@ -229,9 +227,7 @@ class MockExecutor {
     );
     if (!match) return [];
     const table = match[1];
-    const cols = match[2]
-      .split(",")
-      .map((c) => c.trim().replace(/"/g, ""));
+    const cols = match[2].split(",").map((c) => c.trim().replace(/"/g, ""));
     // Parse VALUES expressions: handle "?" as param placeholder, literals as-is
     const rawValues = this.splitValues(match[3]);
     const paramQueue = [...params];
@@ -312,8 +308,7 @@ class MockExecutor {
     setParts.forEach((part, i) => {
       const colMatch = part.match(/"?\w+"?\s*=\s*\?/);
       if (colMatch) {
-        const col =
-          colMatch[0].match(/"?\w+"?/)?.[0].replace(/"/g, "") ?? "";
+        const col = colMatch[0].match(/"?\w+"?/)?.[0].replace(/"/g, "") ?? "";
         item[col] = vals[i];
       }
     });
@@ -323,9 +318,7 @@ class MockExecutor {
   }
 
   private delete(sql: string, params: any[]): any[] {
-    const match = sql.match(
-      /DELETE\s+FROM\s+"?(\w+)"?\s+WHERE\s+(.+)$/i,
-    );
+    const match = sql.match(/DELETE\s+FROM\s+"?(\w+)"?\s+WHERE\s+(.+)$/i);
     if (!match) return [];
     const table = match[1];
     const whereClause = match[2];
@@ -376,8 +369,53 @@ export async function initDB(_db: AppDatabase, platform?: any) {
     const d1 = platform.env.DB;
     try {
       await d1.exec(
-        `CREATE TABLE IF NOT EXISTS projects (` +
+        // better-auth tables
+        `CREATE TABLE IF NOT EXISTS "user" (` +
+          `id TEXT PRIMARY KEY NOT NULL, ` +
+          `name TEXT NOT NULL, ` +
+          `email TEXT NOT NULL UNIQUE, ` +
+          `emailVerified INTEGER NOT NULL DEFAULT 0, ` +
+          `image TEXT, ` +
+          `createdAt TEXT DEFAULT CURRENT_TIMESTAMP, ` +
+          `updatedAt TEXT DEFAULT CURRENT_TIMESTAMP` +
+          `);` +
+          `CREATE TABLE IF NOT EXISTS "session" (` +
+          `id TEXT PRIMARY KEY NOT NULL, ` +
+          `expiresAt TEXT NOT NULL, ` +
+          `token TEXT NOT NULL UNIQUE, ` +
+          `createdAt TEXT DEFAULT CURRENT_TIMESTAMP, ` +
+          `updatedAt TEXT DEFAULT CURRENT_TIMESTAMP, ` +
+          `ipAddress TEXT, ` +
+          `userAgent TEXT, ` +
+          `userId TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE` +
+          `);` +
+          `CREATE TABLE IF NOT EXISTS "account" (` +
+          `id TEXT PRIMARY KEY NOT NULL, ` +
+          `accountId TEXT NOT NULL, ` +
+          `providerId TEXT NOT NULL, ` +
+          `userId TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE, ` +
+          `accessToken TEXT, ` +
+          `refreshToken TEXT, ` +
+          `idToken TEXT, ` +
+          `accessTokenExpiresAt TEXT, ` +
+          `refreshTokenExpiresAt TEXT, ` +
+          `scope TEXT, ` +
+          `password TEXT, ` +
+          `createdAt TEXT DEFAULT CURRENT_TIMESTAMP, ` +
+          `updatedAt TEXT DEFAULT CURRENT_TIMESTAMP` +
+          `);` +
+          `CREATE TABLE IF NOT EXISTS "verification" (` +
+          `id TEXT PRIMARY KEY NOT NULL, ` +
+          `identifier TEXT NOT NULL, ` +
+          `value TEXT NOT NULL, ` +
+          `expiresAt TEXT NOT NULL, ` +
+          `createdAt TEXT DEFAULT CURRENT_TIMESTAMP, ` +
+          `updatedAt TEXT DEFAULT CURRENT_TIMESTAMP` +
+          `);` +
+          // app tables
+          `CREATE TABLE IF NOT EXISTS projects (` +
           `id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, ` +
+          `user_id TEXT, ` +
           `name TEXT NOT NULL, ` +
           `description TEXT, ` +
           `font_family TEXT DEFAULT 'iconfont' NOT NULL, ` +
@@ -395,10 +433,23 @@ export async function initDB(_db: AppDatabase, platform?: any) {
           `width INTEGER, ` +
           `height INTEGER, ` +
           `content TEXT, ` +
+          `tags TEXT, ` +
           `created_at TEXT DEFAULT CURRENT_TIMESTAMP, ` +
           `updated_at TEXT DEFAULT CURRENT_TIMESTAMP` +
           `);`,
       );
+      // Add user_id column if it doesn't exist (migration for existing databases)
+      try {
+        await d1.exec(`ALTER TABLE projects ADD COLUMN user_id TEXT`);
+      } catch {
+        // Column may already exist
+      }
+      // Add tags column if it doesn't exist
+      try {
+        await d1.exec(`ALTER TABLE icons ADD COLUMN tags TEXT`);
+      } catch {
+        // Column may already exist
+      }
     } catch {
       // Tables may already exist or migrations have been applied; ignore errors
     }

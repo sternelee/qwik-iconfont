@@ -1,24 +1,40 @@
 import type { RequestHandler } from "@builder.io/qwik-city";
 import { getDB, initDB } from "~/lib/db";
 import { getBucket, uploadSVG } from "~/lib/storage";
-import { icons } from "~/lib/schema";
-import { eq } from "drizzle-orm";
+import { getSessionFromRequest } from "~/lib/session";
+import { icons, projects } from "~/lib/schema";
+import { eq, and } from "drizzle-orm";
 import { resolveSvgViewBox, type Icon } from "~/lib/types";
 
-export const onGet: RequestHandler = async ({ params, platform, json }) => {
+export const onGet: RequestHandler = async ({
+  params,
+  platform,
+  request,
+  json,
+}) => {
+  const session = await getSessionFromRequest(platform, request);
+  if (!session) {
+    json(401, { error: "Not authenticated" });
+    return;
+  }
+
   const db = getDB(platform);
   await initDB(db, platform);
   const id = parseInt(params.id, 10);
 
-  const result = await db.select().from(icons).where(eq(icons.id, id));
-  const icon = result[0] as Icon | undefined;
+  // Get icon and verify project ownership
+  const result = await db
+    .select()
+    .from(icons)
+    .innerJoin(projects, eq(icons.project_id, projects.id))
+    .where(and(eq(icons.id, id), eq(projects.user_id, session.user.id)));
 
-  if (!icon) {
+  if (!result[0]) {
     json(404, { error: "Icon not found" });
     return;
   }
 
-  json(200, { icon });
+  json(200, { icon: result[0].icons as Icon });
 };
 
 export const onPut: RequestHandler = async ({
@@ -27,14 +43,26 @@ export const onPut: RequestHandler = async ({
   request,
   json,
 }) => {
+  const session = await getSessionFromRequest(platform, request);
+  if (!session) {
+    json(401, { error: "Not authenticated" });
+    return;
+  }
+
   const db = getDB(platform);
   await initDB(db, platform);
   const id = parseInt(params.id, 10);
   const body = (await request.json()) as any;
   const { name, unicode, view_box, content, tags } = body;
 
-  const result = await db.select().from(icons).where(eq(icons.id, id));
-  const current = result[0] as Icon | undefined;
+  // Get icon and verify project ownership
+  const result = await db
+    .select()
+    .from(icons)
+    .innerJoin(projects, eq(icons.project_id, projects.id))
+    .where(and(eq(icons.id, id), eq(projects.user_id, session.user.id)));
+
+  const current = result[0]?.icons as Icon | undefined;
 
   if (!current) {
     json(404, { error: "Icon not found" });
@@ -76,17 +104,31 @@ export const onPut: RequestHandler = async ({
   json(200, { success: true });
 };
 
-export const onDelete: RequestHandler = async ({ params, platform, json }) => {
+export const onDelete: RequestHandler = async ({
+  params,
+  platform,
+  request,
+  json,
+}) => {
+  const session = await getSessionFromRequest(platform, request);
+  if (!session) {
+    json(401, { error: "Not authenticated" });
+    return;
+  }
+
   const db = getDB(platform);
   await initDB(db, platform);
   const bucket = getBucket(platform);
   const id = parseInt(params.id, 10);
 
+  // Get icon and verify project ownership
   const result = await db
-    .select({ svg_path: icons.svg_path })
+    .select()
     .from(icons)
-    .where(eq(icons.id, id));
-  const current = result[0];
+    .innerJoin(projects, eq(icons.project_id, projects.id))
+    .where(and(eq(icons.id, id), eq(projects.user_id, session.user.id)));
+
+  const current = result[0]?.icons;
 
   if (current) {
     await bucket.delete(current.svg_path);

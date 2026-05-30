@@ -43,3 +43,5 @@ lerna-debug.log*
 # Yarn
 .yarn/*
 !.yarn/releases
+
+.pi-lens
