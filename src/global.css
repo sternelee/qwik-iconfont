@@ -1,15 +1,50 @@
 /**
  * Global styles for Iconfont app.
- * Tailwind CSS v4 + daisyUI are imported here.
+ * Tailwind CSS v4 + daisyUI — clean minimal style inspired by iconfont.cn
  */
 
 @import "tailwindcss";
 @plugin "daisyui";
 
+/* ── Theme ─────────────────────────────────────────────────────────── */
+
+@plugin "daisyui/theme" {
+  name: "iconfont";
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+  --color-base-100: oklch(1 0 0);
+  --color-base-200: oklch(0.97 0.001 240);
+  --color-base-300: oklch(0.93 0.002 240);
+  --color-base-content: oklch(0.18 0.02 260);
+  --color-primary: oklch(0.55 0.18 255);
+  --color-primary-content: oklch(0.98 0 0);
+  --color-secondary: oklch(0.65 0.14 255);
+  --color-secondary-content: oklch(0.98 0 0);
+  --color-accent: oklch(0.65 0.16 175);
+  --color-accent-content: oklch(0.98 0 0);
+  --color-neutral: oklch(0.35 0.02 260);
+  --color-neutral-content: oklch(0.98 0 0);
+  --color-info: oklch(0.6 0.12 230);
+  --color-success: oklch(0.65 0.18 145);
+  --color-warning: oklch(0.75 0.15 75);
+  --color-error: oklch(0.6 0.2 25);
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
+
+/* ── Base ──────────────────────────────────────────────────────────── */
+
 html {
-  line-height: 1.5;
+  line-height: 1.6;
   -webkit-text-size-adjust: 100%;
   tab-size: 4;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
@@ -17,50 +52,41 @@ body {
   margin: 0;
   line-height: inherit;
   font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    "Helvetica Neue",
-    Arial,
-    "Noto Sans",
-    sans-serif,
-    "Apple Color Emoji",
-    "Segoe UI Emoji",
-    "Segoe UI Symbol",
-    "Noto Color Emoji";
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: var(--color-base-content);
+  background: var(--color-base-100);
 }
 
-/* ===== UI Animation Keyframes ===== */
+/* ── Typography ────────────────────────────────────────────────────── */
 
-@keyframes toast-slide-in {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* ── Animations ────────────────────────────────────────────────────── */
+
+@keyframes fade-in {
   from {
     opacity: 0;
-    transform: translateX(100%) scale(0.95);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
-    transform: translateX(0) scale(1);
+    transform: translateY(0);
   }
 }
 
-@keyframes toast-slide-out {
-  from {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: translateX(100%) scale(0.95);
-  }
-}
-
-@keyframes modal-box-in {
+@keyframes slide-up {
   from {
     opacity: 0;
-    transform: scale(0.96) translateY(12px);
+    transform: scale(0.97) translateY(8px);
   }
   to {
     opacity: 1;
@@ -68,34 +94,76 @@ body {
   }
 }
 
-@keyframes modal-backdrop-in {
+@keyframes slide-down {
   from {
     opacity: 0;
-    backdrop-filter: blur(0);
+    transform: translateY(-4px);
   }
   to {
     opacity: 1;
-    backdrop-filter: blur(4px);
+    transform: translateY(0);
   }
 }
 
-@keyframes empty-float {
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes float {
   0%,
   100% {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-6px);
+    transform: translateY(-4px);
   }
 }
 
-@keyframes check-pop {
+@keyframes pop {
   0% {
-    transform: scale(0.5);
+    transform: scale(0.8);
     opacity: 0;
   }
   60% {
-    transform: scale(1.15);
+    transform: scale(1.05);
   }
   100% {
     transform: scale(1);
@@ -103,91 +171,56 @@ body {
   }
 }
 
-@keyframes card-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes icon-card-pop {
-  from {
-    opacity: 0;
-    transform: scale(0.92) translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-@keyframes drop-zone-pulse {
+@keyframes pulse-ring {
   0%,
   100% {
-    border-color: oklch(var(--p));
-    box-shadow: 0 0 0 0 oklch(var(--p) / 0.2);
+    box-shadow: 0 0 0 0 oklch(var(--p) / 0.15);
   }
   50% {
     box-shadow: 0 0 0 6px oklch(var(--p) / 0);
   }
 }
 
-/* ===== Animation Utilities ===== */
+/* ── Utility Classes ───────────────────────────────────────────────── */
+
+.animate-fade-in {
+  animation: fade-in 0.25s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.15s ease-out forwards;
+}
+
+.animate-modal {
+  animation: modal-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-backdrop {
+  animation: backdrop-in 0.15s ease-out forwards;
+}
 
 .animate-toast-in {
-  animation: toast-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: toast-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-toast-out {
-  animation: toast-slide-out 0.2s ease-in forwards;
+  animation: toast-out 0.15s ease-in forwards;
 }
 
-/* Toast progress bar shrinks over 3s */
-.toast-progress {
-  width: 100%;
-  animation: toast-progress-shrink 3s linear forwards;
+.animate-float {
+  animation: float 3s ease-in-out infinite;
 }
 
-@keyframes toast-progress-shrink {
-  from {
-    width: 100%;
-  }
-  to {
-    width: 0%;
-  }
+.animate-pop {
+  animation: pop 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.animate-modal-box {
-  animation: modal-box-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-modal-backdrop {
-  animation: modal-backdrop-in 0.2s ease-out forwards;
-}
-
-.animate-empty-float {
-  animation: empty-float 3s ease-in-out infinite;
-}
-
-.animate-check-pop {
-  animation: check-pop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-card-fade-in {
-  animation: card-fade-in 0.3s ease-out forwards;
-}
-
-.animate-icon-pop {
-  animation: icon-card-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* Drop zone pulse when dragging */
-.animate-drop-pulse {
-  animation: drop-zone-pulse 1.5s ease-in-out infinite;
+.animate-pulse-ring {
+  animation: pulse-ring 2s ease-in-out infinite;
 }
 
 /* Stagger delays for grid items */
@@ -216,41 +249,78 @@ body {
   animation-delay: 0.16s;
 }
 
-/* Modal backdrop opacity transition */
-.modal-backdrop {
-  transition: opacity 0.15s ease-out;
-}
+/* ── Component Styles ──────────────────────────────────────────────── */
 
-/* Smooth card hover lift */
-.card-hover-lift {
+/* Card hover */
+.card-hover {
   transition:
-    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.25s ease;
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
-.card-hover-lift:hover {
-  transform: translateY(-3px);
-  box-shadow:
-    0 8px 25px -5px rgb(0 0 0 / 0.1),
-    0 4px 10px -6px rgb(0 0 0 / 0.1);
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px oklch(0 0 0 / 0.06);
 }
 
-/* Icon card selection glow */
-.icon-selected {
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.icon-selected.ring-2 {
-  box-shadow: 0 0 0 3px oklch(var(--p) / 0.15);
-}
-
-/* Checkbox smooth transition */
-.checkbox-smooth {
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease,
-    transform 0.15s ease;
-}
-
-/* Button press feedback */
+/* Button press */
 .btn-press:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
+}
+
+/* Smooth transitions */
+.transition-smooth {
+  transition: all 0.15s ease;
+}
+
+/* Toast progress */
+.toast-progress {
+  width: 100%;
+  animation: toast-progress-shrink 3s linear forwards;
+}
+
+@keyframes toast-progress-shrink {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+/* Drop zone */
+.animate-drop-pulse {
+  animation: pulse-ring 1.5s ease-in-out infinite;
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+  transition: opacity 0.15s ease;
+}
+
+/* Selection ring */
+.selection-ring {
+  transition: all 0.15s ease;
+}
+.selection-ring.ring-2 {
+  box-shadow: 0 0 0 3px oklch(var(--p) / 0.12);
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: oklch(0.7 0 0);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.55 0 0);
 }
