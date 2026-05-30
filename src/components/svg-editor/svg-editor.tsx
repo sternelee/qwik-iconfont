@@ -74,7 +74,6 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
   const svgContent = useSignal(icon.content || "");
   const tags = useSignal(parseTags(icon.tags ?? null).join(", "));
   const fillColor = useSignal("#000000");
-  const bgColor = useSignal("#ffffff");
 
   const previewSize = useSignal(64);
   const showRawCode = useSignal(false);
@@ -376,22 +375,18 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                         }
                       />
                     </label>
-                    <label class="flex items-center gap-1">
-                      <span class="text-base-content/60 text-xs">背景</span>
-                      <input
-                        type="color"
-                        class="h-6 w-6 cursor-pointer rounded border-0"
-                        value={bgColor.value}
-                        onInput$={(e: any) => (bgColor.value = e.target.value)}
-                      />
-                    </label>
                   </div>
 
                   {/* Preview */}
                   <div
-                    class="bg-base-100 border-base-300 rounded-box mt-8 flex min-h-[300px] items-center justify-center overflow-hidden border p-6"
+                    class="border-base-300 rounded-box mt-8 flex min-h-75 items-center justify-center overflow-hidden border p-6"
                     style={{
-                      backgroundColor: bgColor.value,
+                      backgroundColor: "rgb(255, 255, 255)",
+                      backgroundImage:
+                        "linear-gradient(45deg, rgb(243, 244, 246) 25%, transparent 25%), linear-gradient(-45deg, rgb(243, 244, 246) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgb(243, 244, 246) 75%), linear-gradient(-45deg, transparent 75%, rgb(243, 244, 246) 75%)",
+                      backgroundSize: "24px 24px",
+                      backgroundPosition:
+                        "0px 0px, 0px 12px, 12px -12px, -12px 0px",
                     }}
                   >
                     {!isEmpty && previewContent ? (
@@ -856,7 +851,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                   </h4>
                   {showRawCode.value ? (
                     <textarea
-                      class={`textarea textarea-bordered min-h-[220px] w-full font-mono text-xs ${!svgIsValid.value ? "textarea-error" : ""}`}
+                      class={`textarea textarea-bordered min-h-55 w-full font-mono text-xs ${!svgIsValid.value ? "textarea-error" : ""}`}
                       placeholder="SVG 代码..."
                       value={svgContent.value}
                       onInput$={(e: any) => {
@@ -911,7 +906,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
 
       {/* Confirm close with unsaved changes */}
       {showCloseConfirm.value && (
-        <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
+        <div class="fixed inset-0 z-60 flex items-center justify-center bg-black/60 p-4">
           <div class="modal-box bg-base-100 w-full max-w-sm rounded-2xl shadow-2xl">
             <h4 class="mb-2 text-base font-bold">放弃未保存的修改？</h4>
             <p class="text-base-content/60 mb-4 text-sm">

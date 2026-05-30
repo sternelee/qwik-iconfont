@@ -109,6 +109,59 @@ export const useDeleteProject = routeAction$(
   },
 );
 
+// ── Featured Icon Sets Data ─────────────────────────────────────────
+
+const FEATURED_SETS = [
+  {
+    id: 1,
+    name: "Material Outlined",
+    count: 120,
+    color: "#E11D48",
+    icons: [
+      "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z",
+      "M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z",
+      "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z",
+      "M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z",
+    ],
+  },
+  {
+    id: 2,
+    name: "Feather Line",
+    count: 86,
+    color: "#2563EB",
+    icons: [
+      "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8",
+      "M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z",
+      "M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z",
+      "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75",
+    ],
+  },
+  {
+    id: 3,
+    name: "Bold & Round",
+    count: 64,
+    color: "#F59E0B",
+    icons: [
+      "M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z",
+      "M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 14H7v-2h5zm5-4H7v-2h10zm0-4H7V7h10z",
+      "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z",
+      "M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 0 0-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2z",
+    ],
+  },
+  {
+    id: 4,
+    name: "Emoji & Playful",
+    count: 48,
+    color: "#22C55E",
+    icons: [
+      "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-4-8c.79 0 1.5-.71 1.5-1.5S8.79 9 8 9s-1.5.71-1.5 1.5S7.21 12 8 12zm8 0c.79 0 1.5-.71 1.5-1.5S16.79 9 16 9s-1.5.71-1.5 1.5.71 1.5 1.5 1.5zm-4 5.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z",
+      "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z",
+      "M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z",
+      "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-4-8c.79 0 1.5-.71 1.5-1.5S8.79 9 8 9s-1.5.71-1.5 1.5S7.21 12 8 12zm8 0c.79 0 1.5-.71 1.5-1.5S16.79 9 16 9s-1.5.71-1.5 1.5.71 1.5 1.5 1.5zm-4 5.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z",
+    ],
+  },
+];
+
 export default component$(() => {
   const loaderData = useProjects();
   const createProject = useCreateProject();
@@ -145,7 +198,7 @@ export default component$(() => {
 
   // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(() => {
-    document.title = "Iconfont - 我的项目";
+    document.title = "Iconfont - 图标字体管理平台";
   });
 
   useOnDocument(
@@ -282,24 +335,28 @@ export default component$(() => {
 
   const isLocal = loaderData.value.mode === "local";
   const projectList = filtered();
+  const totalIcons = projectList.reduce(
+    (s: number, p: any) => s + (p.icon_count || 0),
+    0,
+  );
 
   return (
-    <div class="bg-base-200 min-h-screen">
+    <div class="hero-gradient min-h-screen">
       <ToastContainer toasts={toasts.items} />
 
       {/* ── Navbar ────────────────────────────────────────────── */}
-      <header class="bg-base-100 border-base-300 sticky top-0 z-30 border-b">
-        <div class="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+      <header class="clay-navbar sticky top-0 z-30">
+        <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           {/* Left: Logo */}
-          <a href="/" class="flex items-center gap-2.5">
-            <div class="bg-primary text-primary-content flex h-8 w-8 items-center justify-center rounded-lg">
+          <a href="/" class="flex items-center gap-3">
+            <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-rose-600 shadow-lg shadow-rose-500/20">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
+                width="20"
+                height="20"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="currentColor"
+                stroke="white"
                 stroke-width="2.5"
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -309,34 +366,45 @@ export default component$(() => {
                 <polyline points="21 15 16 10 5 21" />
               </svg>
             </div>
-            <span class="text-base font-semibold tracking-tight">Iconfont</span>
-            <span class="text-base-content/40 text-xs">开源版</span>
+            <div class="flex flex-col">
+              <span class="font-['Nunito'] text-lg font-extrabold tracking-tight text-rose-600">
+                Iconfont
+              </span>
+              <span class="text-[10px] font-medium tracking-wider text-rose-400/70 -mt-0.5">
+                开源版
+              </span>
+            </div>
           </a>
 
           {/* Right: Actions */}
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-3">
             {isLocal && (
-              <span class="badge badge-warning badge-sm">本地模式</span>
+              <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+                本地模式
+              </span>
             )}
             {isLocal ? (
-              <a href="/login" class="btn btn-ghost btn-sm text-sm">
+              <a
+                href="/login"
+                class="rounded-2xl px-4 py-2 text-sm font-semibold text-rose-600 transition-all hover:bg-rose-50"
+              >
                 登录
               </a>
             ) : (
               <UserMenu />
             )}
             <button
-              class="btn btn-primary btn-sm gap-1.5"
+              class="clay-button flex items-center gap-2 rounded-2xl bg-rose-500 px-5 py-2.5 text-sm font-bold text-white"
               onClick$={() => (showModal.value = true)}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
+                width="16"
+                height="16"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                stroke-width="2"
+                stroke-width="2.5"
                 stroke-linecap="round"
                 stroke-linejoin="round"
               >
@@ -349,24 +417,226 @@ export default component$(() => {
         </div>
       </header>
 
-      {/* ── Main Content ──────────────────────────────────────── */}
-      <main class="mx-auto max-w-6xl px-4 py-6">
-        {/* Toolbar */}
-        <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <div class="flex items-baseline gap-2">
-            <h1 class="text-lg font-semibold">我的项目</h1>
-            <span class="text-base-content/50 text-sm">
-              {projectList.length} 个项目 ·{" "}
-              {projectList.reduce(
-                (s: number, p: any) => s + (p.icon_count || 0),
-                0,
-              )}{" "}
-              个图标
+      {/* ── Hero Section ──────────────────────────────────────── */}
+      <section class="relative mx-auto max-w-7xl px-4 pt-12 pb-16 sm:px-6 sm:pt-16 sm:pb-20">
+        {/* Decorative blobs */}
+        <div class="blob-1 -top-20 -left-20 opacity-60" />
+        <div class="blob-2 top-40 -right-20 opacity-50" />
+
+        <div class="relative z-10 flex flex-col items-center text-center">
+          <div class="animate-fade-in-up mb-6 inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 shadow-sm backdrop-blur-sm">
+            <span class="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+            <span class="text-sm font-medium text-rose-700">
+              已支持 {totalIcons} 个图标 · {projectList.length} 个项目
             </span>
           </div>
+
+          <h1 class="animate-fade-in-up font-['Nunito'] text-4xl font-black tracking-tight text-rose-950 sm:text-5xl lg:text-6xl"
+            style="animation-delay: 0.08s"
+          >
+            创建你的专属
+            <br />
+            <span class="bg-gradient-to-r from-rose-500 via-rose-400 to-blue-500 bg-clip-text text-transparent"
+            >
+              图标字体
+            </span>
+          </h1>
+
+          <p
+            class="animate-fade-in-up mt-5 max-w-xl text-base leading-relaxed text-rose-800/70 sm:text-lg"
+            style="animation-delay: 0.16s"
+          >
+            上传 SVG，一键生成 TTF 字体、CSS 样式和 Symbol 精灵图。
+            <br class="hidden sm:block" />
+            让图标管理变得简单有趣。
+          </p>
+
+          <div
+            class="animate-fade-in-up mt-8 flex flex-wrap items-center justify-center gap-4"
+            style="animation-delay: 0.24s"
+          >
+            <button
+              class="clay-button flex items-center gap-2 rounded-2xl bg-rose-500 px-7 py-3.5 text-base font-bold text-white"
+              onClick$={() => (showModal.value = true)}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="12" x2="12" y1="5" y2="19" />
+                <line x1="5" x2="19" y1="12" y2="12" />
+              </svg>
+              开始创建项目
+            </button>
+            <a
+              href="#featured"
+              class="clay-button-secondary flex items-center gap-2 rounded-2xl bg-blue-500 px-7 py-3.5 text-base font-bold text-white"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+              浏览推荐图标
+            </a>
+          </div>
+
+          {/* Hero Icon Grid Preview */}
+          <div
+            class="animate-fade-in-up mt-14 grid grid-cols-8 gap-3 sm:grid-cols-12"
+            style="animation-delay: 0.32s"
+          >
+            {[
+              "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z",
+              "M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z",
+              "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z",
+              "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-4-8c.79 0 1.5-.71 1.5-1.5S8.79 9 8 9s-1.5.71-1.5 1.5S7.21 12 8 12zm8 0c.79 0 1.5-.71 1.5-1.5S16.79 9 16 9s-1.5.71-1.5 1.5.71 1.5 1.5 1.5zm-4 5.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z",
+              "M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z",
+              "M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z",
+              "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75",
+              "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8",
+              "M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 0 0-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2z",
+              "M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z",
+              "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z",
+              "M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z",
+            ].map((d, i) => (
+              <div
+                key={i}
+                class="animate-fade-in-scale clay-icon-card flex aspect-square items-center justify-center p-2 sm:p-3"
+                style={`animation-delay: ${0.4 + i * 0.04}s`}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="h-5 w-5 text-rose-400 sm:h-6 sm:w-6"
+                >
+                  <path d={d} />
+                </svg>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Featured Icon Sets ────────────────────────────────── */}
+      <section id="featured" class="relative z-10 mx-auto max-w-7xl px-4 py-12 sm:px-6">
+        <div class="mb-8 flex items-end justify-between">
+          <div>
+            <h2 class="font-['Nunito'] text-2xl font-extrabold text-rose-950 sm:text-3xl">
+              推荐图标集
+            </h2>
+            <p class="mt-1 text-sm text-rose-700/60">
+              精选热门风格，一键创建相似项目
+            </p>
+          </div>
+          <span class="featured-badge">热门</span>
+        </div>
+
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {FEATURED_SETS.map((set, idx) => (
+            <div
+              key={set.id}
+              class="animate-fade-in-up clay-card group cursor-pointer p-5"
+              style={`animation-delay: ${idx * 0.08}s`}
+              onClick$={() => {
+                showModal.value = true;
+              }}
+            >
+              {/* Icon preview grid */}
+              <div class="mb-4 grid grid-cols-2 gap-3">
+                {set.icons.map((iconPath, i) => (
+                  <div
+                    key={i}
+                    class="icon-preview-canvas flex aspect-square items-center justify-center transition-transform duration-300 group-hover:scale-105"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke={set.color}
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="h-7 w-7"
+                    >
+                      <path d={iconPath} />
+                    </svg>
+                  </div>
+                ))}
+              </div>
+
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="font-['Nunito'] text-base font-bold text-rose-950"
+                  >
+                    {set.name}
+                  </h3>
+                  <p class="text-xs text-rose-600/60">
+                    {set.count} 个图标
+                  </p>
+                </div>
+                <div
+                  class="flex h-9 w-9 items-center justify-center rounded-xl transition-all"
+                  style={{
+                    background: `${set.color}15`,
+                    color: set.color,
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="m9 18 6-6-6-6" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Main Content ──────────────────────────────────────── */}
+      <main class="relative z-10 mx-auto max-w-7xl px-4 py-8 sm:px-6">
+        {/* Section header */}
+        <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h2 class="font-['Nunito'] text-2xl font-extrabold text-rose-950">
+              我的项目
+            </h2>
+            <p class="mt-1 text-sm text-rose-700/60">
+              {projectList.length} 个项目 ·{" "}
+              {totalIcons} 个图标
+            </p>
+          </div>
+
           <div class="flex items-center gap-2">
             <select
-              class="select select-bordered select-sm min-w-0"
+              class="input-clay px-3 py-2 text-sm"
               value={sortProjects.value}
               onChange$={(ev: any) => (sortProjects.value = ev.target.value)}
             >
@@ -377,16 +647,14 @@ export default component$(() => {
             <div class="relative">
               <input
                 type="text"
-                class="input input-bordered input-sm w-52 pl-8"
+                class="input-clay w-52 py-2 pr-8 pl-9 text-sm"
                 placeholder="搜索项目..."
                 value={searchQuery.value}
                 onInput$={(ev: any) => (searchQuery.value = ev.target.value)}
               />
               <svg
-                class="text-base-content/30 absolute top-1/2 left-2.5 -translate-y-1/2"
+                class="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-rose-400"
                 xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -403,13 +671,13 @@ export default component$(() => {
 
         {/* Empty State */}
         {projectList.length === 0 ? (
-          <div class="flex flex-col items-center justify-center py-24">
-            <div class="bg-base-300 mb-5 flex h-20 w-20 items-center justify-center rounded-2xl">
+          <div class="animate-fade-in-up clay-card flex flex-col items-center justify-center py-20"
+          >
+            <div class="mb-5 flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-rose-100 to-pink-100"
+            >
               <svg
-                class="text-base-content/20"
+                class="h-12 w-12 text-rose-400"
                 xmlns="http://www.w3.org/2000/svg"
-                width="40"
-                height="40"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -422,10 +690,12 @@ export default component$(() => {
                 <polyline points="21 15 16 10 5 21" />
               </svg>
             </div>
-            <h2 class="mb-1 text-base font-medium">
+            <h2 class="font-['Nunito'] mb-2 text-lg font-bold text-rose-950"
+            >
               {debouncedQuery.value ? "未找到匹配的项目" : "还没有项目"}
             </h2>
-            <p class="text-base-content/50 mb-5 text-sm">
+            <p class="mb-6 max-w-sm text-center text-sm text-rose-700/60"
+            >
               {debouncedQuery.value
                 ? "尝试其他关键词"
                 : isLocal
@@ -434,17 +704,17 @@ export default component$(() => {
             </p>
             {!debouncedQuery.value && (
               <button
-                class="btn btn-primary btn-sm gap-1.5"
+                class="clay-button flex items-center gap-2 rounded-2xl bg-rose-500 px-6 py-2.5 text-sm font-bold text-white"
                 onClick$={() => (showModal.value = true)}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
+                  width="16"
+                  height="16"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  stroke-width="2"
+                  stroke-width="2.5"
                   stroke-linecap="round"
                   stroke-linejoin="round"
                 >
@@ -457,26 +727,39 @@ export default component$(() => {
           </div>
         ) : (
           /* Project Grid */
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+          >
             {createProject.isRunning && <SkeletonProjectCard />}
             {projectList.map((project: any, idx: number) => (
               <div
                 key={project.id}
-                class={`card-hover group animate-fade-in bg-base-100 border-base-300 rounded-xl border stagger-${(idx % 8) + 1} ${deleting.id === project.id ? "pointer-events-none opacity-50" : ""}`}
+                class={`animate-fade-in-up clay-card group stagger-${(idx % 8) + 1} ${deleting.id === project.id ? "pointer-events-none opacity-50" : ""}`}
               >
                 <div
-                  class="cursor-pointer p-5"
+                  class="cursor-pointer p-6"
                   onClick$={() => nav(`/project/${project.id}`)}
                 >
-                  <div class="mb-3 flex items-start justify-between">
-                    <h2 class="text-base leading-tight font-semibold">
-                      <HighlightText
-                        text={project.name}
-                        query={debouncedQuery.value}
-                      />
-                    </h2>
+                  <div class="mb-4 flex items-start justify-between"
+                  >
+                    <div class="flex items-center gap-3"
+                    >
+                      <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-400 to-rose-500 text-white shadow-lg shadow-rose-500/20"
+                      >
+                        <span class="font-['Nunito'] text-lg font-bold"
+                        >
+                          {project.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <h3 class="font-['Nunito'] text-lg font-bold text-rose-950"
+                      >
+                        <HighlightText
+                          text={project.name}
+                          query={debouncedQuery.value}
+                        />
+                      </h3>
+                    </div>
                     <button
-                      class="btn btn-ghost btn-xs text-base-content/30 hover:text-error -mt-1 -mr-1.5 opacity-0 transition-all group-hover:opacity-100"
+                      class="flex h-8 w-8 items-center justify-center rounded-xl text-rose-400 opacity-0 transition-all hover:bg-rose-50 hover:text-rose-600 group-hover:opacity-100"
                       onClick$={(ev: any) => {
                         ev.stopPropagation();
                         handleDelete(project);
@@ -486,34 +769,94 @@ export default component$(() => {
                       {deleting.id === project.id ? (
                         <span class="loading loading-spinner loading-xs" />
                       ) : (
-                        "删除"
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg>
                       )}
                     </button>
                   </div>
+
                   {project.description && (
-                    <p class="text-base-content/50 mb-3 line-clamp-2 text-sm leading-relaxed">
+                    <p class="mb-4 line-clamp-2 text-sm leading-relaxed text-rose-800/50"
+                    >
                       <HighlightText
                         text={project.description}
                         query={debouncedQuery.value}
                       />
                     </p>
                   )}
-                  <div class="flex items-center gap-3 text-xs">
-                    <span class="text-base-content/40">
-                      {project.icon_count ?? 0} 个图标
-                    </span>
-                    <span class="text-base-content/20">·</span>
-                    <span class="text-base-content/40 font-mono">
+
+                  {/* Stats bar */}
+                  <div class="clay-inset mb-4 flex items-center gap-4 px-4 py-2.5"
+                  >
+                    <div class="flex items-center gap-1.5"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        class="text-rose-400"
+                      >
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                      </svg>
+                      <span class="text-xs font-semibold text-rose-800/70"
+                      >
+                        {project.icon_count ?? 0}
+                      </span>
+                    </div>
+                    <div class="h-4 w-px bg-rose-200" />
+                    <span class="font-mono text-xs text-rose-600/50"
+                    >
                       {project.font_family}
                     </span>
-                    <span class="text-base-content/20">·</span>
-                    <span class="text-base-content/40 font-mono">
+                    <div class="h-4 w-px bg-rose-200" />
+                    <span class="font-mono text-xs text-rose-600/50"
+                    >
                       {project.prefix}
                     </span>
                   </div>
-                  <p class="text-base-content/30 mt-2.5 text-xs">
-                    {new Date(project.updated_at).toLocaleDateString("zh-CN")}
-                  </p>
+
+                  <div class="flex items-center justify-between"
+                  >
+                    <span class="text-xs text-rose-400/60"
+                    >
+                      {new Date(project.updated_at).toLocaleDateString("zh-CN")}
+                    </span>
+                    <span class="flex items-center gap-1 text-xs font-semibold text-rose-500 transition-colors group-hover:text-rose-600"
+                    >
+                      管理
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path d="m9 18 6-6-6-6" />
+                      </svg>
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}
@@ -524,10 +867,14 @@ export default component$(() => {
       {/* ── Create Project Modal ──────────────────────────────── */}
       {showModal.value && (
         <div class="modal modal-open">
-          <div class="modal-box animate-modal max-w-lg p-0">
-            <div class="border-base-300 border-b px-6 py-4">
-              <h3 class="text-base font-semibold">新建项目</h3>
-              <p class="text-base-content/50 mt-0.5 text-sm">
+          <div class="clay-card animate-modal mx-4 max-w-lg">
+            <div class="border-b border-rose-100 px-6 py-4">
+              <h3 class="font-['Nunito'] text-lg font-bold text-rose-950"
+              >
+                新建项目
+              </h3>
+              <p class="mt-1 text-sm text-rose-700/60"
+              >
                 设置项目名称和配置，后续上传图标后用于代码生成。
               </p>
             </div>
@@ -535,25 +882,27 @@ export default component$(() => {
               <div class="space-y-4 px-6 py-5">
                 <div class="form-control">
                   <label class="label py-1">
-                    <span class="label-text text-sm font-medium">
+                    <span class="label-text text-sm font-semibold text-rose-800"
+                    >
                       项目名称 *
                     </span>
                   </label>
                   <input
                     name="name"
                     type="text"
-                    class="input input-bordered input-sm w-full"
+                    class="input-clay w-full px-4 py-2.5 text-sm"
                     placeholder="例如: my-icons"
                     required
                   />
                 </div>
                 <div class="form-control">
                   <label class="label py-1">
-                    <span class="label-text text-sm font-medium">描述</span>
+                    <span class="label-text text-sm font-semibold text-rose-800"
+                    >描述</span>
                   </label>
                   <textarea
                     name="description"
-                    class="textarea textarea-bordered textarea-sm w-full"
+                    class="input-clay w-full px-4 py-2.5 text-sm"
                     rows={2}
                     placeholder="项目描述（可选）"
                   />
@@ -561,45 +910,53 @@ export default component$(() => {
                 <div class="grid grid-cols-2 gap-3">
                   <div class="form-control">
                     <label class="label py-1">
-                      <span class="label-text text-sm font-medium">
+                      <span class="label-text text-sm font-semibold text-rose-800"
+                      >
                         Font Family
                       </span>
                     </label>
                     <input
                       name="font_family"
                       type="text"
-                      class="input input-bordered input-sm w-full"
+                      class="input-clay w-full px-4 py-2.5 text-sm"
                       value="iconfont"
                     />
                   </div>
                   <div class="form-control">
                     <label class="label py-1">
-                      <span class="label-text text-sm font-medium">
+                      <span class="label-text text-sm font-semibold text-rose-800"
+                      >
                         Class 前缀
                       </span>
                     </label>
                     <input
                       name="prefix"
                       type="text"
-                      class="input input-bordered input-sm w-full"
+                      class="input-clay w-full px-4 py-2.5 text-sm"
                       value="icon-"
                     />
                   </div>
                 </div>
-                <div class="bg-info/5 text-info rounded-lg px-3 py-2 text-xs">
+                <div class="rounded-2xl bg-blue-50 px-4 py-3 text-xs text-blue-700"
+                >
                   生成 class 时会得到类似{" "}
-                  <span class="font-mono font-medium">icon-home</span> 的名称。
+                  <span class="font-mono font-semibold">icon-home</span>{" "}
+                  的名称。
                 </div>
               </div>
-              <div class="border-base-300 flex justify-end gap-2 border-t px-6 py-3">
+              <div class="flex justify-end gap-3 border-t border-rose-100 px-6 py-4"
+              >
                 <button
                   type="button"
-                  class="btn btn-ghost btn-sm"
+                  class="rounded-2xl px-5 py-2.5 text-sm font-semibold text-rose-700 transition-all hover:bg-rose-50"
                   onClick$={() => (showModal.value = false)}
                 >
                   取消
                 </button>
-                <button type="submit" class="btn btn-primary btn-sm">
+                <button
+                  type="submit"
+                  class="clay-button rounded-2xl bg-rose-500 px-6 py-2.5 text-sm font-bold text-white"
+                >
                   创建
                 </button>
               </div>
@@ -615,25 +972,53 @@ export default component$(() => {
       {/* ── Confirm Delete Modal ──────────────────────────────── */}
       {confirmState.show && (
         <div class="modal modal-open">
-          <div class="modal-box animate-modal max-w-sm">
-            <h3 class="text-base font-semibold">确认删除</h3>
-            <p class="text-base-content/60 mt-2 text-sm">
-              确定要删除项目 "{confirmState.project?.name}"
-              吗？此操作将删除项目下的所有图标，不可恢复。
-            </p>
-            <div class="modal-action mt-4">
-              <button
-                class="btn btn-ghost btn-sm"
-                onClick$={() => {
-                  confirmState.show = false;
-                  confirmState.project = null;
-                }}
+          <div class="clay-card animate-modal mx-4 max-w-sm text-center"
+          >
+            <div class="p-6">
+              <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-100"
               >
-                取消
-              </button>
-              <button class="btn btn-error btn-sm" onClick$={confirmDelete}>
-                删除
-              </button>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#E11D48"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                </svg>
+              </div>
+              <h3 class="font-['Nunito'] text-lg font-bold text-rose-950"
+              >
+                确认删除
+              </h3>
+              <p class="mt-2 text-sm text-rose-700/60"
+              >
+                确定要删除项目 "{confirmState.project?.name}"
+                吗？此操作将删除项目下的所有图标，不可恢复。
+              </p>
+              <div class="mt-5 flex justify-center gap-3"
+              >
+                <button
+                  class="rounded-2xl px-5 py-2.5 text-sm font-semibold text-rose-700 transition-all hover:bg-rose-50"
+                  onClick$={() => {
+                    confirmState.show = false;
+                    confirmState.project = null;
+                  }}
+                >
+                  取消
+                </button>
+                <button
+                  class="clay-button rounded-2xl bg-rose-500 px-6 py-2.5 text-sm font-bold text-white"
+                  onClick$={confirmDelete}
+                >
+                  删除
+                </button>
+              </div>
             </div>
           </div>
           <div
@@ -649,27 +1034,37 @@ export default component$(() => {
       {/* ── Keyboard Shortcuts ─────────────────────────────────── */}
       {showShortcuts.value && (
         <div class="modal modal-open">
-          <div class="modal-box animate-modal max-w-xs">
-            <h3 class="mb-3 text-base font-semibold">键盘快捷键</h3>
-            <div class="space-y-1.5 text-sm">
-              {[
-                ["搜索聚焦", "/"],
-                ["关闭弹窗", "Esc"],
-                ["快捷键帮助", "?"],
-              ].map(([label, key]) => (
-                <div class="flex items-center justify-between py-1" key={label}>
-                  <span class="text-base-content/60">{label}</span>
-                  <kbd class="kbd kbd-sm">{key}</kbd>
-                </div>
-              ))}
-            </div>
-            <div class="modal-action mt-3">
-              <button
-                class="btn btn-ghost btn-sm"
-                onClick$={() => (showShortcuts.value = false)}
+          <div class="clay-card animate-modal mx-4 max-w-xs">
+            <div class="p-5">
+              <h3 class="font-['Nunito'] mb-4 text-base font-bold text-rose-950"
               >
-                关闭
-              </button>
+                键盘快捷键
+              </h3>
+              <div class="space-y-2 text-sm">
+                {[
+                  ["搜索聚焦", "/"],
+                  ["关闭弹窗", "Esc"],
+                  ["快捷键帮助", "?"],
+                ].map(([label, key]) => (
+                  <div class="flex items-center justify-between py-1" key={label}
+                  >
+                    <span class="text-rose-700/60">{label}</span>
+                    <kbd class="rounded-lg bg-rose-50 px-2 py-1 text-xs font-semibold text-rose-600"
+                    >
+                      {key}
+                    </kbd>
+                  </div>
+                ))}
+              </div>
+              <div class="mt-4 flex justify-end"
+              >
+                <button
+                  class="rounded-2xl px-4 py-2 text-sm font-semibold text-rose-700 transition-all hover:bg-rose-50"
+                  onClick$={() => (showShortcuts.value = false)}
+                >
+                  关闭
+                </button>
+              </div>
             </div>
           </div>
           <div
@@ -692,28 +1087,33 @@ const UserMenu = component$(() => {
   return (
     <div class="dropdown dropdown-end">
       <label
-        class="btn btn-ghost btn-sm btn-circle"
+        class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-2xl transition-all hover:bg-rose-50"
         onClick$={() => (showMenu.value = !showMenu.value)}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
+          width="18"
+          height="18"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
+          class="text-rose-600"
         >
           <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
           <circle cx="12" cy="7" r="4" />
         </svg>
       </label>
       {showMenu.value && (
-        <ul class="menu dropdown-content bg-base-100 rounded-box z-10 w-36 p-1.5 shadow-lg">
+        <ul class="menu dropdown-content clay-card z-10 mt-2 w-36 p-1.5"
+        >
           <li>
-            <button class="text-sm" onClick$={handleSignOut}>
+            <button
+              class="rounded-xl px-3 py-2 text-sm text-rose-800 transition-all hover:bg-rose-50"
+              onClick$={handleSignOut}
+            >
               退出登录
             </button>
           </li>

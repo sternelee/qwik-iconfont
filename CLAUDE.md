@@ -85,6 +85,7 @@ The app deliberately keeps both `icons.svg_path` (R2 key) and `icons.content` (r
 - Global styles: `src/global.css` (Tailwind CSS v4 + daisyUI with a custom `iconfont` theme).
 - UI uses daisyUI components: `btn`, `card`, `modal`, `navbar`, `tabs`, `form-control`, etc.
 - Animation utilities defined in `global.css` (fade-in, slide-up, modal-in, toast-in, etc.).
+- **Design system**: See `docs/design-system.md` for full visual guidelines — colors, typography, claymorphism specs, layout, animations.
 
 ### Path Aliases
 

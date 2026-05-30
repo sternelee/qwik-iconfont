@@ -1,10 +1,14 @@
 /**
  * Global styles for Iconfont app.
- * Tailwind CSS v4 + daisyUI — clean minimal style inspired by iconfont.cn
+ * Tailwind CSS v4 + daisyUI — Vibrant claymorphism theme
  */
 
 @import "tailwindcss";
 @plugin "daisyui";
+
+/* ── Google Fonts ─────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Nunito:ital,wght@0,700;0,800;0,900;1,700&display=swap');
 
 /* ── Theme ─────────────────────────────────────────────────────────── */
 
@@ -13,25 +17,29 @@
   default: true;
   prefersdark: false;
   color-scheme: light;
-  --color-base-100: oklch(1 0 0);
-  --color-base-200: oklch(0.97 0.001 240);
-  --color-base-300: oklch(0.93 0.002 240);
-  --color-base-content: oklch(0.18 0.02 260);
-  --color-primary: oklch(0.55 0.18 255);
-  --color-primary-content: oklch(0.98 0 0);
-  --color-secondary: oklch(0.65 0.14 255);
-  --color-secondary-content: oklch(0.98 0 0);
-  --color-accent: oklch(0.65 0.16 175);
-  --color-accent-content: oklch(0.98 0 0);
-  --color-neutral: oklch(0.35 0.02 260);
-  --color-neutral-content: oklch(0.98 0 0);
-  --color-info: oklch(0.6 0.12 230);
-  --color-success: oklch(0.65 0.18 145);
-  --color-warning: oklch(0.75 0.15 75);
-  --color-error: oklch(0.6 0.2 25);
-  --radius-selector: 0.5rem;
-  --radius-field: 0.5rem;
-  --radius-box: 0.75rem;
+  --color-base-100: #FFFBFB;
+  --color-base-200: #FFF1F2;
+  --color-base-300: #FFE4E6;
+  --color-base-content: #4A0418;
+  --color-primary: #E11D48;
+  --color-primary-content: #FFFFFF;
+  --color-secondary: #FB7185;
+  --color-secondary-content: #FFFFFF;
+  --color-accent: #2563EB;
+  --color-accent-content: #FFFFFF;
+  --color-neutral: #1E1B4B;
+  --color-neutral-content: #F8FAFC;
+  --color-info: #3B82F6;
+  --color-info-content: #FFFFFF;
+  --color-success: #22C55E;
+  --color-success-content: #FFFFFF;
+  --color-warning: #F59E0B;
+  --color-warning-content: #FFFFFF;
+  --color-error: #DC2626;
+  --color-error-content: #FFFFFF;
+  --radius-selector: 1rem;
+  --radius-field: 1rem;
+  --radius-box: 1.5rem;
   --border: 1px;
   --depth: 1;
   --noise: 0;
@@ -45,41 +53,180 @@ html {
   tab-size: 4;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
 }
 
 body {
   padding: 0;
   margin: 0;
   line-height: inherit;
-  font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
-    Arial, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   color: var(--color-base-content);
   background: var(--color-base-100);
 }
 
-/* ── Typography ────────────────────────────────────────────────────── */
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-weight: 600;
-  letter-spacing: -0.01em;
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
-/* ── Animations ────────────────────────────────────────────────────── */
+/* ── Claymorphism Utilities ───────────────────────────────────────── */
 
-@keyframes fade-in {
+.clay-card {
+  border-radius: 28px;
+  background: linear-gradient(145deg, #ffffff 0%, #FFF5F6 100%);
+  box-shadow:
+    8px 8px 20px rgba(225, 29, 72, 0.08),
+    -4px -4px 12px rgba(255, 255, 255, 0.9),
+    inset 1px 1px 1px rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 228, 230, 0.6);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.clay-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow:
+    12px 16px 32px rgba(225, 29, 72, 0.12),
+    -4px -4px 12px rgba(255, 255, 255, 0.9),
+    inset 1px 1px 1px rgba(255, 255, 255, 0.6);
+}
+
+.clay-card:active {
+  transform: translateY(0) scale(0.99);
+  box-shadow:
+    4px 4px 12px rgba(225, 29, 72, 0.06),
+    -2px -2px 8px rgba(255, 255, 255, 0.8),
+    inset 2px 2px 4px rgba(225, 29, 72, 0.05);
+}
+
+.clay-button {
+  border-radius: 16px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  box-shadow:
+    0 4px 0 #BE123C,
+    0 6px 12px rgba(225, 29, 72, 0.25);
+  transition: all 0.15s ease;
+}
+
+.clay-button:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 0 #BE123C,
+    0 8px 20px rgba(225, 29, 72, 0.35);
+}
+
+.clay-button:active {
+  transform: translateY(2px);
+  box-shadow:
+    0 2px 0 #BE123C,
+    0 2px 6px rgba(225, 29, 72, 0.2);
+}
+
+.clay-button-secondary {
+  box-shadow:
+    0 4px 0 #1D4ED8,
+    0 6px 12px rgba(37, 99, 235, 0.25);
+}
+
+.clay-button-secondary:hover {
+  box-shadow:
+    0 6px 0 #1D4ED8,
+    0 8px 20px rgba(37, 99, 235, 0.35);
+}
+
+.clay-button-secondary:active {
+  box-shadow:
+    0 2px 0 #1D4ED8,
+    0 2px 6px rgba(37, 99, 235, 0.2);
+}
+
+.clay-icon-card {
+  border-radius: 24px;
+  background: linear-gradient(145deg, #ffffff 0%, #FFF8F9 100%);
+  box-shadow:
+    4px 4px 12px rgba(225, 29, 72, 0.06),
+    -2px -2px 8px rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 228, 230, 0.5);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.clay-icon-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow:
+    6px 10px 20px rgba(225, 29, 72, 0.1),
+    -2px -2px 8px rgba(255, 255, 255, 0.8);
+}
+
+.clay-inset {
+  border-radius: 20px;
+  background: linear-gradient(145deg, #FFF0F1 0%, #FFFBFB 100%);
+  box-shadow:
+    inset 3px 3px 6px rgba(225, 29, 72, 0.06),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 228, 230, 0.4);
+}
+
+.clay-navbar {
+  background: rgba(255, 251, 251, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 228, 230, 0.5);
+  box-shadow: 0 1px 20px rgba(225, 29, 72, 0.04);
+}
+
+/* ── Hero Gradient Backgrounds ────────────────────────────────────── */
+
+.hero-gradient {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -20%, rgba(251, 113, 133, 0.15), transparent),
+    radial-gradient(ellipse 60% 50% at 80% 50%, rgba(37, 99, 235, 0.08), transparent),
+    radial-gradient(ellipse 50% 40% at 20% 80%, rgba(225, 29, 72, 0.06), transparent),
+    linear-gradient(180deg, #FFFBFB 0%, #FFF1F2 50%, #FFFBFB 100%);
+}
+
+.warm-gradient {
+  background: linear-gradient(135deg, #FFF1F2 0%, #FFF7ED 50%, #EFF6FF 100%);
+}
+
+/* ── Featured Icon Set Badge ──────────────────────────────────────── */
+
+.featured-badge {
+  background: linear-gradient(135deg, #E11D48 0%, #FB7185 100%);
+  color: white;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 100px;
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.3);
+}
+
+/* ── Animations ───────────────────────────────────────────────────── */
+
+@keyframes fade-in-up {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
@@ -117,12 +264,8 @@ h6 {
 }
 
 @keyframes backdrop-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes toast-in {
@@ -148,13 +291,8 @@ h6 {
 }
 
 @keyframes float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-4px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
 }
 
 @keyframes pop {
@@ -162,9 +300,7 @@ h6 {
     transform: scale(0.8);
     opacity: 0;
   }
-  60% {
-    transform: scale(1.05);
-  }
+  60% { transform: scale(1.05); }
   100% {
     transform: scale(1);
     opacity: 1;
@@ -172,19 +308,34 @@ h6 {
 }
 
 @keyframes pulse-ring {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 oklch(var(--p) / 0.15);
-  }
-  50% {
-    box-shadow: 0 0 0 6px oklch(var(--p) / 0);
-  }
+  0%, 100% { box-shadow: 0 0 0 0 oklch(var(--p) / 0.15); }
+  50% { box-shadow: 0 0 0 6px oklch(var(--p) / 0); }
 }
 
-/* ── Utility Classes ───────────────────────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
 
-.animate-fade-in {
-  animation: fade-in 0.25s ease-out forwards;
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+
+@keyframes blob {
+  0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+  50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+}
+
+/* ── Animation Utility Classes ────────────────────────────────────── */
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in-scale {
+  animation: fade-in-scale 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-slide-up {
@@ -223,51 +374,44 @@ h6 {
   animation: pulse-ring 2s ease-in-out infinite;
 }
 
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.animate-wiggle {
+  animation: wiggle 0.3s ease-in-out;
+}
+
+.animate-blob {
+  animation: blob 8s ease-in-out infinite;
+}
+
 /* Stagger delays for grid items */
-.stagger-1 {
-  animation-delay: 0.02s;
-}
-.stagger-2 {
-  animation-delay: 0.04s;
-}
-.stagger-3 {
-  animation-delay: 0.06s;
-}
-.stagger-4 {
-  animation-delay: 0.08s;
-}
-.stagger-5 {
-  animation-delay: 0.1s;
-}
-.stagger-6 {
-  animation-delay: 0.12s;
-}
-.stagger-7 {
-  animation-delay: 0.14s;
-}
-.stagger-8 {
-  animation-delay: 0.16s;
-}
+.stagger-1 { animation-delay: 0.04s; }
+.stagger-2 { animation-delay: 0.08s; }
+.stagger-3 { animation-delay: 0.12s; }
+.stagger-4 { animation-delay: 0.16s; }
+.stagger-5 { animation-delay: 0.20s; }
+.stagger-6 { animation-delay: 0.24s; }
+.stagger-7 { animation-delay: 0.28s; }
+.stagger-8 { animation-delay: 0.32s; }
 
-/* ── Component Styles ──────────────────────────────────────────────── */
+/* ── Component Styles ─────────────────────────────────────────────── */
 
-/* Card hover */
 .card-hover {
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .card-hover:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px oklch(0 0 0 / 0.06);
 }
 
-/* Button press */
 .btn-press:active {
   transform: scale(0.98);
 }
 
-/* Smooth transitions */
 .transition-smooth {
   transition: all 0.15s ease;
 }
@@ -279,12 +423,8 @@ h6 {
 }
 
 @keyframes toast-progress-shrink {
-  from {
-    width: 100%;
-  }
-  to {
-    width: 0%;
-  }
+  from { width: 100%; }
+  to { width: 0%; }
 }
 
 /* Drop zone */
@@ -323,4 +463,59 @@ h6 {
 
 ::-webkit-scrollbar-thumb:hover {
   background: oklch(0.55 0 0);
+}
+
+/* ── Decorative Blobs ─────────────────────────────────────────────── */
+
+.blob-1 {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: linear-gradient(135deg, rgba(251, 113, 133, 0.2), rgba(225, 29, 72, 0.1));
+  filter: blur(60px);
+  border-radius: 50%;
+  animation: blob 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.blob-2 {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(59, 130, 246, 0.06));
+  filter: blur(50px);
+  border-radius: 50%;
+  animation: blob 10s ease-in-out infinite reverse;
+  pointer-events: none;
+}
+
+/* ── Icon Preview Canvas ──────────────────────────────────────────── */
+
+.icon-preview-canvas {
+  background:
+    radial-gradient(circle at 30% 30%, rgba(251, 113, 133, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 70% 70%, rgba(37, 99, 235, 0.06) 0%, transparent 50%),
+    #FFFBFB;
+  border-radius: 20px;
+}
+
+/* ── Input Clay Style ─────────────────────────────────────────────── */
+
+.input-clay {
+  border-radius: 14px;
+  background: linear-gradient(145deg, #ffffff 0%, #FFF8F9 100%);
+  box-shadow:
+    inset 2px 2px 4px rgba(225, 29, 72, 0.04),
+    inset -1px -1px 3px rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 228, 230, 0.5);
+  transition: all 0.2s ease;
+}
+
+.input-clay:focus {
+  outline: none;
+  box-shadow:
+    inset 2px 2px 4px rgba(225, 29, 72, 0.06),
+    inset -1px -1px 3px rgba(255, 255, 255, 0.8),
+    0 0 0 3px rgba(225, 29, 72, 0.1);
+  border-color: rgba(225, 29, 72, 0.3);
 }
