@@ -25,6 +25,9 @@ import { SvgPreview } from "~/components/svg-preview/svg-preview";
 import { ToastContainer, type ToastItem } from "~/components/toast/toast";
 import { SkeletonIconCard } from "~/components/skeleton/skeleton";
 import { HighlightText } from "~/components/highlight-text/highlight-text";
+import { SvgEditor } from "~/components/svg-editor/svg-editor";
+import { IconDetailPanel } from "~/components/icon-detail/icon-detail";
+import { parseTags, resolveSvgViewBox } from "~/lib/types";
 
 export const useProject = routeLoader$(async ({ params, platform }) => {
   const { getDB, initDB } = await import("~/lib/db");
@@ -123,9 +126,13 @@ export const useUpdateIcon = routeAction$(async (data, { platform }) => {
     .set({
       name,
       unicode: (data.unicode as string | undefined) ?? null,
-      view_box: (data.view_box as string | undefined) ?? "0 0 1024 1024",
+      view_box: resolveSvgViewBox(
+        data.view_box as string | undefined,
+        content ?? current.content,
+      ),
       content: content ?? current.content,
       svg_path: svgPath,
+      tags: (data.tags as string | undefined) ?? current.tags ?? null,
       updated_at: new Date().toISOString(),
     })
     .where(eq(icons.id, id));
@@ -166,6 +173,47 @@ export const useBatchRenameIcons = routeAction$(async (data, { platform }) => {
   return { success: true };
 });
 
+export const useBatchUpdateTags = routeAction$(async (data, { platform }) => {
+  const { getDB, initDB } = await import("~/lib/db");
+  const db = getDB(platform);
+  await initDB(db, platform);
+  const { icons } = await import("~/lib/schema");
+  const { eq, inArray } = await import("drizzle-orm");
+
+  const ids = (data.ids as string).split(",").map((id) => parseInt(id, 10));
+  const action = data.action as "add" | "remove" | "set";
+  const newTags = (data.tags as string).split(",").filter(Boolean);
+
+  const iconsResult = await db
+    .select()
+    .from(icons)
+    .where(inArray(icons.id, ids));
+
+  for (const icon of iconsResult) {
+    const existing = icon.tags
+      ? icon.tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
+      : [];
+    let finalTags: string[];
+    if (action === "add") {
+      finalTags = [...new Set([...existing, ...newTags])];
+    } else if (action === "remove") {
+      finalTags = existing.filter((t) => !newTags.includes(t));
+    } else {
+      finalTags = newTags;
+    }
+    const tagsStr = finalTags.join(",");
+    await db
+      .update(icons)
+      .set({ tags: tagsStr || null })
+      .where(eq(icons.id, icon.id));
+  }
+
+  return { success: true };
+});
+
 export default component$(() => {
   const data = useProject();
   const loc = useLocation();
@@ -174,6 +222,7 @@ export default component$(() => {
   const updateProject = useUpdateProject();
   const updateIcon = useUpdateIcon();
   const batchRenameIcons = useBatchRenameIcons();
+  const batchUpdateTags = useBatchUpdateTags();
 
   const project = useStore({ ...data.value.project });
   const icons = useStore({ list: [...data.value.icons] });
@@ -206,14 +255,49 @@ export default component$(() => {
   const codeMode = useSignal<"symbol" | "fontclass" | "unicode">("fontclass");
   const generatedCode = useSignal("");
   const searchQuery = useSignal(loc.url.searchParams.get("search") || "");
+  const validSort = ["name", "time", "unicode"] as const;
+  const sortParam = loc.url.searchParams.get("sort");
   const sortBy = useSignal<"name" | "time" | "unicode">(
-    (loc.url.searchParams.get("sort") as any) || "time",
+    validSort.includes(sortParam as any)
+      ? (sortParam as "name" | "time" | "unicode")
+      : "time",
   );
   const copied = useSignal(false);
   const previewColor = useSignal("#333333");
   const downloadLoading = useSignal<"font" | "package" | null>(null);
   const showShortcuts = useSignal(false);
   const fontPreviewBase64 = useSignal("");
+
+  // Enhanced features state
+  const showSvgEditor = useSignal(false);
+  const showIconDetail = useSignal(false);
+  const showBatchTag = useSignal(false);
+  const activeTag = useSignal<string | null>(null);
+  const gridSize = useSignal<"small" | "medium" | "large">("medium");
+  const selectedIconForEdit = useStore<Partial<Icon>>({});
+  const batchTagForm = useStore({
+    action: "add" as "add" | "remove" | "set",
+    tags: "",
+  });
+  const allTags = useComputed$(() => {
+    const tagSet = new Set<string>();
+    icons.list.forEach((icon) => {
+      const tags = parseTags(icon.tags);
+      tags.forEach((t) => tagSet.add(t));
+    });
+    return Array.from(tagSet).sort();
+  });
+
+  const tagCounts = useComputed$(() => {
+    const counts: Record<string, number> = {};
+    icons.list.forEach((icon) => {
+      const tags = parseTags(icon.tags);
+      tags.forEach((t) => {
+        counts[t] = (counts[t] || 0) + 1;
+      });
+    });
+    return counts;
+  });
 
   // Toast state
   const toasts = useStore<{ items: ToastItem[] }>({ items: [] });
@@ -294,6 +378,18 @@ export default component$(() => {
           confirmBatchDelete.show = false;
           return;
         }
+        if (showSvgEditor.value) {
+          showSvgEditor.value = false;
+          return;
+        }
+        if (showIconDetail.value) {
+          showIconDetail.value = false;
+          return;
+        }
+        if (showBatchTag.value) {
+          showBatchTag.value = false;
+          return;
+        }
       }
 
       // ?: show keyboard shortcuts help
@@ -354,6 +450,12 @@ export default component$(() => {
       const q = searchQuery.value.toLowerCase();
       list = list.filter((i) => i.name.toLowerCase().includes(q));
     }
+    if (activeTag.value) {
+      list = list.filter((i) => {
+        const tags = i.tags ? i.tags.split(",").map((t) => t.trim()) : [];
+        return tags.includes(activeTag.value!);
+      });
+    }
     if (sortBy.value === "name") {
       list.sort((a, b) => a.name.localeCompare(b.name));
     } else if (sortBy.value === "unicode") {
@@ -383,7 +485,7 @@ export default component$(() => {
         body: formData,
       });
       if (res.ok) {
-        const result = await res.json() as { icon: Icon };
+        const result = (await res.json()) as { icon: Icon };
         return result.icon;
       }
       return null;
@@ -657,7 +759,7 @@ ${classes}`;
           </div>
         </div>
         <div class="hidden min-w-0 flex-1 px-4 md:block">
-          <p class="text-xs text-gray-500">
+          <p class="text-base-content/60 text-xs">
             {icons.list.length} 个图标 · Font: {project.font_family}
           </p>
         </div>
@@ -795,7 +897,7 @@ ${classes}`;
       {/* Toolbar */}
       <div class="container mx-auto px-4 py-4">
         <div class="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div class="flex items-center gap-3">
+          <div class="flex flex-wrap items-center gap-2">
             <label class="label cursor-pointer gap-2">
               <input
                 type="checkbox"
@@ -813,19 +915,61 @@ ${classes}`;
             {selectedIds.ids.size > 0 && (
               <>
                 <button
-                  class="btn btn-error btn-sm"
+                  class="btn btn-error btn-sm gap-1"
                   onClick$={() => {
                     confirmBatchDelete.count = selectedIds.ids.size;
                     confirmBatchDelete.show = true;
                   }}
                 >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  </svg>
                   删除选中
                 </button>
                 <button
-                  class="btn btn-outline btn-sm"
+                  class="btn btn-outline btn-sm gap-1"
                   onClick$={() => (showBatchRename.value = true)}
                 >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
                   批量重命名
+                </button>
+                <button
+                  class="btn btn-outline btn-sm gap-1"
+                  onClick$={() => (showBatchTag.value = true)}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                    <line x1="7" x2="7.01" y1="7" y2="7" />
+                  </svg>
+                  批量标签
                 </button>
               </>
             )}
@@ -889,7 +1033,7 @@ ${classes}`;
               </svg>
               {searchQuery.value && (
                 <button
-                  class="absolute top-1/2 right-2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  class="absolute top-1/2 right-2 -translate-y-1/2 text-gray-400 transition-all duration-150 hover:scale-110 hover:text-gray-600 active:scale-95"
                   onClick$={() => (searchQuery.value = "")}
                   title="清除搜索"
                 >
@@ -924,11 +1068,102 @@ ${classes}`;
           <span class="self-center text-xs text-gray-500">
             {displayList.length} / {icons.list.length}
           </span>
+          {/* Grid size selector */}
+          <div class="join">
+            <button
+              class={`join-item btn btn-sm ${gridSize.value === "small" ? "btn-active" : ""}`}
+              onClick$={() => (gridSize.value = "small")}
+              title="小图标"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+              </svg>
+            </button>
+            <button
+              class={`join-item btn btn-sm ${gridSize.value === "medium" ? "btn-active" : ""}`}
+              onClick$={() => (gridSize.value = "medium")}
+              title="中图标"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+              </svg>
+            </button>
+            <button
+              class={`join-item btn btn-sm ${gridSize.value === "large" ? "btn-active" : ""}`}
+              onClick$={() => (gridSize.value = "large")}
+              title="大图标"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+              </svg>
+            </button>
+          </div>
         </div>
 
+        {/* Tag filter bar */}
+        {allTags.value.length > 0 && (
+          <div class="mb-3 flex flex-wrap items-center gap-2">
+            <span class="text-xs text-gray-500">标签:</span>
+            <button
+              class={`btn btn-xs ${activeTag.value === null ? "btn-primary" : "btn-ghost"}`}
+              onClick$={() => (activeTag.value = null)}
+            >
+              全部
+            </button>
+            {allTags.value.map((tag) => (
+              <button
+                key={tag}
+                class={`btn btn-xs ${activeTag.value === tag ? "btn-primary" : "btn-ghost"}`}
+                onClick$={() =>
+                  (activeTag.value = activeTag.value === tag ? null : tag)
+                }
+              >
+                {tag}
+                <span
+                  class={`ml-1 rounded-full px-1 text-[10px] ${activeTag.value === tag ? "bg-primary-content/20" : "bg-base-300"}`}
+                >
+                  {tagCounts.value[tag] || 0}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
         {/* Drop zone */}
         <div
-          class={`relative rounded-xl border-2 border-dashed p-8 text-center transition-all duration-200 ${dragOver.value ? "border-primary bg-primary/5 text-primary scale-[1.01] shadow-lg" : "border-base-300 hover:border-primary/50 hover:bg-base-100 text-gray-500"}`}
+          class={`relative rounded-xl border-2 border-dashed p-8 text-center transition-all duration-200 ${dragOver.value ? "border-primary bg-primary/5 text-primary animate-drop-pulse scale-[1.01] shadow-lg" : "border-base-300 hover:border-primary/50 hover:bg-base-100 text-gray-500"}`}
           onDragOver$={(ev: any) => {
             ev.preventDefault();
             dragOver.value = true;
@@ -970,11 +1205,34 @@ ${classes}`;
 
       {/* Icons Grid */}
       <div class="container mx-auto px-4 pb-8">
+        {/* Stats strip */}
+        {icons.list.length > 0 && (
+          <div class="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
+            <span>共 {icons.list.length} 个图标</span>
+            {selectedIds.ids.size > 0 && (
+              <span class="text-primary font-medium">
+                {selectedIds.ids.size} 个已选中
+              </span>
+            )}
+            <span>
+              {icons.list.filter((i) => i.unicode).length} 个含 Unicode
+            </span>
+            {allTags.value.length > 0 && (
+              <span>{allTags.value.length} 个标签</span>
+            )}
+            {activeTag.value && (
+              <span>
+                · 当前筛选: <strong>{activeTag.value}</strong> (
+                {displayList.length} 个)
+              </span>
+            )}
+          </div>
+        )}
         {displayList.length === 0 ? (
           <div class="card bg-base-100 shadow">
             <div class="card-body items-center py-12 text-center">
               <svg
-                class="mb-3 animate-empty-float text-gray-300"
+                class="animate-empty-float mb-3 text-gray-300"
                 xmlns="http://www.w3.org/2000/svg"
                 width="48"
                 height="48"
@@ -997,7 +1255,15 @@ ${classes}`;
             </div>
           </div>
         ) : (
-          <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+          <div
+            class={`grid gap-3 ${
+              gridSize.value === "small"
+                ? "grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10"
+                : gridSize.value === "large"
+                  ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6"
+                  : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8"
+            }`}
+          >
             {/* Skeleton cards shown while uploading */}
             {uploadLoading.value && (
               <>
@@ -1009,19 +1275,19 @@ ${classes}`;
             {displayList.map((icon, idx) => (
               <div
                 key={icon.id}
-                class={`card bg-base-100 group shadow card-hover-lift hover:shadow-lg animate-icon-pop icon-selected ${selectedIds.ids.has(icon.id) ? "ring-primary bg-primary/5 ring-2" : ""}`}
+                class={`card bg-base-100 group card-hover-lift animate-icon-pop icon-selected shadow hover:shadow-lg ${selectedIds.ids.has(icon.id) ? "ring-primary bg-primary/5 ring-2" : ""}`}
                 style={`animation-delay: ${(idx % 12) * 0.02}s`}
               >
                 <div class="card-body relative items-center p-3 text-center">
                   {/* Selection checkbox */}
                   <button
-                    class={`absolute top-2 left-2 flex h-5 w-5 items-center justify-center rounded border checkbox-smooth ${selectedIds.ids.has(icon.id) ? "bg-primary border-primary" : "border-base-300 bg-base-100 hover:border-primary"}`}
+                    class={`checkbox-smooth absolute top-2 left-2 flex h-5 w-5 items-center justify-center rounded border ${selectedIds.ids.has(icon.id) ? "bg-primary border-primary" : "border-base-300 bg-base-100 hover:border-primary"}`}
                     onClick$={() => toggleSelect(icon.id)}
                     title={selectedIds.ids.has(icon.id) ? "取消选择" : "选择"}
                   >
                     {selectedIds.ids.has(icon.id) && (
                       <svg
-                        class="h-3.5 w-3.5 animate-check-pop text-white"
+                        class="animate-check-pop h-3.5 w-3.5 text-white"
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
                         fill="none"
@@ -1034,7 +1300,7 @@ ${classes}`;
                       </svg>
                     )}
                   </button>
-                  {/* Preview click area */}
+                  {/* Preview click area - opens IconDetailPanel */}
                   <button
                     class="mt-1 flex h-14 w-14 items-center justify-center transition-transform hover:scale-110"
                     onClick$={() => {
@@ -1042,9 +1308,13 @@ ${classes}`;
                       previewIcon.name = icon.name;
                       previewIcon.content = icon.content;
                       previewIcon.unicode = icon.unicode;
-                      showPreview.value = true;
+                      previewIcon.view_box = icon.view_box;
+                      previewIcon.tags = icon.tags;
+                      previewIcon.project_id = icon.project_id;
+                      previewIcon.svg_path = icon.svg_path;
+                      showIconDetail.value = true;
                     }}
-                    title="点击预览"
+                    title="点击查看详情"
                   >
                     {icon.content ? (
                       <SvgPreview
@@ -1055,12 +1325,22 @@ ${classes}`;
                       <span class="text-xs text-gray-400">无预览</span>
                     )}
                   </button>
-                  <p
-                    class="w-full truncate text-xs font-medium"
-                    title={icon.name}
+                  <button
+                    class="hover:text-primary w-full truncate text-left text-xs font-medium transition-colors"
+                    title={`点击复制类名: ${project.prefix}${icon.name}`}
+                    onClick$={async (ev: any) => {
+                      ev.stopPropagation();
+                      await navigator.clipboard.writeText(
+                        `${project.prefix}${icon.name}`,
+                      );
+                      showToast(
+                        `已复制 ${project.prefix}${icon.name}`,
+                        "success",
+                      );
+                    }}
                   >
                     <HighlightText text={icon.name} query={searchQuery.value} />
-                  </p>
+                  </button>
                   {icon.unicode && (
                     <button
                       class="hover:text-primary font-mono text-[10px] text-gray-400 transition-colors"
@@ -1079,12 +1359,13 @@ ${classes}`;
                       class="btn btn-ghost btn-xs btn-square"
                       title="编辑"
                       onClick$={() => {
-                        editingIcon.id = icon.id;
-                        editingIcon.name = icon.name;
-                        editingIcon.unicode = icon.unicode;
-                        editingIcon.view_box = icon.view_box;
-                        editingIcon.content = icon.content;
-                        showEdit.value = true;
+                        selectedIconForEdit.id = icon.id;
+                        selectedIconForEdit.name = icon.name;
+                        selectedIconForEdit.unicode = icon.unicode;
+                        selectedIconForEdit.view_box = icon.view_box;
+                        selectedIconForEdit.content = icon.content;
+                        selectedIconForEdit.tags = icon.tags;
+                        showSvgEditor.value = true;
                       }}
                     >
                       <svg
@@ -1165,7 +1446,7 @@ ${classes}`;
       {/* Settings Modal */}
       {showSettings.value && (
         <div class="modal modal-open">
-          <div class="modal-box max-w-lg animate-modal-box">
+          <div class="modal-box animate-modal-box max-w-lg">
             <h3 class="mb-4 text-lg font-bold">项目设置</h3>
             <form
               preventdefault:submit
@@ -1261,7 +1542,7 @@ ${classes}`;
       {/* Preview Icon Modal */}
       {showPreview.value && (
         <div class="modal modal-open">
-          <div class="modal-box max-w-sm text-center animate-modal-box">
+          <div class="modal-box animate-modal-box max-w-sm text-center">
             <h3 class="mb-4 text-lg font-bold">{previewIcon.name}</h3>
             <div class="bg-base-200 mx-auto mb-4 flex h-32 w-32 items-center justify-center rounded-lg p-4">
               {previewIcon.content && (
@@ -1320,7 +1601,7 @@ ${classes}`;
       {/* Edit Icon Modal */}
       {showEdit.value && (
         <div class="modal modal-open">
-          <div class="modal-box max-w-lg animate-modal-box">
+          <div class="modal-box animate-modal-box max-w-lg">
             <h3 class="mb-4 text-lg font-bold">编辑图标</h3>
             <div class="flex gap-4">
               <div class="flex flex-shrink-0 flex-col items-center gap-2">
@@ -1486,7 +1767,7 @@ ${classes}`;
       {/* Code Generation Modal */}
       {showCode.value && (
         <div class="modal modal-open">
-          <div class="modal-box max-w-3xl animate-modal-box">
+          <div class="modal-box animate-modal-box max-w-3xl">
             <h3 class="mb-4 text-lg font-bold">生成代码</h3>
             <div class="tabs tabs-boxed mb-4">
               <button
@@ -1653,7 +1934,7 @@ ${classes}`;
       {/* Batch Rename Modal */}
       {showBatchRename.value && (
         <div class="modal modal-open">
-          <div class="modal-box max-w-lg animate-modal-box">
+          <div class="modal-box animate-modal-box max-w-lg">
             <h3 class="mb-4 text-lg font-bold">
               批量重命名 ({selectedIds.ids.size} 个图标)
             </h3>
@@ -1818,7 +2099,7 @@ ${classes}`;
       {/* Confirm Delete Icon Modal */}
       {confirmDeleteIcon.show && (
         <div class="modal modal-open">
-          <div class="modal-box max-w-sm animate-modal-box">
+          <div class="modal-box animate-modal-box max-w-sm">
             <h3 class="mb-2 text-lg font-bold">确认删除</h3>
             <p class="mb-4 text-gray-500">
               确定要删除图标 "{confirmDeleteIcon.iconName}" 吗？此操作不可恢复。
@@ -1851,7 +2132,7 @@ ${classes}`;
       {/* Confirm Batch Delete Modal */}
       {confirmBatchDelete.show && (
         <div class="modal modal-open">
-          <div class="modal-box max-w-sm animate-modal-box">
+          <div class="modal-box animate-modal-box max-w-sm">
             <h3 class="mb-2 text-lg font-bold">确认批量删除</h3>
             <p class="mb-4 text-gray-500">
               确定要删除选中的 {confirmBatchDelete.count}{" "}
@@ -1883,47 +2164,171 @@ ${classes}`;
       )}
 
       {/* Keyboard Shortcuts Help */}
-      {showShortcuts.value && (
+      {/* SVG Editor Modal */}
+      {showSvgEditor.value && selectedIconForEdit.id && (
+        <SvgEditor
+          icon={selectedIconForEdit}
+          onSave$={async (icon) => {
+            await updateIcon.submit({
+              id: String(icon.id),
+              name: icon.name || "",
+              unicode: icon.unicode || null,
+              view_box: icon.view_box || "0 0 1024 1024",
+              content: icon.content || null,
+              tags: icon.tags || null,
+            });
+            const idx = icons.list.findIndex((i) => i.id === icon.id);
+            if (idx >= 0) {
+              icons.list[idx] = { ...icons.list[idx], ...icon } as Icon;
+            }
+            showSvgEditor.value = false;
+            showToast("图标已更新", "success");
+          }}
+          onClose$={() => (showSvgEditor.value = false)}
+        />
+      )}
+
+      {/* Icon Detail Panel */}
+      {showIconDetail.value && previewIcon.id && (
+        <IconDetailPanel
+          icon={previewIcon}
+          prefix={project.prefix}
+          fontFamily={project.font_family}
+          onEdit$={(icon) => {
+            selectedIconForEdit.id = icon.id;
+            selectedIconForEdit.name = icon.name;
+            selectedIconForEdit.unicode = icon.unicode;
+            selectedIconForEdit.view_box = icon.view_box;
+            selectedIconForEdit.content = icon.content;
+            selectedIconForEdit.tags = icon.tags;
+            showIconDetail.value = false;
+            showSvgEditor.value = true;
+          }}
+          onDelete$={(id) => {
+            const icon = icons.list.find((i) => i.id === id);
+            if (icon) handleDelete(id, icon.name);
+            showIconDetail.value = false;
+          }}
+          onClose$={() => (showIconDetail.value = false)}
+        />
+      )}
+
+      {/* Batch Tag Management Modal */}
+      {showBatchTag.value && (
         <div class="modal modal-open">
-          <div class="modal-box max-w-md animate-modal-box">
-            <h3 class="mb-4 text-lg font-bold">键盘快捷键</h3>
-            <div class="space-y-2 text-sm">
-              <div class="border-base-200 flex items-center justify-between border-b py-1">
-                <span>搜索聚焦</span>
-                <kbd class="kbd kbd-sm">/</kbd>
-              </div>
-              <div class="border-base-200 flex items-center justify-between border-b py-1">
-                <span>全选可见图标</span>
-                <span>
-                  <kbd class="kbd kbd-sm">Ctrl</kbd> +{" "}
-                  <kbd class="kbd kbd-sm">A</kbd>
-                </span>
-              </div>
-              <div class="border-base-200 flex items-center justify-between border-b py-1">
-                <span>删除选中图标</span>
-                <kbd class="kbd kbd-sm">Delete</kbd>
-              </div>
-              <div class="border-base-200 flex items-center justify-between border-b py-1">
-                <span>关闭弹窗</span>
-                <kbd class="kbd kbd-sm">Esc</kbd>
-              </div>
-              <div class="flex items-center justify-between py-1">
-                <span>显示快捷键帮助</span>
-                <kbd class="kbd kbd-sm">?</kbd>
+          <div class="modal-box animate-modal-box max-w-lg">
+            <h3 class="mb-4 text-lg font-bold">
+              批量标签管理 ({selectedIds.ids.size} 个图标)
+            </h3>
+            <div class="mb-4">
+              <div class="tabs tabs-boxed">
+                <button
+                  class={`tab ${batchTagForm.action === "add" ? "tab-active" : ""}`}
+                  onClick$={() => (batchTagForm.action = "add")}
+                >
+                  添加标签
+                </button>
+                <button
+                  class={`tab ${batchTagForm.action === "remove" ? "tab-active" : ""}`}
+                  onClick$={() => (batchTagForm.action = "remove")}
+                >
+                  移除标签
+                </button>
+                <button
+                  class={`tab ${batchTagForm.action === "set" ? "tab-active" : ""}`}
+                  onClick$={() => (batchTagForm.action = "set")}
+                >
+                  设置标签
+                </button>
               </div>
             </div>
+            <div class="form-control mb-4">
+              <label class="label">
+                <span class="label-text">
+                  {batchTagForm.action === "add"
+                    ? "添加标签（逗号分隔）"
+                    : batchTagForm.action === "remove"
+                      ? "移除标签（逗号分隔）"
+                      : "设置标签（逗号分隔）"}
+                </span>
+              </label>
+              <input
+                type="text"
+                class="input input-bordered"
+                placeholder="例如: outline, filled, basic"
+                value={batchTagForm.tags}
+                onInput$={(e: any) => (batchTagForm.tags = e.target.value)}
+              />
+            </div>
+            {allTags.value.length > 0 && (
+              <div class="mb-4">
+                <label class="label">
+                  <span class="label-text text-xs">已有标签</span>
+                </label>
+                <div class="flex flex-wrap gap-1">
+                  {allTags.value.map((tag) => (
+                    <button
+                      key={tag}
+                      class="btn btn-xs btn-ghost"
+                      onClick$={() => {
+                        const current = batchTagForm.tags
+                          .split(",")
+                          .filter(Boolean);
+                        if (!current.includes(tag)) {
+                          batchTagForm.tags = [...current, tag].join(",");
+                        }
+                      }}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <div class="modal-action">
+              <button class="btn" onClick$={() => (showBatchTag.value = false)}>
+                取消
+              </button>
               <button
-                class="btn btn-sm"
-                onClick$={() => (showShortcuts.value = false)}
+                class="btn btn-primary"
+                onClick$={async () => {
+                  const ids = Array.from(selectedIds.ids).join(",");
+                  await batchUpdateTags.submit({
+                    ids,
+                    action: batchTagForm.action,
+                    tags: batchTagForm.tags,
+                  });
+                  // Update local state
+                  const newTags = batchTagForm.tags.split(",").filter(Boolean);
+                  for (const id of Array.from(selectedIds.ids)) {
+                    const idx = icons.list.findIndex((i) => i.id === id);
+                    if (idx < 0) continue;
+                    const existing = parseTags(icons.list[idx].tags);
+                    let finalTags: string[];
+                    if (batchTagForm.action === "add") {
+                      finalTags = [...new Set([...existing, ...newTags])];
+                    } else if (batchTagForm.action === "remove") {
+                      finalTags = existing.filter((t) => !newTags.includes(t));
+                    } else {
+                      finalTags = newTags;
+                    }
+                    icons.list[idx] = {
+                      ...icons.list[idx],
+                      tags: finalTags.join(","),
+                    } as Icon;
+                  }
+                  batchTagForm.tags = "";
+                  showBatchTag.value = false;
+                  showToast("批量标签更新完成", "success");
+                }}
               >
-                关闭
+                应用
               </button>
             </div>
           </div>
           <div
             class="modal-backdrop animate-modal-backdrop"
-            onClick$={() => (showShortcuts.value = false)}
+            onClick$={() => (showBatchTag.value = false)}
           />
         </div>
       )}

@@ -60,7 +60,7 @@ body {
 @keyframes modal-box-in {
   from {
     opacity: 0;
-    transform: scale(0.95) translateY(-10px);
+    transform: scale(0.96) translateY(12px);
   }
   to {
     opacity: 1;
@@ -71,14 +71,17 @@ body {
 @keyframes modal-backdrop-in {
   from {
     opacity: 0;
+    backdrop-filter: blur(0);
   }
   to {
     opacity: 1;
+    backdrop-filter: blur(4px);
   }
 }
 
 @keyframes empty-float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -114,11 +117,22 @@ body {
 @keyframes icon-card-pop {
   from {
     opacity: 0;
-    transform: scale(0.9);
+    transform: scale(0.92) translateY(6px);
   }
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes drop-zone-pulse {
+  0%,
+  100% {
+    border-color: oklch(var(--p));
+    box-shadow: 0 0 0 0 oklch(var(--p) / 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 6px oklch(var(--p) / 0);
   }
 }
 
@@ -132,12 +146,27 @@ body {
   animation: toast-slide-out 0.2s ease-in forwards;
 }
 
+/* Toast progress bar shrinks over 3s */
+.toast-progress {
+  width: 100%;
+  animation: toast-progress-shrink 3s linear forwards;
+}
+
+@keyframes toast-progress-shrink {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
 .animate-modal-box {
-  animation: modal-box-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: modal-box-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-modal-backdrop {
-  animation: modal-backdrop-in 0.15s ease-out forwards;
+  animation: modal-backdrop-in 0.2s ease-out forwards;
 }
 
 .animate-empty-float {
@@ -153,18 +182,39 @@ body {
 }
 
 .animate-icon-pop {
-  animation: icon-card-pop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: icon-card-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Drop zone pulse when dragging */
+.animate-drop-pulse {
+  animation: drop-zone-pulse 1.5s ease-in-out infinite;
 }
 
 /* Stagger delays for grid items */
-.stagger-1 { animation-delay: 0.03s; }
-.stagger-2 { animation-delay: 0.06s; }
-.stagger-3 { animation-delay: 0.09s; }
-.stagger-4 { animation-delay: 0.12s; }
-.stagger-5 { animation-delay: 0.15s; }
-.stagger-6 { animation-delay: 0.18s; }
-.stagger-7 { animation-delay: 0.21s; }
-.stagger-8 { animation-delay: 0.24s; }
+.stagger-1 {
+  animation-delay: 0.02s;
+}
+.stagger-2 {
+  animation-delay: 0.04s;
+}
+.stagger-3 {
+  animation-delay: 0.06s;
+}
+.stagger-4 {
+  animation-delay: 0.08s;
+}
+.stagger-5 {
+  animation-delay: 0.1s;
+}
+.stagger-6 {
+  animation-delay: 0.12s;
+}
+.stagger-7 {
+  animation-delay: 0.14s;
+}
+.stagger-8 {
+  animation-delay: 0.16s;
+}
 
 /* Modal backdrop opacity transition */
 .modal-backdrop {
@@ -173,20 +223,31 @@ body {
 
 /* Smooth card hover lift */
 .card-hover-lift {
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+  transition:
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.25s ease;
 }
 .card-hover-lift:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow:
+    0 8px 25px -5px rgb(0 0 0 / 0.1),
+    0 4px 10px -6px rgb(0 0 0 / 0.1);
 }
 
 /* Icon card selection glow */
 .icon-selected {
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
+.icon-selected.ring-2 {
+  box-shadow: 0 0 0 3px oklch(var(--p) / 0.15);
+}
 
 /* Checkbox smooth transition */
 .checkbox-smooth {
-  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
 }
 
 /* Button press feedback */

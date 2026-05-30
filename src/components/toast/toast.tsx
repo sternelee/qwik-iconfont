@@ -71,12 +71,13 @@ export const ToastContainer = component$((props: { toasts: ToastItem[] }) => {
       {props.toasts.map((toast) => (
         <div
           key={toast.id}
-          class={`alert ${alertClass[toast.type]} pointer-events-auto min-w-[240px] shadow-lg animate-toast-in`}
+          class={`alert ${alertClass[toast.type]} animate-toast-in pointer-events-auto max-w-sm min-w-[240px] overflow-hidden shadow-lg`}
         >
           <div class="flex items-center gap-2">
             {iconMap[toast.type]}
             <span class="text-sm">{toast.message}</span>
           </div>
+          <div class="toast-progress absolute bottom-0 left-0 h-0.5 bg-current opacity-30" />
         </div>
       ))}
     </div>

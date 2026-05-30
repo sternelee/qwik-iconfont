@@ -90,6 +90,7 @@ export default component$(() => {
   const showModal = useSignal(false);
   const searchQuery = useSignal("");
   const debouncedQuery = useSignal("");
+  const sortProjects = useSignal<"date" | "name" | "count">("date");
   const deleting = useStore({ id: 0 });
   const showShortcuts = useSignal(false);
 
@@ -175,13 +176,25 @@ export default component$(() => {
   });
 
   const filtered = () => {
-    if (!debouncedQuery.value) return projects.value;
-    const q = debouncedQuery.value.toLowerCase();
-    return projects.value.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        (p.description || "").toLowerCase().includes(q),
-    );
+    let list = debouncedQuery.value
+      ? projects.value.filter(
+          (p) =>
+            p.name.toLowerCase().includes(debouncedQuery.value.toLowerCase()) ||
+            (p.description || "")
+              .toLowerCase()
+              .includes(debouncedQuery.value.toLowerCase()),
+        )
+      : [...projects.value];
+
+    if (sortProjects.value === "name") {
+      list = [...list].sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortProjects.value === "count") {
+      list = [...list].sort(
+        (a, b) => (b.icon_count || 0) - (a.icon_count || 0),
+      );
+    }
+    // "date" keeps existing server order (desc updated_at)
+    return list;
   };
 
   const handleDelete = $((project: Project) => {
@@ -217,7 +230,7 @@ export default component$(() => {
         </div>
         <div class="flex-none gap-2">
           <button
-            class="btn btn-primary btn-sm gap-1 btn-press"
+            class="btn btn-primary btn-sm btn-press gap-1"
             onClick$={() => (showModal.value = true)}
           >
             <svg
@@ -242,61 +255,79 @@ export default component$(() => {
       {/* Main */}
       <div class="container mx-auto px-4 py-8">
         <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-          <h1 class="text-2xl font-bold">我的项目</h1>
-          <div class="relative w-full sm:w-auto sm:min-w-[280px]">
-            <input
-              type="text"
-              class="input input-bordered input-sm w-full pr-8 pl-9"
-              placeholder="搜索项目..."
-              value={searchQuery.value}
-              onInput$={(ev: any) => (searchQuery.value = ev.target.value)}
-            />
-            <svg
-              class="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"
-              xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+          <div class="flex items-center gap-3">
+            <h1 class="text-2xl font-bold">我的项目</h1>
+            <span class="text-base-content/60 text-sm">
+              {projects.value.length} 个项目 ·{" "}
+              {projects.value.reduce((s, p) => s + (p.icon_count || 0), 0)}{" "}
+              个图标
+            </span>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <select
+              class="select select-bordered select-sm"
+              value={sortProjects.value}
+              onChange$={(ev: any) => (sortProjects.value = ev.target.value)}
             >
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" x2="16.65" y1="21" y2="16.65" />
-            </svg>
-            {searchQuery.value && (
-              <button
-                class="absolute top-1/2 right-2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                onClick$={() => (searchQuery.value = "")}
-                title="清除搜索"
+              <option value="date">按时间</option>
+              <option value="name">按名称</option>
+              <option value="count">按图标数</option>
+            </select>
+            <div class="relative w-full sm:w-auto sm:min-w-[280px]">
+              <input
+                type="text"
+                class="input input-bordered input-sm w-full pr-8 pl-9"
+                placeholder="搜索项目..."
+                value={searchQuery.value}
+                onInput$={(ev: any) => (searchQuery.value = ev.target.value)}
+              />
+              <svg
+                class="text-base-content/40 absolute top-1/2 left-3 -translate-y-1/2"
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" x2="16.65" y1="21" y2="16.65" />
+              </svg>
+              {searchQuery.value && (
+                <button
+                  class="text-base-content/40 hover:text-base-content/70 absolute top-1/2 right-2 -translate-y-1/2"
+                  onClick$={() => (searchQuery.value = "")}
+                  title="清除搜索"
                 >
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="15" x2="9" y1="9" y2="15" />
-                  <line x1="9" x2="15" y1="9" y2="15" />
-                </svg>
-              </button>
-            )}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="15" x2="9" y1="9" y2="15" />
+                    <line x1="9" x2="15" y1="9" y2="15" />
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
         {filtered().length === 0 ? (
-          <div class="card bg-base-100 shadow">
+          <div class="card bg-base-100 border-base-200 border shadow-sm">
             <div class="card-body items-center py-16 text-center">
               <svg
-                class="mb-4 animate-empty-float text-gray-300"
+                class="text-base-content/20 animate-empty-float mb-4"
                 xmlns="http://www.w3.org/2000/svg"
                 width="64"
                 height="64"
@@ -314,7 +345,7 @@ export default component$(() => {
               <h2 class="card-title text-lg">
                 {debouncedQuery.value ? "未找到匹配的项目" : "还没有项目"}
               </h2>
-              <p class="mb-4 text-gray-500">
+              <p class="text-base-content/60 mb-4">
                 {debouncedQuery.value
                   ? "尝试其他关键词"
                   : "创建你的第一个图标库，开始管理和生成 iconfont"}
@@ -354,7 +385,7 @@ export default component$(() => {
             {filtered().map((project, idx) => (
               <div
                 key={project.id}
-                class={`card bg-base-100 group shadow card-hover-lift hover:shadow-lg animate-card-fade-in stagger-${(idx % 8) + 1} ${deleting.id === project.id ? "pointer-events-none opacity-50" : ""}`}
+                class={`card bg-base-100 border-base-200 group card-hover-lift animate-card-fade-in border shadow-sm hover:shadow-lg stagger-${(idx % 8) + 1} ${deleting.id === project.id ? "pointer-events-none opacity-50" : ""}`}
               >
                 <div
                   class="card-body cursor-pointer"
@@ -383,7 +414,7 @@ export default component$(() => {
                     </button>
                   </div>
                   {project.description && (
-                    <p class="line-clamp-2 text-sm text-gray-500">
+                    <p class="text-base-content/60 line-clamp-2 text-sm">
                       <HighlightText
                         text={project.description}
                         query={debouncedQuery.value}
@@ -401,7 +432,7 @@ export default component$(() => {
                       Prefix: {project.prefix}
                     </span>
                   </div>
-                  <p class="mt-2 text-xs text-gray-400">
+                  <p class="text-base-content/50 mt-2 text-xs">
                     更新于 {new Date(project.updated_at).toLocaleDateString()}
                   </p>
                 </div>
@@ -413,9 +444,15 @@ export default component$(() => {
 
       {/* Create Project Modal */}
       {showModal.value && (
-        <div class="modal modal-open">
-          <div class="modal-box max-w-lg animate-modal-box">
-            <h3 class="mb-4 text-lg font-bold">新建项目</h3>
+        <div class="modal modal-open p-4">
+          <div class="modal-box animate-modal-box max-w-2xl overflow-hidden p-0">
+            <div class="border-base-200 bg-base-200/60 border-b px-6 py-5">
+              <h3 class="text-lg font-bold">新建项目</h3>
+              <p class="text-base-content/60 mt-1 text-sm">
+                设置项目名称、字体族和 class
+                前缀，后续上传图标后会直接用于代码生成。
+              </p>
+            </div>
             <form
               preventdefault:submit
               onSubmit$={async (ev: any) => {
@@ -436,59 +473,64 @@ export default component$(() => {
                 }
               }}
             >
-              <div class="form-control mb-3">
-                <label class="label">
-                  <span class="label-text">项目名称 *</span>
-                </label>
-                <input
-                  name="name"
-                  type="text"
-                  class="input input-bordered"
-                  placeholder="例如: my-icons"
-                  required
-                />
-              </div>
-              <div class="form-control mb-3">
-                <label class="label">
-                  <span class="label-text">描述</span>
-                </label>
-                <input
-                  name="description"
-                  type="text"
-                  class="input input-bordered"
-                  placeholder="项目描述（可选）"
-                />
-              </div>
-              <div class="form-control mb-3">
-                <label class="label">
-                  <span class="label-text">Font Family</span>
-                </label>
-                <input
-                  name="font_family"
-                  type="text"
-                  class="input input-bordered"
-                  placeholder="iconfont"
-                  value="iconfont"
-                />
-              </div>
-              <div class="form-control mb-4">
-                <label class="label">
-                  <span class="label-text">Class 前缀</span>
-                </label>
-                <input
-                  name="prefix"
-                  type="text"
-                  class="input input-bordered"
-                  placeholder="icon-"
-                  value="icon-"
-                />
-                <label class="label">
-                  <span class="label-text-alt font-mono text-gray-400">
-                    示例: <span class="text-primary">icon-</span>home
+              <div class="grid gap-4 px-6 py-5 md:grid-cols-2">
+                <div class="form-control md:col-span-2">
+                  <label class="label justify-start pb-2">
+                    <span class="label-text font-medium">项目名称 *</span>
+                  </label>
+                  <input
+                    name="name"
+                    type="text"
+                    class="input input-bordered w-full"
+                    placeholder="例如: my-icons"
+                    required
+                  />
+                </div>
+                <div class="form-control md:col-span-2">
+                  <label class="label justify-start pb-2">
+                    <span class="label-text font-medium">描述</span>
+                  </label>
+                  <textarea
+                    name="description"
+                    class="textarea textarea-bordered min-h-24 w-full"
+                    placeholder="项目描述（可选）"
+                  />
+                </div>
+                <div class="form-control">
+                  <label class="label justify-start pb-2">
+                    <span class="label-text font-medium">Font Family</span>
+                  </label>
+                  <input
+                    name="font_family"
+                    type="text"
+                    class="input input-bordered w-full"
+                    placeholder="iconfont"
+                    value="iconfont"
+                  />
+                </div>
+                <div class="form-control">
+                  <label class="label justify-start pb-2">
+                    <span class="label-text font-medium">Class 前缀</span>
+                  </label>
+                  <input
+                    name="prefix"
+                    type="text"
+                    class="input input-bordered w-full"
+                    placeholder="icon-"
+                    value="icon-"
+                  />
+                </div>
+                <div class="alert alert-info md:col-span-2">
+                  <span class="text-sm">
+                    生成 class 时会得到类似{" "}
+                    <span class="text-primary font-mono font-medium">
+                      icon-home
+                    </span>{" "}
+                    的名称。
                   </span>
-                </label>
+                </div>
               </div>
-              <div class="modal-action">
+              <div class="border-base-200 bg-base-200/40 modal-action mt-0 justify-end border-t px-6 py-4">
                 <button
                   type="button"
                   class="btn"
@@ -512,9 +554,9 @@ export default component$(() => {
       {/* Confirm Delete Modal */}
       {confirmState.show && (
         <div class="modal modal-open">
-          <div class="modal-box max-w-sm animate-modal-box">
+          <div class="modal-box animate-modal-box max-w-sm">
             <h3 class="mb-2 text-lg font-bold">确认删除</h3>
-            <p class="mb-4 text-gray-500">
+            <p class="text-base-content/60 mb-4">
               确定要删除项目 "{confirmState.project?.name}"
               吗？此操作将删除项目下的所有图标，不可恢复。
             </p>
@@ -546,7 +588,7 @@ export default component$(() => {
       {/* Keyboard Shortcuts Help */}
       {showShortcuts.value && (
         <div class="modal modal-open">
-          <div class="modal-box max-w-md animate-modal-box">
+          <div class="modal-box animate-modal-box max-w-md">
             <h3 class="mb-4 text-lg font-bold">键盘快捷键</h3>
             <div class="space-y-2 text-sm">
               <div class="border-base-200 flex items-center justify-between border-b py-1">

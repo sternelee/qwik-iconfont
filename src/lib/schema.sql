@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS icons (
   width INTEGER,
   height INTEGER,
   content TEXT,                   -- cached SVG content for quick access
+  tags TEXT,                      -- comma-separated tags for categorization
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
@@ -28,3 +29,4 @@ CREATE TABLE IF NOT EXISTS icons (
 -- Index for faster lookups
 CREATE INDEX IF NOT EXISTS idx_icons_project ON icons(project_id);
 CREATE INDEX IF NOT EXISTS idx_icons_unicode ON icons(unicode);
+CREATE INDEX IF NOT EXISTS idx_icons_tags ON icons(tags);

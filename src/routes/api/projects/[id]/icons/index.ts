@@ -3,7 +3,7 @@ import { getDB, initDB } from "~/lib/db";
 import { uploadSVG } from "~/lib/storage";
 import { icons } from "~/lib/schema";
 import { eq } from "drizzle-orm";
-import type { Icon } from "~/lib/types";
+import { resolveSvgViewBox, type Icon } from "~/lib/types";
 
 export const onGet: RequestHandler = async ({ params, platform, json }) => {
   const db = getDB(platform);
@@ -33,7 +33,7 @@ export const onPost: RequestHandler = async ({
   const name = formData.get("name") as string;
   const content = formData.get("content") as string;
   const unicode = (formData.get("unicode") as string) || null;
-  const viewBox = (formData.get("viewBox") as string) || "0 0 1024 1024";
+  const viewBox = resolveSvgViewBox(formData.get("viewBox") as string, content);
 
   if (!name || !content) {
     json(400, { error: "name and content are required" });

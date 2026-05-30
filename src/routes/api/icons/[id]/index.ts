@@ -3,7 +3,7 @@ import { getDB, initDB } from "~/lib/db";
 import { getBucket, uploadSVG } from "~/lib/storage";
 import { icons } from "~/lib/schema";
 import { eq } from "drizzle-orm";
-import type { Icon } from "~/lib/types";
+import { resolveSvgViewBox, type Icon } from "~/lib/types";
 
 export const onGet: RequestHandler = async ({ params, platform, json }) => {
   const db = getDB(platform);
@@ -30,8 +30,8 @@ export const onPut: RequestHandler = async ({
   const db = getDB(platform);
   await initDB(db, platform);
   const id = parseInt(params.id, 10);
-  const body = await request.json() as any;
-  const { name, unicode, view_box, content } = body;
+  const body = (await request.json()) as any;
+  const { name, unicode, view_box, content, tags } = body;
 
   const result = await db.select().from(icons).where(eq(icons.id, id));
   const current = result[0] as Icon | undefined;
@@ -62,8 +62,12 @@ export const onPut: RequestHandler = async ({
     .set({
       name: newName,
       unicode: unicode !== undefined ? unicode : current.unicode,
-      view_box: view_box ?? current.view_box,
+      view_box: resolveSvgViewBox(
+        (view_box as string | undefined) ?? current.view_box,
+        newContent ?? current.content,
+      ),
       content: newContent ?? current.content,
+      tags: tags !== undefined ? tags : current.tags,
       svg_path: svgPath,
       updated_at: new Date().toISOString(),
     })

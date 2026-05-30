@@ -7,9 +7,15 @@ function sanitizeSVG(svg: string): string {
 }
 
 function applyColor(svg: string, color: string): string {
-  // Replace explicit fill/stroke colors (but preserve "none")
-  let result = svg.replace(/fill="(?!none")[^"]*"/gi, `fill="${color}"`);
-  result = result.replace(/stroke="(?!none")[^"]*"/gi, `stroke="${color}"`);
+  // Replace explicit fill/stroke colors — skip fill="none" and fill="url(#...)" (gradients/patterns)
+  let result = svg.replace(
+    /\bfill="(?!none"|(?:url\())[^ "]*"/gi,
+    `fill="${color}"`,
+  );
+  result = result.replace(
+    /\bstroke="(?!none"|(?:url\())[^ "]*"/gi,
+    `stroke="${color}"`,
+  );
   // If no fill attribute at all, add to root svg
   if (!result.includes('fill="')) {
     result = result.replace(/<svg/i, `<svg fill="${color}"`);
@@ -23,7 +29,12 @@ function applyColor(svg: string, color: string): string {
  * Optional `color` prop overrides SVG fill/stroke colors.
  */
 export const SvgPreview = component$(
-  (props: { content: string | null; class?: string; color?: string }) => {
+  (props: {
+    content: string | null;
+    class?: string;
+    color?: string;
+    loading?: "lazy" | "eager";
+  }) => {
     const svg = props.content || "";
     let sanitized = sanitizeSVG(svg);
 
@@ -40,7 +51,7 @@ export const SvgPreview = component$(
         width="100"
         height="100"
         class={props.class || "h-full w-full object-contain"}
-        loading="lazy"
+        loading={props.loading || "lazy"}
       />
     );
   },

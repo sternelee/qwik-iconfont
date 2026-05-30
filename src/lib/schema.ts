@@ -21,6 +21,7 @@ export const icons = sqliteTable("icons", {
   width: integer("width", { mode: "number" }),
   height: integer("height", { mode: "number" }),
   content: text("content"),
+  tags: text("tags"), // Comma-separated tags for categorization
   created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
