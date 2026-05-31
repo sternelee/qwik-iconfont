@@ -472,14 +472,17 @@ export async function generateFont(
 /** 将任意格式的 unicode 值转为 CSS escape 格式（\e001）
  *  支持: &#xe001; / &#57345; / \e001 / U+E001 / e001
  */
-function toCSSEscape(unicode: string | null | undefined, fallback: number): string {
+function toCSSEscape(
+  unicode: string | null | undefined,
+  fallback: number,
+): string {
   if (!unicode) return `\\${fallback.toString(16)}`;
   const hex = unicode
     .replace(/^&#x/i, "") // &#xe001; → e001;
-    .replace(/^&#/, "")    // &#57345; → 57345 (decimal — rare)
-    .replace(/^\\/, "")   // \e001 → e001
+    .replace(/^&#/, "") // &#57345; → 57345 (decimal — rare)
+    .replace(/^\\/, "") // \e001 → e001
     .replace(/^U\+/i, "") // U+E001 → E001
-    .replace(/;$/, "");   // 去尾分号
+    .replace(/;$/, ""); // 去尾分号
   // 如果剩余是纯十进制数字（decimal entity）
   if (/^\d+$/.test(hex)) {
     return `\\${parseInt(hex, 10).toString(16)}`;
@@ -578,8 +581,10 @@ export async function generateDemoHTML(
 
   const items = icons
     .map((icon, i) => {
-      // HTML 展示用 HTML entity 格式，仅用于 .code 展示区
-      const displayCode = icon.unicode || `&#x${(0xe000 + i).toString(16)};`;
+      // 用于 .code 展示的文字：把 & 转义为 &amp; 防止浏览器将 &#xe001; 渲染为字符
+      const cssEscape = toCSSEscape(icon.unicode, 0xe000 + i);
+      const hex = cssEscape.replace(/^\\/, "");           // e001
+      const displayCode = `&amp;#x${hex};`;               // &amp;#xe001;
       return `    <li class="icon-item">\n      <i class="${prefix} ${prefix}${icon.name}"></i>\n      <div class="name">${icon.name}</div>\n      <div class="code">${displayCode}</div>\n    </li>`;
     })
     .join("\n");
