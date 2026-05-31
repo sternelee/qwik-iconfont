@@ -469,6 +469,24 @@ export async function generateFont(
 // CSS generation
 // ---------------------------------------------------------------------------
 
+/** 将任意格式的 unicode 值转为 CSS escape 格式（\e001）
+ *  支持: &#xe001; / &#57345; / \e001 / U+E001 / e001
+ */
+function toCSSEscape(unicode: string | null | undefined, fallback: number): string {
+  if (!unicode) return `\\${fallback.toString(16)}`;
+  const hex = unicode
+    .replace(/^&#x/i, "") // &#xe001; → e001;
+    .replace(/^&#/, "")    // &#57345; → 57345 (decimal — rare)
+    .replace(/^\\/, "")   // \e001 → e001
+    .replace(/^U\+/i, "") // U+E001 → E001
+    .replace(/;$/, "");   // 去尾分号
+  // 如果剩余是纯十进制数字（decimal entity）
+  if (/^\d+$/.test(hex)) {
+    return `\\${parseInt(hex, 10).toString(16)}`;
+  }
+  return `\\${hex.toLowerCase()}`;
+}
+
 export function generateCSS(
   fontFamily: string,
   prefix: string,
@@ -476,7 +494,7 @@ export function generateCSS(
 ): string {
   const rules = icons
     .map((icon, i) => {
-      const unicode = icon.unicode || `\\${(0xe000 + i).toString(16)}`;
+      const unicode = toCSSEscape(icon.unicode, 0xe000 + i);
       return `.${prefix}${icon.name}:before { content: "${unicode}"; }`;
     })
     .join("\n  ");
@@ -560,15 +578,16 @@ export async function generateDemoHTML(
 
   const items = icons
     .map((icon, i) => {
-      const unicode = icon.unicode || `&#x${(0xe000 + i).toString(16)};`;
-      return `    <li class="icon-item">\n      <i class="${prefix} ${prefix}${icon.name}"></i>\n      <div class="name">${icon.name}</div>\n      <div class="code">${unicode}</div>\n    </li>`;
+      // HTML 展示用 HTML entity 格式，仅用于 .code 展示区
+      const displayCode = icon.unicode || `&#x${(0xe000 + i).toString(16)};`;
+      return `    <li class="icon-item">\n      <i class="${prefix} ${prefix}${icon.name}"></i>\n      <div class="name">${icon.name}</div>\n      <div class="code">${displayCode}</div>\n    </li>`;
     })
     .join("\n");
 
   return `<!DOCTYPE html>\n<html>\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>${fontFamily} - Icon Demo</title>\n  <style>\n    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 40px 20px; background: #f5f5f5; }\n    h1 { text-align: center; margin-bottom: 40px; font-size: 24px; }\n    .icon-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 20px; list-style: none; padding: 0; max-width: 1200px; margin: 0 auto; }\n    .icon-item { background: #fff; border-radius: 8px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: transform 0.2s; }\n    .icon-item:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }\n    .icon-item i { font-size: 32px; color: #333; display: block; margin-bottom: 8px; }\n    .icon-item .name { font-size: 12px; color: #666; margin-bottom: 4px; word-break: break-all; }\n    .icon-item .code { font-size: 11px; color: #999; font-family: monospace; }\n    .icon-item .copy-btn { margin-top: 8px; padding: 2px 8px; font-size: 11px; border: 1px solid #ddd; background: #fff; border-radius: 4px; cursor: pointer; }\n    .icon-item .copy-btn:hover { background: #f0f0f0; }\n    .copy-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: #333; color: #fff; padding: 8px 16px; border-radius: 6px; font-size: 13px; opacity: 0; transition: all 0.3s; pointer-events: none; }\n    .copy-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }\n    @media (max-width: 480px) { .icon-list { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 12px; } .icon-item { padding: 12px; } .icon-item i { font-size: 24px; } }\n${inlineFontFace ? "    " + inlineFontFace.replace(/\n/g, "\n    ") : ""}\n    .${prefix} { font-family: "${fontFamily}" !important; font-style: normal; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }\n    ${icons
     .map((icon, i) => {
-      const unicode = icon.unicode || `\\${(0xe000 + i).toString(16)}`;
-      return `.${prefix}${icon.name}:before { content: "${unicode}"; }`;
+      const cssEscape = toCSSEscape(icon.unicode, 0xe000 + i);
+      return `.${prefix}${icon.name}:before { content: "${cssEscape}"; }`;
     })
     .join(
       "\n    ",
