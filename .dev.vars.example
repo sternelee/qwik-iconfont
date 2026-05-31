@@ -3,7 +3,7 @@
 # 参考 .dev.vars.example 创建此文件，或直接复制并填入真实值。
 
 BETTER_AUTH_URL=http://localhost:8788
-BETTER_AUTH_SECRET=local-dev-secret-change-in-production
+BETTER_AUTH_SECRET=6e44f39d487063af877b296e7cf8a3761440fd5d7ca889f8c4b3df49032d44b3
 
 # GitHub OAuth（本地测试 OAuth 流程时填写）
 GITHUB_CLIENT_ID=
