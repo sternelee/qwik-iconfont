@@ -353,6 +353,21 @@ export default component$(() => {
     action: "add" as "add" | "remove" | "set",
     tags: "",
   });
+
+  // AI icon generation state
+  const showAIGenerate = useSignal(false);
+  const aiPrompt = useSignal("");
+  const aiStyle = useSignal<"outline" | "filled">("outline");
+  const aiGenerating = useSignal(false);
+  const aiPreviewSvg = useSignal("");
+  const aiIconName = useSignal("");
+
+  // AI icon modification state
+  const showAIModify = useSignal(false);
+  const aiModifyIcon = useStore<Partial<Icon>>({});
+  const aiModifyInstruction = useSignal("");
+  const aiModifying = useSignal(false);
+  const aiModifiedSvg = useSignal("");
   const allTags = useComputed$(() => {
     const tagSet = new Set<string>();
     icons.list.forEach((icon) => {
@@ -382,6 +397,131 @@ export default component$(() => {
     setTimeout(() => {
       toasts.items = toasts.items.filter((t) => t.id !== id);
     }, 3000);
+  });
+
+  // ── AI handlers ────────────────────────────────────────────────────────────
+
+  const generateAIIcon = $(async () => {
+    if (!aiPrompt.value.trim()) return;
+    aiGenerating.value = true;
+    aiPreviewSvg.value = "";
+    try {
+      const res = await fetch("/api/ai/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: aiPrompt.value, style: aiStyle.value }),
+      });
+      const data = (await res.json()) as { svg?: string; error?: string };
+      if (!res.ok || data.error) throw new Error(data.error || "生成失败");
+      aiPreviewSvg.value = data.svg!;
+      if (!aiIconName.value) {
+        aiIconName.value = aiPrompt.value
+          .toLowerCase()
+          .replace(/\s+/g, "-")
+          .replace(/[^a-z0-9-]/g, "")
+          .slice(0, 30) || "ai-icon";
+      }
+    } catch (e: any) {
+      showToast(e.message || "AI 生成失败", "error");
+    } finally {
+      aiGenerating.value = false;
+    }
+  });
+
+  const addAIGeneratedIcon = $(async () => {
+    if (!aiPreviewSvg.value) return;
+    const projectId = parseInt(loc.params.id, 10);
+    const cleanName = (aiIconName.value.trim() || "ai-icon")
+      .replace(/\.svg$/i, "")
+      .replace(/[^a-zA-Z0-9_-]/g, "-");
+    uploadLoading.value = true;
+    try {
+      let icon: any = null;
+      if (isLocal) {
+        icon = createLocalIcon(projectId, {
+          name: cleanName,
+          content: aiPreviewSvg.value,
+        });
+      } else {
+        const formData = new FormData();
+        formData.append("name", cleanName);
+        formData.append("content", aiPreviewSvg.value);
+        const res = await fetch(`/api/projects/${projectId}/icons`, {
+          method: "POST",
+          body: formData,
+        });
+        if (res.ok) {
+          const result = (await res.json()) as { icon: Icon };
+          icon = result.icon;
+        }
+      }
+      if (icon) {
+        icons.list.push(icon);
+        showAIGenerate.value = false;
+        aiPrompt.value = "";
+        aiPreviewSvg.value = "";
+        aiIconName.value = "";
+        showToast("AI 图标已添加", "success");
+      } else {
+        showToast("添加失败，请重试", "error");
+      }
+    } finally {
+      uploadLoading.value = false;
+    }
+  });
+
+  const performAIModify = $(async () => {
+    if (!aiModifyInstruction.value.trim() || !aiModifyIcon.content) return;
+    aiModifying.value = true;
+    aiModifiedSvg.value = "";
+    try {
+      const res = await fetch("/api/ai/modify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          svg: aiModifyIcon.content,
+          instruction: aiModifyInstruction.value,
+        }),
+      });
+      const data = (await res.json()) as { svg?: string; error?: string };
+      if (!res.ok || data.error) throw new Error(data.error || "修改失败");
+      aiModifiedSvg.value = data.svg!;
+    } catch (e: any) {
+      showToast(e.message || "AI 修改失败", "error");
+    } finally {
+      aiModifying.value = false;
+    }
+  });
+
+  const applyAIModify = $(async () => {
+    if (!aiModifiedSvg.value || !aiModifyIcon.id) return;
+    const projectId = parseInt(loc.params.id, 10);
+    if (isLocal) {
+      updateLocalIcon(projectId, aiModifyIcon.id, {
+        content: aiModifiedSvg.value,
+        view_box: resolveSvgViewBox(undefined, aiModifiedSvg.value),
+      });
+    } else {
+      await updateIcon.submit({
+        id: String(aiModifyIcon.id),
+        name: aiModifyIcon.name || "",
+        unicode: aiModifyIcon.unicode || null,
+        view_box: aiModifyIcon.view_box || "0 0 1024 1024",
+        content: aiModifiedSvg.value,
+        tags: aiModifyIcon.tags || null,
+      });
+    }
+    const idx = icons.list.findIndex((i) => i.id === aiModifyIcon.id);
+    if (idx >= 0) {
+      icons.list[idx] = {
+        ...icons.list[idx],
+        content: aiModifiedSvg.value,
+      } as Icon;
+    }
+    showAIModify.value = false;
+    aiModifiedSvg.value = "";
+    aiModifyInstruction.value = "";
+    showToast("图标已更新", "success");
   });
 
   // Sync search/sort to URL query params
@@ -1266,6 +1406,12 @@ ${classes}`;
                 {uploadLoading.value ? "上传中..." : "上传图标"}
               </button>
             </div>
+            <button
+              class="clay-button flex items-center gap-2 rounded-2xl bg-violet-500 px-5 py-2.5 text-sm font-bold text-white"
+              onClick$={() => (showAIGenerate.value = true)}
+            >
+              ✨ AI 生成
+            </button>
           </div>
         </div>
 
@@ -2695,7 +2841,228 @@ ${classes}`;
             showIconDetail.value = false;
           }}
           onClose$={() => (showIconDetail.value = false)}
+          onAIModify$={(icon) => {
+            aiModifyIcon.id = icon.id;
+            aiModifyIcon.name = icon.name;
+            aiModifyIcon.unicode = icon.unicode;
+            aiModifyIcon.view_box = icon.view_box;
+            aiModifyIcon.content = icon.content;
+            aiModifyIcon.tags = icon.tags;
+            aiModifyInstruction.value = "";
+            aiModifiedSvg.value = "";
+            showIconDetail.value = false;
+            showAIModify.value = true;
+          }}
         />
+      )}
+
+      {/* ── AI Generate Modal ─────────────────────────────────── */}
+      {showAIGenerate.value && (
+        <div class="modal modal-open z-50">
+          <div class="clay-card animate-modal mx-4 w-full max-w-lg">
+            <div class="flex items-center justify-between border-b border-rose-100 px-6 py-4">
+              <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
+                ✨ AI 生成图标
+              </h3>
+              <button
+                class="flex h-8 w-8 items-center justify-center rounded-xl text-rose-400 transition-all hover:bg-rose-50 hover:text-rose-600"
+                onClick$={() => {
+                  showAIGenerate.value = false;
+                  aiPreviewSvg.value = "";
+                }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <line x1="18" x2="6" y1="6" y2="18" />
+                  <line x1="6" x2="18" y1="6" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <div class="space-y-4 p-6">
+              <div>
+                <label class="mb-1 block text-sm font-semibold text-rose-700">
+                  图标描述
+                </label>
+                <textarea
+                  class="input-clay w-full resize-none p-3 text-sm"
+                  placeholder="例如：一个心形图标，表示收藏或喜爱"
+                  rows={3}
+                  value={aiPrompt.value}
+                  onInput$={(e: any) => (aiPrompt.value = e.target.value)}
+                />
+              </div>
+              <div>
+                <label class="mb-1 block text-sm font-semibold text-rose-700">
+                  风格
+                </label>
+                <div class="flex gap-2">
+                  {(["outline", "filled"] as const).map((s) => (
+                    <button
+                      key={s}
+                      class={`flex-1 rounded-2xl py-2 text-sm font-semibold transition-all ${aiStyle.value === s ? "bg-rose-500 text-white shadow-md shadow-rose-500/20" : "bg-rose-50 text-rose-600 hover:bg-rose-100"}`}
+                      onClick$={() => (aiStyle.value = s)}
+                    >
+                      {s === "outline" ? "线条" : "填充"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <button
+                class="clay-button w-full rounded-2xl bg-violet-500 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                onClick$={generateAIIcon}
+                disabled={!aiPrompt.value.trim() || aiGenerating.value}
+              >
+                {aiGenerating.value ? "AI 生成中..." : "✨ 生成图标"}
+              </button>
+              {aiPreviewSvg.value && (
+                <div class="space-y-3 rounded-2xl bg-violet-50 p-4">
+                  <div class="flex items-center justify-center rounded-xl bg-white p-6">
+                    <SvgPreview
+                      content={aiPreviewSvg.value}
+                      class="h-20 w-20"
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    class="input-clay w-full px-3 py-2.5 text-sm"
+                    placeholder="图标名称"
+                    value={aiIconName.value}
+                    onInput$={(e: any) => (aiIconName.value = e.target.value)}
+                  />
+                  <button
+                    class="clay-button w-full rounded-2xl bg-emerald-500 py-2.5 text-sm font-bold text-white"
+                    onClick$={addAIGeneratedIcon}
+                  >
+                    ＋ 添加到项目
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+          <div
+            class="modal-backdrop"
+            onClick$={() => {
+              showAIGenerate.value = false;
+              aiPreviewSvg.value = "";
+            }}
+          />
+        </div>
+      )}
+
+      {/* ── AI Modify Modal ───────────────────────────────────── */}
+      {showAIModify.value && (
+        <div class="modal modal-open z-50">
+          <div class="clay-card animate-modal mx-4 w-full max-w-lg">
+            <div class="flex items-center justify-between border-b border-rose-100 px-6 py-4">
+              <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
+                ✨ AI 修改 · {aiModifyIcon.name}
+              </h3>
+              <button
+                class="flex h-8 w-8 items-center justify-center rounded-xl text-rose-400 transition-all hover:bg-rose-50 hover:text-rose-600"
+                onClick$={() => {
+                  showAIModify.value = false;
+                  aiModifiedSvg.value = "";
+                  aiModifyInstruction.value = "";
+                }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <line x1="18" x2="6" y1="6" y2="18" />
+                  <line x1="6" x2="18" y1="6" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <div class="space-y-4 p-6">
+              <div
+                class={`grid gap-4 ${aiModifiedSvg.value ? "grid-cols-2" : "grid-cols-1"}`}
+              >
+                <div>
+                  <label class="mb-1 block text-xs font-semibold tracking-wider text-rose-400/60 uppercase">
+                    原始
+                  </label>
+                  <div class="flex items-center justify-center rounded-2xl bg-rose-50 p-6">
+                    <SvgPreview
+                      content={aiModifyIcon.content ?? null}
+                      class="h-16 w-16"
+                    />
+                  </div>
+                </div>
+                {aiModifiedSvg.value && (
+                  <div>
+                    <label class="mb-1 block text-xs font-semibold tracking-wider text-emerald-500/80 uppercase">
+                      修改后
+                    </label>
+                    <div class="flex items-center justify-center rounded-2xl bg-emerald-50 p-6">
+                      <SvgPreview
+                        content={aiModifiedSvg.value}
+                        class="h-16 w-16"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div>
+                <label class="mb-1 block text-sm font-semibold text-rose-700">
+                  修改说明
+                </label>
+                <textarea
+                  class="input-clay w-full resize-none p-3 text-sm"
+                  placeholder="例如：改为填充风格、增大线条宽度、添加圆角..."
+                  rows={3}
+                  value={aiModifyInstruction.value}
+                  onInput$={(e: any) =>
+                    (aiModifyInstruction.value = e.target.value)
+                  }
+                />
+              </div>
+              <div class="flex gap-2">
+                <button
+                  class="clay-button flex-1 rounded-2xl bg-violet-500 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  onClick$={performAIModify}
+                  disabled={
+                    !aiModifyInstruction.value.trim() || aiModifying.value
+                  }
+                >
+                  {aiModifying.value ? "AI 修改中..." : "✨ 开始修改"}
+                </button>
+                {aiModifiedSvg.value && (
+                  <button
+                    class="clay-button flex-1 rounded-2xl bg-emerald-500 py-2.5 text-sm font-bold text-white"
+                    onClick$={applyAIModify}
+                  >
+                    ✓ 应用修改
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+          <div
+            class="modal-backdrop"
+            onClick$={() => {
+              showAIModify.value = false;
+              aiModifiedSvg.value = "";
+              aiModifyInstruction.value = "";
+            }}
+          />
+        </div>
       )}
 
       {/* ── Batch Tag Management Modal ────────────────────────── */}

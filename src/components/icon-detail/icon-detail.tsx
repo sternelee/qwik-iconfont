@@ -7,12 +7,13 @@ interface IconDetailPanelProps {
   onEdit$: QRL<(icon: Partial<Icon>) => void>;
   onDelete$: QRL<(id: number) => void>;
   onClose$: QRL<() => void>;
+  onAIModify$?: QRL<(icon: Partial<Icon>) => void>;
   prefix?: string;
   fontFamily?: string;
 }
 
 export const IconDetailPanel = component$((props: IconDetailPanelProps) => {
-  const { icon, onEdit$, onDelete$, onClose$ } = props;
+  const { icon, onEdit$, onDelete$, onClose$, onAIModify$ } = props;
 
   const previewSize = useSignal(96);
   const fillColor = useSignal("#E11D48");
@@ -266,7 +267,7 @@ export const IconDetailPanel = component$((props: IconDetailPanelProps) => {
         </div>
 
         {/* Actions */}
-        <div class="flex items-center justify-between border-t border-rose-100 px-5 py-4">
+        <div class="flex flex-wrap items-center gap-2 border-t border-rose-100 px-5 py-4">
           <button
             class="flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-rose-600 transition-all hover:bg-rose-50"
             onClick$={() => onDelete$(icon.id!)}
@@ -287,8 +288,16 @@ export const IconDetailPanel = component$((props: IconDetailPanelProps) => {
             </svg>
             删除
           </button>
+          {onAIModify$ && (
+            <button
+              class="flex items-center gap-1.5 rounded-xl bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-600 transition-all hover:bg-violet-100"
+              onClick$={() => onAIModify$(icon)}
+            >
+              ✨ AI 修改
+            </button>
+          )}
           <button
-            class="clay-button flex items-center gap-1.5 rounded-2xl bg-rose-500 px-5 py-2 text-sm font-bold text-white"
+            class="clay-button ml-auto flex items-center gap-1.5 rounded-2xl bg-rose-500 px-5 py-2 text-sm font-bold text-white"
             onClick$={() => onEdit$(icon)}
           >
             <svg
