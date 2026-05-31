@@ -75,7 +75,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
   const tags = useSignal(parseTags(icon.tags ?? null).join(", "));
   const fillColor = useSignal("#000000");
 
-  const previewSize = useSignal(64);
+  const previewSize = useSignal(256);
   const showRawCode = useSignal(false);
   const showCloseConfirm = useSignal(false);
   const copiedSvg = useSignal(false);
@@ -344,7 +344,6 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                 <div class="card-body p-5">
                   {/* Preview (300×300) + color panel side by side */}
                   <div class="flex flex-col gap-5 sm:flex-row sm:items-start">
-
                     {/* 300×300 fixed preview */}
                     <div
                       class="mx-auto shrink-0 overflow-hidden rounded-xl sm:mx-0"
@@ -388,11 +387,20 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                             stroke-width="1.5"
                             class="text-base-content/20"
                           >
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                            <rect
+                              x="3"
+                              y="3"
+                              width="18"
+                              height="18"
+                              rx="2"
+                              ry="2"
+                            />
                             <circle cx="8.5" cy="8.5" r="1.5" />
                             <polyline points="21 15 16 10 5 21" />
                           </svg>
-                          <p class="text-base-content/40 text-sm">暂无可预览的 SVG 内容</p>
+                          <p class="text-base-content/40 text-sm">
+                            暂无可预览的 SVG 内容
+                          </p>
                         </div>
                       )}
                     </div>
@@ -401,45 +409,58 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                     <div class="flex flex-1 flex-col gap-4">
                       {/* Grayscale */}
                       <div>
-                        <p class="text-base-content/50 mb-2 text-[11px] font-semibold uppercase tracking-wider">
+                        <p class="text-base-content/50 mb-2 text-[11px] font-semibold tracking-wider uppercase">
                           灰度
                         </p>
                         <div class="flex gap-1.5">
-                          {["#000000", "#333333", "#666666", "#999999", "#cccccc", "#ffffff"].map(
-                            (c) => (
-                              <button
-                                key={c}
-                                class={[
-                                  "h-8 flex-1 rounded-lg border-2 transition-all hover:scale-110 active:scale-95",
-                                  fillColor.value === c
-                                    ? "border-primary ring-primary/30 ring-2"
-                                    : "border-base-300",
-                                ].join(" ")}
-                                style={{ backgroundColor: c }}
-                                title={c}
-                                onClick$={() => (fillColor.value = c)}
-                              />
-                            ),
-                          )}
+                          {[
+                            "#000000",
+                            "#333333",
+                            "#666666",
+                            "#999999",
+                            "#cccccc",
+                            "#ffffff",
+                          ].map((c) => (
+                            <button
+                              key={c}
+                              class={[
+                                "h-6 flex-1 rounded-lg border-2 transition-all hover:scale-110 active:scale-95",
+                                fillColor.value === c
+                                  ? "border-primary ring-primary/30 ring-2"
+                                  : "border-base-300",
+                              ].join(" ")}
+                              style={{ backgroundColor: c }}
+                              title={c}
+                              onClick$={() => (fillColor.value = c)}
+                            />
+                          ))}
                         </div>
                       </div>
 
                       {/* Accent colors */}
                       <div>
-                        <p class="text-base-content/50 mb-2 text-[11px] font-semibold uppercase tracking-wider">
+                        <p class="text-base-content/50 mb-2 text-[11px] font-semibold tracking-wider uppercase">
                           彩色
                         </p>
                         <div class="grid grid-cols-6 gap-1.5">
                           {[
-                            "#ef4444", "#f97316", "#eab308",
-                            "#22c55e", "#3b82f6", "#8b5cf6",
-                            "#ec4899", "#06b6d4", "#10b981",
-                            "#f59e0b", "#6366f1", "#e11d48",
+                            "#ef4444",
+                            "#f97316",
+                            "#eab308",
+                            "#22c55e",
+                            "#3b82f6",
+                            "#8b5cf6",
+                            "#ec4899",
+                            "#06b6d4",
+                            "#10b981",
+                            "#f59e0b",
+                            "#6366f1",
+                            "#e11d48",
                           ].map((c) => (
                             <button
                               key={c}
                               class={[
-                                "h-8 rounded-lg border-2 transition-all hover:scale-110 active:scale-95",
+                                "h-6 rounded-lg border-2 transition-all hover:scale-110 active:scale-95",
                                 fillColor.value === c
                                   ? "border-primary ring-primary/30 ring-2"
                                   : "border-base-300",
@@ -454,7 +475,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
 
                       {/* Custom color picker */}
                       <div>
-                        <p class="text-base-content/50 mb-2 text-[11px] font-semibold uppercase tracking-wider">
+                        <p class="text-base-content/50 mb-2 text-[11px] font-semibold tracking-wider uppercase">
                           自定义
                         </p>
                         <div class="flex items-center gap-2">
@@ -462,7 +483,9 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                             type="color"
                             class="border-base-300 h-9 w-9 cursor-pointer rounded-lg border-2 p-0.5"
                             value={fillColor.value}
-                            onInput$={(e: any) => (fillColor.value = e.target.value)}
+                            onInput$={(e: any) =>
+                              (fillColor.value = e.target.value)
+                            }
                           />
                           <code class="bg-base-100 flex-1 rounded-lg px-3 py-2 font-mono text-sm">
                             {fillColor.value}
@@ -472,7 +495,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
 
                       {/* Preview size */}
                       <div>
-                        <p class="text-base-content/50 mb-2 text-[11px] font-semibold uppercase tracking-wider">
+                        <p class="text-base-content/50 mb-2 text-[11px] font-semibold tracking-wider uppercase">
                           图标大小
                         </p>
                         <select
@@ -490,6 +513,126 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                           <option value="256">256 px（最大）</option>
                         </select>
                       </div>
+
+                      {/* Divider */}
+                      <div class="divider my-0" />
+
+                      {/* Transform controls — moved here from standalone card */}
+                      <div>
+                        <p class="text-base-content/50 mb-2 text-[11px] font-semibold tracking-wider uppercase">
+                          变换
+                        </p>
+                        <div class="grid grid-cols-2 gap-2">
+                          <div class="form-control">
+                            <label class="label py-1">
+                              <span class="label-text text-xs">缩放 X</span>
+                            </label>
+                            <input
+                              type="number"
+                              class="input input-bordered input-sm"
+                              step="0.1"
+                              min="0.1"
+                              max="10"
+                              value={transform.scaleX}
+                              onInput$={(e: any) =>
+                                (transform.scaleX = parseFloat(e.target.value) || 1)
+                              }
+                            />
+                          </div>
+                          <div class="form-control">
+                            <label class="label py-1">
+                              <span class="label-text text-xs">缩放 Y</span>
+                            </label>
+                            <input
+                              type="number"
+                              class="input input-bordered input-sm"
+                              step="0.1"
+                              min="0.1"
+                              max="10"
+                              value={transform.scaleY}
+                              onInput$={(e: any) =>
+                                (transform.scaleY = parseFloat(e.target.value) || 1)
+                              }
+                            />
+                          </div>
+                          <div class="form-control">
+                            <label class="label py-1">
+                              <span class="label-text text-xs">旋转 (°)</span>
+                            </label>
+                            <input
+                              type="number"
+                              class="input input-bordered input-sm"
+                              step="1"
+                              min="-360"
+                              max="360"
+                              value={transform.rotate}
+                              onInput$={(e: any) =>
+                                (transform.rotate = parseFloat(e.target.value) || 0)
+                              }
+                            />
+                          </div>
+                          <div class="form-control">
+                            <label class="label py-1">
+                              <span class="label-text text-xs">偏移 X</span>
+                            </label>
+                            <input
+                              type="number"
+                              class="input input-bordered input-sm"
+                              step="1"
+                              value={transform.translateX}
+                              onInput$={(e: any) =>
+                                (transform.translateX = parseFloat(e.target.value) || 0)
+                              }
+                            />
+                          </div>
+                          <div class="form-control">
+                            <label class="label py-1">
+                              <span class="label-text text-xs">偏移 Y</span>
+                            </label>
+                            <input
+                              type="number"
+                              class="input input-bordered input-sm"
+                              step="1"
+                              value={transform.translateY}
+                              onInput$={(e: any) =>
+                                (transform.translateY = parseFloat(e.target.value) || 0)
+                              }
+                            />
+                          </div>
+                          <div class="flex items-end gap-1">
+                            <button
+                              class="btn btn-outline btn-sm"
+                              title="水平翻转"
+                              onClick$={() => {
+                                transform.scaleX = (transform.scaleX || 1) * -1;
+                              }}
+                            >
+                              ↔
+                            </button>
+                            <button
+                              class="btn btn-outline btn-sm"
+                              title="垂直翻转"
+                              onClick$={() => {
+                                transform.scaleY = (transform.scaleY || 1) * -1;
+                              }}
+                            >
+                              ↕
+                            </button>
+                            <button
+                              class="btn btn-outline btn-sm"
+                              onClick$={() => {
+                                transform.scaleX = 1;
+                                transform.scaleY = 1;
+                                transform.rotate = 0;
+                                transform.translateX = 0;
+                                transform.translateY = 0;
+                              }}
+                            >
+                              重置
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -498,145 +641,6 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                       当前 SVG 内容格式不正确，预览与保存会被禁用。
                     </div>
                   )}
-                </div>
-              </div>
-
-              {/* Transform controls */}
-              <div class="card bg-base-200 border-base-300 border shadow-sm">
-                <div class="card-body p-5">
-                  <h4 class="mb-3 flex items-center gap-2 text-sm font-medium">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    >
-                      <polyline points="5 9 2 12 5 15" />
-                      <polyline points="9 5 12 2 15 5" />
-                      <polyline points="15 19 12 22 9 19" />
-                      <polyline points="19 9 22 12 19 15" />
-                      <line x1="2" x2="22" y1="12" y2="12" />
-                      <line x1="12" x2="12" y1="2" y2="22" />
-                    </svg>
-                    变换
-                  </h4>
-                  <div class="grid grid-cols-2 gap-3">
-                    <div class="form-control">
-                      <label class="label">
-                        <span class="label-text text-xs">缩放 X</span>
-                      </label>
-                      <input
-                        type="number"
-                        class="input input-bordered input-sm"
-                        step="0.1"
-                        min="0.1"
-                        max="10"
-                        value={transform.scaleX}
-                        onInput$={(e: any) =>
-                          (transform.scaleX = parseFloat(e.target.value) || 1)
-                        }
-                      />
-                    </div>
-                    <div class="form-control">
-                      <label class="label">
-                        <span class="label-text text-xs">缩放 Y</span>
-                      </label>
-                      <input
-                        type="number"
-                        class="input input-bordered input-sm"
-                        step="0.1"
-                        min="0.1"
-                        max="10"
-                        value={transform.scaleY}
-                        onInput$={(e: any) =>
-                          (transform.scaleY = parseFloat(e.target.value) || 1)
-                        }
-                      />
-                    </div>
-                    <div class="form-control">
-                      <label class="label">
-                        <span class="label-text text-xs">旋转 (°)</span>
-                      </label>
-                      <input
-                        type="number"
-                        class="input input-bordered input-sm"
-                        step="1"
-                        min="-360"
-                        max="360"
-                        value={transform.rotate}
-                        onInput$={(e: any) =>
-                          (transform.rotate = parseFloat(e.target.value) || 0)
-                        }
-                      />
-                    </div>
-                    <div class="form-control">
-                      <label class="label">
-                        <span class="label-text text-xs">偏移 X</span>
-                      </label>
-                      <input
-                        type="number"
-                        class="input input-bordered input-sm"
-                        step="1"
-                        value={transform.translateX}
-                        onInput$={(e: any) =>
-                          (transform.translateX =
-                            parseFloat(e.target.value) || 0)
-                        }
-                      />
-                    </div>
-                    <div class="form-control">
-                      <label class="label">
-                        <span class="label-text text-xs">偏移 Y</span>
-                      </label>
-                      <input
-                        type="number"
-                        class="input input-bordered input-sm"
-                        step="1"
-                        value={transform.translateY}
-                        onInput$={(e: any) =>
-                          (transform.translateY =
-                            parseFloat(e.target.value) || 0)
-                        }
-                      />
-                    </div>
-                    <div class="flex items-end gap-1">
-                      <button
-                        class="btn btn-outline btn-sm"
-                        title="水平翻转"
-                        onClick$={() => {
-                          transform.scaleX = (transform.scaleX || 1) * -1;
-                        }}
-                      >
-                        ↔
-                      </button>
-                      <button
-                        class="btn btn-outline btn-sm"
-                        title="垂直翻转"
-                        onClick$={() => {
-                          transform.scaleY = (transform.scaleY || 1) * -1;
-                        }}
-                      >
-                        ↕
-                      </button>
-                      <button
-                        class="btn btn-outline btn-sm"
-                        onClick$={() => {
-                          transform.scaleX = 1;
-                          transform.scaleY = 1;
-                          transform.rotate = 0;
-                          transform.translateX = 0;
-                          transform.translateY = 0;
-                        }}
-                      >
-                        重置
-                      </button>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
