@@ -111,6 +111,7 @@ export const SvgColorEditor = component$<SvgColorEditorProps>(
       svgEl.removeAttribute("width");
       svgEl.removeAttribute("height");
       svgEl.setAttribute("width", "100%");
+      svgEl.setAttribute("height", "100%"); // parent is 420u00d7420 u2014 explicit size
       svgEl.style.display = "block";
       container.appendChild(document.adoptNode(svgEl));
 
@@ -185,9 +186,13 @@ export const SvgColorEditor = component$<SvgColorEditorProps>(
 
     // ── Render ──────────────────────────────────────────────────────
     return (
-      <div class="flex flex-col gap-3">
-        {/* ── Full-width SVG canvas ─────────────────────────────── */}
-        <div class="relative w-full overflow-hidden rounded-2xl border border-rose-100 bg-white">
+      <div class="flex gap-3">
+
+        {/* 420×420 fixed canvas — absolute-positioned SVG fills it */}
+        <div
+          class="relative shrink-0 overflow-hidden rounded-2xl border border-rose-100 bg-white"
+          style={{ width: "420px", height: "420px" }}
+        >
           {/* Checkerboard */}
           <div
             class="absolute inset-0"
@@ -201,22 +206,18 @@ export const SvgColorEditor = component$<SvgColorEditorProps>(
               backgroundPosition: "0 0,0 8px,8px -8px,-8px 0",
             }}
           />
-          {/* SVG mounts here — height driven by viewBox aspect ratio */}
-          <div
-            ref={containerRef}
-            class="relative p-4 min-h-[200px]"
-          />
+          {/* SVG mounts here — fills 420×420 via absolute inset */}
+          <div ref={containerRef} class="absolute inset-0 p-3" />
         </div>
 
-        {/* ── Colour control bar ─────────────────────────────────── */}
-        <div class="flex flex-wrap items-center gap-2 rounded-2xl border border-rose-100 bg-rose-50/40 px-3 py-2">
-          {/* Hint */}
-          <p class="shrink-0 text-[11px] text-rose-400">
-            {sel < 0 ? "👆 点击路径选择" : `路径 ${sel + 1} · ${selEntry?.tag}`}
+        {/* Colour panel */}
+        <div class="flex min-w-0 flex-1 flex-col gap-3">
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-rose-400">
+            {sel < 0 ? "👆 点击路径选择" : `已选 · 路径 ${sel + 1} · ${selEntry?.tag}`}
           </p>
 
-          {/* Path swatches — scrollable row */}
-          <div class="flex flex-1 flex-wrap gap-1.5">
+          {/* Path swatches */}
+          <div class="flex flex-wrap gap-1.5">
             {entries.value.map((e) => {
               const isSel = selectedIdx.value === e.idx;
               const displayColor = e.fill === "currentColor" ? "#111" : e.fill;
@@ -224,7 +225,7 @@ export const SvgColorEditor = component$<SvgColorEditorProps>(
                 <button
                   key={e.idx}
                   class={[
-                    "flex h-6 w-6 items-center justify-center rounded-lg border-2 transition-all",
+                    "h-6 w-6 rounded-lg border-2 transition-all",
                     isSel
                       ? "border-rose-500 ring-2 ring-rose-300 ring-offset-1"
                       : "border-white hover:border-rose-300",
@@ -237,29 +238,30 @@ export const SvgColorEditor = component$<SvgColorEditorProps>(
             })}
           </div>
 
-          {/* Colour picker for selected path */}
+          {/* Picker for selected */}
           {selEntry && (
-            <div class="flex shrink-0 items-center gap-1.5">
-              <input
-                type="color"
-                class="h-7 w-7 cursor-pointer rounded-lg border border-rose-200 p-0.5"
-                value={
-                  selEntry.fill === "currentColor" ? "#111111" : selEntry.fill
-                }
-                onInput$={(e) =>
-                  applyColor(selEntry.idx, (e.target as HTMLInputElement).value)
-                }
-              />
-              <input
-                type="text"
-                class="w-24 rounded-xl border border-rose-100 bg-white px-2 py-1 font-mono text-xs text-rose-800 focus:border-rose-300 focus:outline-none"
-                value={selEntry.fill}
-                onBlur$={(e) => {
-                  const v = (e.target as HTMLInputElement).value.trim();
-                  if (/^#[0-9a-fA-F]{3,8}$/.test(v) || v === "currentColor")
-                    applyColor(selEntry.idx, v);
-                }}
-              />
+            <div class="flex flex-col gap-2 rounded-2xl border border-rose-100 bg-rose-50/60 p-3">
+              <p class="text-[11px] font-semibold text-rose-500">修改颜色</p>
+              <div class="flex items-center gap-2">
+                <input
+                  type="color"
+                  class="h-8 w-8 shrink-0 cursor-pointer rounded-lg border border-rose-200 p-0.5"
+                  value={selEntry.fill === "currentColor" ? "#111111" : selEntry.fill}
+                  onInput$={(e) =>
+                    applyColor(selEntry.idx, (e.target as HTMLInputElement).value)
+                  }
+                />
+                <input
+                  type="text"
+                  class="w-full rounded-xl border border-rose-100 bg-white px-2.5 py-1 font-mono text-xs text-rose-800 focus:border-rose-300 focus:outline-none"
+                  value={selEntry.fill}
+                  onBlur$={(e) => {
+                    const v = (e.target as HTMLInputElement).value.trim();
+                    if (/^#[0-9a-fA-F]{3,8}$/.test(v) || v === "currentColor")
+                      applyColor(selEntry.idx, v);
+                  }}
+                />
+              </div>
             </div>
           )}
         </div>
