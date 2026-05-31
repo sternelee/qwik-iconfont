@@ -1,0 +1,1 @@
+ALTER TABLE `icons` ADD `color_layers` text;

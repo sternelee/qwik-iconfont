@@ -4,6 +4,7 @@ import {
   $,
   useStore,
   useVisibleTask$,
+  noSerialize,
 } from "@builder.io/qwik";
 import { routeLoader$ } from "@builder.io/qwik-city";
 import type { Project } from "~/lib/types";
@@ -26,8 +27,8 @@ const SORT_OPTIONS = [
 
 type SortKey = (typeof SORT_OPTIONS)[number]["key"];
 
-// Module-level controller so concurrent search fetches can be cancelled
-let searchAbortController: AbortController | null = null;
+// Module-level controller removed — now kept in component signal (noSerialize)
+// to avoid rolldown "Cannot assign to import" error in QRL closures.
 
 export const useInitialProjects = routeLoader$(
   async ({ platform, query }): Promise<PageData> => {
@@ -92,6 +93,11 @@ export default component$(() => {
 
   const search = useSignal("");
   const sort = useSignal<SortKey>("favorites");
+  // AbortController kept in a noSerialize signal so QRL closures can mutate it
+  // without triggering rolldown's "Cannot assign to import" error.
+  const abortCtrl = useSignal(
+    noSerialize<AbortController | undefined>(undefined),
+  );
   const loading = useSignal(false);
   const loadingMore = useSignal(false);
 
@@ -129,13 +135,13 @@ export default component$(() => {
   // Fetch from API (search + cursor)
   const fetchProjects = $(async (reset: boolean) => {
     if (reset) {
-      if (searchAbortController) searchAbortController.abort();
-      searchAbortController = new AbortController();
+      abortCtrl.value?.abort();
+      abortCtrl.value = noSerialize(new AbortController());
       loading.value = true;
     } else {
       loadingMore.value = true;
     }
-    const signal = reset ? searchAbortController!.signal : undefined;
+    const signal = reset ? abortCtrl.value?.signal : undefined;
     try {
       const params = new URLSearchParams({ visibility: "public", limit: "24" });
       if (search.value) params.set("q", search.value);

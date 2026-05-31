@@ -67,9 +67,9 @@
     // 配置后可在项目页面使用「✨ AI 生成」功能生成 SVG 图标
     // 支持 OpenAI、Together、Groq、Ollama 等兼容接口
     // 本地开发：在 .dev.vars 中设置 OPENAI_API_KEY（已加入 .gitignore）
-    "OPENAI_API_KEY": "",
-    "OPENAI_BASE_URL": "https://api.openai.com/v1",
-    "AI_MODEL": "gpt-4o-mini",
+    "OPENAI_API_KEY": "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",
+    "OPENAI_BASE_URL": "https://openrouter.ai/api/v1",
+    "AI_MODEL": "stepfun/step-3.7-flash",
   },
 
   // ── 可选：Cloudflare Workers AI（替代 OpenAI）──────────────────────────────
