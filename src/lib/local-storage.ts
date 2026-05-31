@@ -151,6 +151,7 @@ export function createLocalIcon(
     content: string;
     unicode?: string;
     tags?: string;
+    view_box?: string | null;
   },
 ): LocalIcon {
   const now = new Date().toISOString();
@@ -161,7 +162,7 @@ export function createLocalIcon(
     name: params.name,
     unicode: params.unicode || null,
     svg_path: `local/${projectId}/${params.name}.svg`,
-    view_box: null,
+    view_box: params.view_box ?? null,
     width: null,
     height: null,
     content: params.content,

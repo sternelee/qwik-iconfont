@@ -75,10 +75,11 @@ export async function callAI(
   );
 }
 
-/** Strip dangerous SVG content (scripts, event handlers, javascript: URIs). */
+/** Strip dangerous SVG content (scripts, styles with JS, event handlers, javascript: URIs). */
 export function sanitizeSVG(svg: string): string {
   return svg
     .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
     .replace(/\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s/>]*)/gi, "")
     .replace(/(href|xlink:href)\s*=\s*['"]javascript:[^'"]*['"]/gi, "");
 }
@@ -86,8 +87,10 @@ export function sanitizeSVG(svg: string): string {
 function extractSVG(text: string): string {
   // Remove markdown code fences if the model wrapped the response
   const cleaned = text.replace(/```[a-z]*\n?/gi, "").trim();
-  // Greedy match: from first <svg to last </svg>
-  const match = cleaned.match(/<svg[\s\S]*<\/svg>/i);
+  // Non-greedy: matches from first <svg to first </svg>.
+  // AI-generated icons are simple shapes without nested <svg> elements,
+  // so non-greedy is safer against trailing text that contains "</svg>".
+  const match = cleaned.match(/<svg[\s\S]*?<\/svg>/i);
   if (!match) {
     throw new Error("AI 未返回有效的 SVG 元素，请重试");
   }

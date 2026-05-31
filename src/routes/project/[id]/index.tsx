@@ -441,6 +441,7 @@ export default component$(() => {
         icon = createLocalIcon(projectId, {
           name: cleanName,
           content: aiPreviewSvg.value,
+          view_box: resolveSvgViewBox(undefined, aiPreviewSvg.value),
         });
       } else {
         const formData = new FormData();
@@ -453,6 +454,11 @@ export default component$(() => {
         if (res.ok) {
           const result = (await res.json()) as { icon: Icon };
           icon = result.icon;
+        } else {
+          const errData = await res
+            .json()
+            .catch(() => ({ error: "上传失败" })) as { error?: string };
+          throw new Error(errData.error || `上传失败 (${res.status})`);
         }
       }
       if (icon) {
@@ -506,7 +512,7 @@ export default component$(() => {
         id: String(aiModifyIcon.id),
         name: aiModifyIcon.name || "",
         unicode: aiModifyIcon.unicode || null,
-        view_box: aiModifyIcon.view_box || "0 0 1024 1024",
+        view_box: null, // let server extract from modified content
         content: aiModifiedSvg.value,
         tags: aiModifyIcon.tags || null,
       });
