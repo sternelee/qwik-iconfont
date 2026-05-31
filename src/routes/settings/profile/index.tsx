@@ -7,6 +7,7 @@ import {
   z,
 } from "@builder.io/qwik-city";
 import { getSessionFromRequest } from "~/lib/session";
+import { ThemeToggle } from "~/components/theme-toggle/theme-toggle";
 
 interface UserProfile {
   id: string;
@@ -166,6 +167,7 @@ export default component$(() => {
             >
               收藏
             </a>
+            <ThemeToggle />
           </div>
         </div>
       </nav>

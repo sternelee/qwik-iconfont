@@ -8,6 +8,7 @@ import {
 } from "@builder.io/qwik";
 import { routeLoader$ } from "@builder.io/qwik-city";
 import type { Project } from "~/lib/types";
+import { ThemeToggle } from "~/components/theme-toggle/theme-toggle";
 
 interface ExploreProject extends Project {
   icon_count: number;
@@ -259,6 +260,7 @@ export default component$(() => {
             >
               收藏
             </a>
+            <ThemeToggle />
           </div>
         </div>
       </nav>

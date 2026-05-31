@@ -2,6 +2,7 @@ import { component$, useSignal, $ } from "@builder.io/qwik";
 import { routeLoader$, useNavigate } from "@builder.io/qwik-city";
 import type { Project } from "~/lib/types";
 import { getSessionFromRequest } from "~/lib/session";
+import { ThemeToggle } from "~/components/theme-toggle/theme-toggle";
 
 interface FavoriteProject extends Project {
   icon_count: number;
@@ -117,6 +118,7 @@ export default component$(() => {
             >
               收藏
             </a>
+            <ThemeToggle />
           </div>
         </div>
       </nav>

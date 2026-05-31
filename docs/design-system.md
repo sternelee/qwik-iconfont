@@ -10,16 +10,16 @@
 
 ### 设计方向修订（v2）
 
-| 项目 | v1（旧） | v2（当前） |
-|------|---------|-----------|
-| 卡片阴影 | 多层 `8px 8px 20px` + 白色内光 | 单层 `0 2px 8px`，无内光 |
-| hover 阴影 | `12px 16px 32px` | `0 6px 16px` |
-| 背景 | 白→粉渐变 | 纯白 `#ffffff` |
-| 边框 | `rgba(ffc, 0.6)` 极浅 | `rgba(rose, 0.15)` 清晰 |
-| Navbar blur | `blur(20px) saturate(180%)` | `blur(8px) saturate(110%)` |
-| Blob blur | `blur(60px)` | `blur(28px)` |
-| base-200 | `#fff1f2` | `#ffeaec` （加深 +25%）|
-| base-300 | `#ffe4e6` | `#ffc5cb` （加深 +40%）|
+| 项目        | v1（旧）                       | v2（当前）                 |
+| ----------- | ------------------------------ | -------------------------- |
+| 卡片阴影    | 多层 `8px 8px 20px` + 白色内光 | 单层 `0 2px 8px`，无内光   |
+| hover 阴影  | `12px 16px 32px`               | `0 6px 16px`               |
+| 背景        | 白→粉渐变                      | 纯白 `#ffffff`             |
+| 边框        | `rgba(ffc, 0.6)` 极浅          | `rgba(rose, 0.15)` 清晰    |
+| Navbar blur | `blur(20px) saturate(180%)`    | `blur(8px) saturate(110%)` |
+| Blob blur   | `blur(60px)`                   | `blur(28px)`               |
+| base-200    | `#fff1f2`                      | `#ffeaec` （加深 +25%）    |
+| base-300    | `#ffe4e6`                      | `#ffc5cb` （加深 +40%）    |
 
 ---
 
@@ -27,40 +27,40 @@
 
 ### 主色
 
-| Token | Hex | 用途 |
-|-------|-----|------|
-| Primary | `#E11D48` | 主按钮、强调、选中态、图标 |
+| Token        | Hex       | 用途                              |
+| ------------ | --------- | --------------------------------- |
+| Primary      | `#E11D48` | 主按钮、强调、选中态、图标        |
 | Primary Dark | `#BE123C` | 按钮底部实色边（clay press 效果） |
-| Secondary | `#FB7185` | 渐变装饰、轻量强调 |
-| Accent | `#2563EB` | 次按钮、链接、信息提示 |
-| Accent Dark | `#1D4ED8` | 次按钮底部实色边 |
+| Secondary    | `#FB7185` | 渐变装饰、轻量强调                |
+| Accent       | `#2563EB` | 次按钮、链接、信息提示            |
+| Accent Dark  | `#1D4ED8` | 次按钮底部实色边                  |
 
 ### 背景色
 
-| Token | Hex | 对比说明 |
-|-------|-----|---------|
-| Base-100 | `#FFFFFF` | 页面主背景（纯白，最大对比度基准） |
-| Base-200 | `#FFEAEC` | 卡片背景、输入框凹陷区域 |
+| Token    | Hex       | 对比说明                            |
+| -------- | --------- | ----------------------------------- |
+| Base-100 | `#FFFFFF` | 页面主背景（纯白，最大对比度基准）  |
+| Base-200 | `#FFEAEC` | 卡片背景、输入框凹陷区域            |
 | Base-300 | `#FFC5CB` | 边框色、分割线（明显深于 base-200） |
 
 ### 文字色
 
-| Token | Hex | 对比度（vs #fff） |
-|-------|-----|-----------------|
-| Content | `#3D0114` | ≈ 13:1（AAA） |
-| Muted | `rgba(61, 1, 20, 0.55)` | ≈ 5.5:1（AA） |
-| Light | `rgba(61, 1, 20, 0.35)` | 占位符 / 禁用 |
+| Token   | Hex                     | 对比度（vs #fff） |
+| ------- | ----------------------- | ----------------- |
+| Content | `#3D0114`               | ≈ 13:1（AAA）     |
+| Muted   | `rgba(61, 1, 20, 0.55)` | ≈ 5.5:1（AA）     |
+| Light   | `rgba(61, 1, 20, 0.35)` | 占位符 / 禁用     |
 
 > 所有正文文字对比度须达到 WCAG AA 标准（4.5:1）。
 
 ### 语义色
 
-| Token | Hex | 用途 |
-|-------|-----|------|
-| Success | `#22C55E` | 成功提示、完成状态 |
-| Warning | `#F59E0B` | 警告、本地模式标签 |
-| Error | `#DC2626` | 删除按钮、错误提示 |
-| Info | `#3B82F6` | 提示信息、代码块背景 |
+| Token   | Hex       | 用途                 |
+| ------- | --------- | -------------------- |
+| Success | `#22C55E` | 成功提示、完成状态   |
+| Warning | `#F59E0B` | 警告、本地模式标签   |
+| Error   | `#DC2626` | 删除按钮、错误提示   |
+| Info    | `#3B82F6` | 提示信息、代码块背景 |
 
 ---
 
@@ -73,15 +73,15 @@
 
 ### 字号层级
 
-| 层级 | 字号 | 字重 | 用途 |
-|------|------|------|------|
-| Display | 48-64px | 900 | Hero 主标题 |
-| H1 | 24-30px | 800 | 页面标题 |
-| H2 | 18-20px | 700 | 区块标题 |
-| H3 | 16px | 700 | 卡片标题 |
-| Body | 14px | 400-500 | 正文 |
-| Caption | 12px | 500 | 标签、辅助文字 |
-| Mono | 12px | 400 | 代码、Unicode、数据 |
+| 层级    | 字号    | 字重    | 用途                |
+| ------- | ------- | ------- | ------------------- |
+| Display | 48-64px | 900     | Hero 主标题         |
+| H1      | 24-30px | 800     | 页面标题            |
+| H2      | 18-20px | 700     | 区块标题            |
+| H3      | 16px    | 700     | 卡片标题            |
+| Body    | 14px    | 400-500 | 正文                |
+| Caption | 12px    | 500     | 标签、辅助文字      |
+| Mono    | 12px    | 400     | 代码、Unicode、数据 |
 
 ---
 
@@ -96,27 +96,27 @@
 
 ### 数值表
 
-| 状态 | 值 |
-|------|-----|
-| `.clay-card` 静止 | `0 2px 8px rgba(225,29,72, 0.10)` |
-| `.clay-card:hover` | `0 6px 16px rgba(225,29,72, 0.14)` |
-| `.clay-card:active` | `0 1px 4px rgba(225,29,72, 0.08)` |
-| `.clay-icon-card` 静止 | `0 1px 4px rgba(225,29,72, 0.08)` |
+| 状态                    | 值                                 |
+| ----------------------- | ---------------------------------- |
+| `.clay-card` 静止       | `0 2px 8px rgba(225,29,72, 0.10)`  |
+| `.clay-card:hover`      | `0 6px 16px rgba(225,29,72, 0.14)` |
+| `.clay-card:active`     | `0 1px 4px rgba(225,29,72, 0.08)`  |
+| `.clay-icon-card` 静止  | `0 1px 4px rgba(225,29,72, 0.08)`  |
 | `.clay-icon-card:hover` | `0 4px 12px rgba(225,29,72, 0.12)` |
-| `.clay-button` 实色边 | `0 3px 0 #BE123C` |
-| `.clay-button` 扩散光 | `0 4px 8px rgba(225,29,72, 0.15)` |
-| `.clay-navbar` | `0 1px 6px rgba(225,29,72, 0.06)` |
+| `.clay-button` 实色边   | `0 3px 0 #BE123C`                  |
+| `.clay-button` 扩散光   | `0 4px 8px rgba(225,29,72, 0.15)`  |
+| `.clay-navbar`          | `0 1px 6px rgba(225,29,72, 0.06)`  |
 
 ---
 
 ## 模糊规范（v2）
 
-| 元素 | v1 | v2 |
-|------|----|----|
+| 元素                   | v1                          | v2                         |
+| ---------------------- | --------------------------- | -------------------------- |
 | Navbar backdrop-filter | `blur(20px) saturate(180%)` | `blur(8px) saturate(110%)` |
-| blob-1 filter | `blur(60px)` | `blur(28px)` |
-| blob-2 filter | `blur(50px)` | `blur(24px)` |
-| input-clay inset | 多层 | `inset 0 1px 3px` 单层 |
+| blob-1 filter          | `blur(60px)`                | `blur(28px)`               |
+| blob-2 filter          | `blur(50px)`                | `blur(24px)`               |
+| input-clay inset       | 多层                        | `inset 0 1px 3px` 单层     |
 
 ---
 
@@ -127,7 +127,7 @@
 ```css
 border-radius: 24px;
 background: #ffffff;
-box-shadow: 0 2px 8px rgba(225, 29, 72, 0.10);
+box-shadow: 0 2px 8px rgba(225, 29, 72, 0.1);
 border: 1px solid rgba(225, 29, 72, 0.15);
 ```
 
@@ -138,7 +138,9 @@ active：回位，shadow 收至 0.08。
 
 ```css
 border-radius: 14px;
-box-shadow: 0 3px 0 #BE123C, 0 4px 8px rgba(225,29,72, 0.15);
+box-shadow:
+  0 3px 0 #be123c,
+  0 4px 8px rgba(225, 29, 72, 0.15);
 ```
 
 实色底边模拟物理按压感，hover 上移 1px（原 2px），active 下移 2px。
@@ -156,7 +158,7 @@ border: 1px solid rgba(225, 29, 72, 0.12);
 
 ```css
 border-radius: 16px;
-background: #ffeaec;  /* base-200 */
+background: #ffeaec; /* base-200 */
 box-shadow: inset 0 1px 3px rgba(225, 29, 72, 0.08);
 border: 1px solid rgba(225, 29, 72, 0.14);
 ```
@@ -208,18 +210,18 @@ focus：`0 0 0 2px rgba(225,29,72, 0.12)` + border 加深至 0.4。
 
 ### 入场动画
 
-| 名称 | 时长 | 缓动 | 效果 |
-|------|------|------|------|
-| `fade-in-up` | 500ms | `cubic-bezier(0.16, 1, 0.3, 1)` | 上移 20px + 淡入 |
+| 名称            | 时长  | 缓动                            | 效果                 |
+| --------------- | ----- | ------------------------------- | -------------------- |
+| `fade-in-up`    | 500ms | `cubic-bezier(0.16, 1, 0.3, 1)` | 上移 20px + 淡入     |
 | `fade-in-scale` | 400ms | `cubic-bezier(0.16, 1, 0.3, 1)` | 缩放 0.92 → 1 + 淡入 |
-| `pop` | 200ms | `cubic-bezier(0.16, 1, 0.3, 1)` | 缩放弹出 |
+| `pop`           | 200ms | `cubic-bezier(0.16, 1, 0.3, 1)` | 缩放弹出             |
 
 ### 交互动画
 
-| 名称 | 时长 | 效果 |
-|------|------|------|
-| 卡片 hover | 250ms | 上移 3px + shadow 加深 |
-| 按钮 hover | 150ms | 上移 1px + shadow 加深 |
+| 名称        | 时长  | 效果                   |
+| ----------- | ----- | ---------------------- |
+| 卡片 hover  | 250ms | 上移 3px + shadow 加深 |
+| 按钮 hover  | 150ms | 上移 1px + shadow 加深 |
 | 按钮 active | 150ms | 下移 2px + shadow 压缩 |
 
 ### 装饰动画

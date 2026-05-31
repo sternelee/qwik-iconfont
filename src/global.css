@@ -18,10 +18,10 @@
   default: true;
   prefersdark: false;
   color-scheme: light;
-  --color-base-100: #ffffff;       /* 纯白背景，最大对比度 */
-  --color-base-200: #ffeaec;       /* 更深的卡片背景，与 base-100 区分明显 */
-  --color-base-300: #ffc5cb;       /* 深化边框色，提高分割线对比度 */
-  --color-base-content: #3d0114;   /* 加深正文色（原 #4a0418）*/
+  --color-base-100: #ffffff;
+  --color-base-200: #ffeaec;
+  --color-base-300: #ffc5cb;
+  --color-base-content: #3d0114;
   --color-primary: #e11d48;
   --color-primary-content: #ffffff;
   --color-secondary: #fb7185;
@@ -37,6 +37,39 @@
   --color-warning: #f59e0b;
   --color-warning-content: #ffffff;
   --color-error: #dc2626;
+  --color-error-content: #ffffff;
+  --radius-selector: 1rem;
+  --radius-field: 0.875rem;
+  --radius-box: 1.25rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: "iconfont-dark";
+  default: false;
+  prefersdark: true;
+  color-scheme: dark;
+  --color-base-100: #160b10;
+  --color-base-200: #1f1018;
+  --color-base-300: #2c1520;
+  --color-base-content: #fce7ef;
+  --color-primary: #f43f5e;
+  --color-primary-content: #ffffff;
+  --color-secondary: #fb7185;
+  --color-secondary-content: #ffffff;
+  --color-accent: #60a5fa;
+  --color-accent-content: #ffffff;
+  --color-neutral: #2c1520;
+  --color-neutral-content: #fce7ef;
+  --color-info: #60a5fa;
+  --color-info-content: #ffffff;
+  --color-success: #4ade80;
+  --color-success-content: #052e16;
+  --color-warning: #fbbf24;
+  --color-warning-content: #1c1008;
+  --color-error: #f87171;
   --color-error-content: #ffffff;
   --radius-selector: 1rem;
   --radius-field: 0.875rem;
@@ -442,14 +475,30 @@ h6 {
 }
 
 /* Stagger delays for grid items */
-.stagger-1 { animation-delay: 0.04s; }
-.stagger-2 { animation-delay: 0.08s; }
-.stagger-3 { animation-delay: 0.12s; }
-.stagger-4 { animation-delay: 0.16s; }
-.stagger-5 { animation-delay: 0.2s; }
-.stagger-6 { animation-delay: 0.24s; }
-.stagger-7 { animation-delay: 0.28s; }
-.stagger-8 { animation-delay: 0.32s; }
+.stagger-1 {
+  animation-delay: 0.04s;
+}
+.stagger-2 {
+  animation-delay: 0.08s;
+}
+.stagger-3 {
+  animation-delay: 0.12s;
+}
+.stagger-4 {
+  animation-delay: 0.16s;
+}
+.stagger-5 {
+  animation-delay: 0.2s;
+}
+.stagger-6 {
+  animation-delay: 0.24s;
+}
+.stagger-7 {
+  animation-delay: 0.28s;
+}
+.stagger-8 {
+  animation-delay: 0.32s;
+}
 
 /* ── Component Styles ─────────────────────────────────────────────── */
 
@@ -478,8 +527,12 @@ h6 {
 }
 
 @keyframes toast-progress-shrink {
-  from { width: 100%; }
-  to   { width: 0%; }
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
 }
 
 /* Drop zone */
@@ -532,7 +585,7 @@ h6 {
     rgba(251, 113, 133, 0.16),
     rgba(225, 29, 72, 0.08)
   );
-  filter: blur(28px);   /* 原 60px → 28px */
+  filter: blur(28px); /* 原 60px → 28px */
   border-radius: 50%;
   animation: blob 8s ease-in-out infinite;
   pointer-events: none;
@@ -547,7 +600,7 @@ h6 {
     rgba(37, 99, 235, 0.1),
     rgba(59, 130, 246, 0.05)
   );
-  filter: blur(24px);   /* 原 50px → 24px */
+  filter: blur(24px); /* 原 50px → 24px */
   border-radius: 50%;
   animation: blob 10s ease-in-out infinite reverse;
   pointer-events: none;
@@ -587,4 +640,146 @@ h6 {
     inset 0 1px 3px rgba(225, 29, 72, 0.06),
     0 0 0 2px rgba(225, 29, 72, 0.12);
   border-color: rgba(225, 29, 72, 0.4);
+}
+
+/* ── Dark Mode Overrides ──────────────────────────────────────────── */
+/*
+ * 覆盖自定义 clay 类和页面中硬编码的浅色 Tailwind 工具类。
+ * daisyUI 语义色（bg-base-100、text-primary 等）已自动适配。
+ */
+
+[data-theme="iconfont-dark"] {
+  /* 滚动条 */
+  color-scheme: dark;
+}
+
+/* ── Clay 组件暗色版 ── */
+
+[data-theme="iconfont-dark"] .clay-card {
+  background: #1f1018;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  border-color: rgba(244, 63, 94, 0.2);
+}
+[data-theme="iconfont-dark"] .clay-card:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
+  border-color: rgba(244, 63, 94, 0.35);
+}
+[data-theme="iconfont-dark"] .clay-card:active {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="iconfont-dark"] .clay-icon-card {
+  background: #1f1018;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  border-color: rgba(244, 63, 94, 0.18);
+}
+[data-theme="iconfont-dark"] .clay-icon-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border-color: rgba(244, 63, 94, 0.32);
+}
+
+[data-theme="iconfont-dark"] .clay-inset {
+  background: #160b10;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+  border-color: rgba(244, 63, 94, 0.2);
+}
+
+[data-theme="iconfont-dark"] .clay-navbar {
+  background: rgba(22, 11, 16, 0.92);
+  border-bottom-color: rgba(244, 63, 94, 0.18);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="iconfont-dark"] .clay-button {
+  box-shadow: 0 3px 0 #9f1239, 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+[data-theme="iconfont-dark"] .clay-button:hover {
+  box-shadow: 0 4px 0 #9f1239, 0 6px 12px rgba(0, 0, 0, 0.5);
+}
+[data-theme="iconfont-dark"] .clay-button:active {
+  box-shadow: 0 1px 0 #9f1239, 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="iconfont-dark"] .clay-button-secondary {
+  box-shadow: 0 3px 0 #1e40af, 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+[data-theme="iconfont-dark"] .clay-button-secondary:hover {
+  box-shadow: 0 4px 0 #1e40af, 0 6px 12px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="iconfont-dark"] .input-clay {
+  background: #1f1018;
+  border-color: rgba(244, 63, 94, 0.25);
+  color: #fce7ef;
+}
+[data-theme="iconfont-dark"] .input-clay:focus {
+  border-color: rgba(244, 63, 94, 0.5);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.3), 0 0 0 2px rgba(244, 63, 94, 0.18);
+}
+
+[data-theme="iconfont-dark"] .icon-preview-canvas {
+  background:
+    radial-gradient(circle at 30% 30%, rgba(244, 63, 94, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 70% 70%, rgba(96, 165, 250, 0.04) 0%, transparent 50%),
+    #160b10;
+}
+
+[data-theme="iconfont-dark"] .featured-badge {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Hero 背景暗色版 ── */
+[data-theme="iconfont-dark"] .hero-gradient {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(244, 63, 94, 0.1), transparent),
+    radial-gradient(ellipse 50% 40% at 80% 50%, rgba(96, 165, 250, 0.06), transparent),
+    #160b10;
+}
+[data-theme="iconfont-dark"] .warm-gradient {
+  background: linear-gradient(135deg, #1f1018 0%, #1a1208 50%, #0f1524 100%);
+}
+
+/* ── Blob 暗色版（降低亮度） ── */
+[data-theme="iconfont-dark"] .blob-1 {
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.12), rgba(159, 18, 57, 0.06));
+}
+[data-theme="iconfont-dark"] .blob-2 {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.08), rgba(37, 99, 235, 0.04));
+}
+
+/* ── 页面内联 nav/header 适配（非 clay-navbar 的简单 nav） ── */
+[data-theme="iconfont-dark"] nav.sticky,
+[data-theme="iconfont-dark"] nav.sticky.top-0 {
+  background: rgba(22, 11, 16, 0.92) !important;
+  border-bottom-color: rgba(244, 63, 94, 0.18) !important;
+}
+
+/* ── 硬编码浅色背景适配 ── */
+[data-theme="iconfont-dark"] .bg-white {
+  background-color: #1f1018 !important;
+}
+[data-theme="iconfont-dark"] .bg-rose-50 {
+  background-color: rgba(244, 63, 94, 0.08) !important;
+}
+[data-theme="iconfont-dark"] .bg-rose-100 {
+  background-color: rgba(244, 63, 94, 0.14) !important;
+}
+[data-theme="iconfont-dark"] .border-rose-100 {
+  border-color: rgba(244, 63, 94, 0.18) !important;
+}
+[data-theme="iconfont-dark"] .border-rose-200 {
+  border-color: rgba(244, 63, 94, 0.25) !important;
+}
+
+/* ── 代码块 / 预格式化文本 ── */
+[data-theme="iconfont-dark"] pre,
+[data-theme="iconfont-dark"] code {
+  background-color: #2c1520;
+  color: #fce7ef;
+}
+
+/* ── 分割线 ── */
+[data-theme="iconfont-dark"] .divider::before,
+[data-theme="iconfont-dark"] .divider::after {
+  background-color: rgba(244, 63, 94, 0.15);
 }

@@ -14,6 +14,7 @@ import {
 } from "~/components/add-to-project/add-to-project";
 import { SvgPreview } from "~/components/svg-preview/svg-preview";
 import { getSessionFromRequest } from "~/lib/session";
+import { ThemeToggle } from "~/components/theme-toggle/theme-toggle";
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -304,6 +305,7 @@ export default component$(() => {
             >
               收藏
             </a>
+            <ThemeToggle />
           </div>
         </div>
       </nav>

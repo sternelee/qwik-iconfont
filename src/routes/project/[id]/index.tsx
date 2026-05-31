@@ -31,6 +31,7 @@ import { ProjectMembers } from "~/components/project-members/project-members";
 import { UserMenu } from "~/components/user-menu/user-menu";
 import { parseTags, resolveSvgViewBox } from "~/lib/types";
 import { getSessionFromRequest } from "~/lib/session";
+import { ThemeToggle } from "~/components/theme-toggle/theme-toggle";
 import {
   getLocalProject,
   getLocalIcons,
@@ -1078,6 +1079,7 @@ ${classes}`;
 
           {/* Right: Actions */}
           <div class="flex items-center gap-2">
+            <ThemeToggle />
             {/* Desktop actions */}
             <div class="hidden flex-wrap items-center gap-2 md:flex">
               <button
