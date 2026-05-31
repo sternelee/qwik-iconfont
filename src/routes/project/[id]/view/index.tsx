@@ -8,6 +8,10 @@ import {
 import { routeLoader$, useLocation } from "@builder.io/qwik-city";
 import type { Project, Icon } from "~/lib/types";
 import { generateTTFFont, generateCSS } from "~/lib/font-gen";
+import {
+  AddToProjectDrawer,
+  type AddToProjectIcon,
+} from "~/components/add-to-project/add-to-project";
 import { SvgPreview } from "~/components/svg-preview/svg-preview";
 import { getSessionFromRequest } from "~/lib/session";
 
@@ -112,6 +116,11 @@ export default component$(() => {
   const copied = useSignal<string | null>(null);
   const toast = useSignal<string | null>(null);
   const filteredIcons = useStore<{ list: Icon[] }>({ list: icons });
+  // Add-to-project drawer
+  const addingIcon = useSignal<AddToProjectIcon | null>(null);
+  const closeDrawer = $(() => {
+    addingIcon.value = null;
+  });
 
   // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(({ track }) => {
@@ -239,6 +248,15 @@ export default component$(() => {
         <div class="fixed top-4 right-4 z-50 rounded-2xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-lg">
           {toast.value}
         </div>
+      )}
+
+      {/* Add-to-project drawer */}
+      {addingIcon.value && (
+        <AddToProjectDrawer
+          icon={addingIcon.value}
+          userId={data.value.userId}
+          onClose$={closeDrawer}
+        />
       )}
 
       {/* Navbar */}
@@ -562,31 +580,52 @@ export default component$(() => {
         ) : (
           <div class="grid grid-cols-3 gap-3 pb-8 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10">
             {filteredIcons.list.map((icon) => (
-              <button
+              <div
                 key={icon.id}
                 class="group relative flex flex-col items-center gap-1.5 rounded-2xl border border-rose-50 bg-white p-3 text-center transition-all hover:border-rose-200 hover:shadow-sm"
-                onClick$={() => handleCopy(icon.name)}
-                title={`复制名称: ${icon.name}`}
               >
-                <div class="flex h-10 w-10 items-center justify-center">
+                {/* Click icon to copy name */}
+                <button
+                  class="flex h-10 w-10 items-center justify-center"
+                  onClick$={() => handleCopy(icon.name)}
+                  title={`复制名称: ${icon.name}`}
+                >
                   <SvgPreview
                     content={icon.content}
                     class="h-8 w-8"
                     color="#e11d48"
                   />
-                </div>
+                </button>
                 <span class="w-full truncate text-[10px] font-medium text-rose-700">
                   {icon.name}
                 </span>
                 {icon.unicode && (
                   <span class="text-[9px] text-rose-300">{icon.unicode}</span>
                 )}
+
+                {/* Add to project button — appears on hover */}
+                <button
+                  class="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[11px] font-bold text-white opacity-0 shadow transition-all group-hover:opacity-100 hover:bg-rose-600 active:scale-95"
+                  title="添加到我的项目"
+                  onClick$={() => {
+                    addingIcon.value = {
+                      id: icon.id,
+                      name: icon.name,
+                      content: icon.content,
+                      unicode: icon.unicode,
+                      view_box: icon.view_box,
+                    };
+                  }}
+                >
+                  +
+                </button>
+
                 {copied.value === icon.name && (
                   <div class="absolute inset-0 flex items-center justify-center rounded-2xl bg-rose-500/90">
                     <span class="text-xs font-semibold text-white">已复制</span>
                   </div>
                 )}
-              </button>
+              </div>
             ))}
           </div>
         )}
