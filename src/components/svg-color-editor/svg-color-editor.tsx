@@ -104,8 +104,13 @@ export const SvgColorEditor = component$<SvgColorEditorProps>(
       const svgEl = parseSanitisedSvg(initialSvg);
       if (!svgEl) return;
 
+      // Only override width; keep the viewBox so the browser
+      // computes height from the aspect ratio automatically.
+      // Setting height="100%" on an SVG with no explicit parent height
+      // causes the SVG to shrink to 0 — so we DON'T set it.
+      svgEl.removeAttribute("width");
+      svgEl.removeAttribute("height");
       svgEl.setAttribute("width", "100%");
-      svgEl.setAttribute("height", "100%");
       svgEl.style.display = "block";
       container.appendChild(document.adoptNode(svgEl));
 
@@ -196,11 +201,10 @@ export const SvgColorEditor = component$<SvgColorEditorProps>(
               backgroundPosition: "0 0,0 8px,8px -8px,-8px 0",
             }}
           />
-          {/* SVG container — fills parent via absolute */}
+          {/* SVG mounts here — height driven by viewBox aspect ratio */}
           <div
             ref={containerRef}
-            class="relative p-3"
-            style={{ minHeight: "420px" }}
+            class="relative p-4 min-h-[200px]"
           />
         </div>
 
@@ -239,12 +243,11 @@ export const SvgColorEditor = component$<SvgColorEditorProps>(
               <input
                 type="color"
                 class="h-7 w-7 cursor-pointer rounded-lg border border-rose-200 p-0.5"
-                value={selEntry.fill === "currentColor" ? "#111111" : selEntry.fill}
+                value={
+                  selEntry.fill === "currentColor" ? "#111111" : selEntry.fill
+                }
                 onInput$={(e) =>
-                  applyColor(
-                    selEntry.idx,
-                    (e.target as HTMLInputElement).value,
-                  )
+                  applyColor(selEntry.idx, (e.target as HTMLInputElement).value)
                 }
               />
               <input
