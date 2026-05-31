@@ -783,3 +783,30 @@ h6 {
 [data-theme="iconfont-dark"] .divider::after {
   background-color: rgba(244, 63, 94, 0.15);
 }
+
+/* ── 暗色模式：深色 rose 文字色翻转 ────────────────────────────────
+ * Tailwind v4 的颜色工具类全部引用 CSS 自定义属性，包括不透明度变体
+ * (color-mix 也引用同一变量)，故此处覆盖变量即可覆盖所有变体。
+ *
+ * 对比度目标：WCAG AA（4.5:1）on base-100 #160b10
+ *   rose-50  #fce7ef → ~13:1 ✓  (headings)
+ *   rose-200 #fecdd3 → ~10:1 ✓  (labels, body)
+ *   rose-300 #fda4af → ~7:1  ✓  (muted)
+ *   rose-400 #fb7185 → ~4.7:1 ✓ (stays as-is, acceptable)
+ * ───────────────────────────────────────────────────────────────── */
+[data-theme="iconfont-dark"] {
+  /* 深色文字 → 翻转为浅色，所有 text-rose-* / border-rose-* 等自动跟随 */
+  --color-rose-950: #fce7ef;  /* → rose-50 近白 */
+  --color-rose-900: #fecdd3;  /* → rose-200 */
+  --color-rose-800: #fecdd3;  /* → rose-200 */
+  --color-rose-700: #fda4af;  /* → rose-300 */
+  --color-rose-600: #fb7185;  /* → rose-400（仍可辨）*/
+}
+
+/* 特例：bg-rose-950 用于代码块背景，需保持暗色而非跟随上方变量翻转 */
+[data-theme="iconfont-dark"] .bg-rose-950 {
+  background-color: #2c1520 !important;
+}
+[data-theme="iconfont-dark"] .bg-rose-900 {
+  background-color: #23101a !important;
+}
