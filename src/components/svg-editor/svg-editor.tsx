@@ -341,107 +341,163 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
             {/* Left: Preview */}
             <div class="flex min-w-0 flex-col gap-4">
               <div class="card bg-base-200 border-base-300 border shadow-sm">
-                <div class="card-body relative gap-4 p-5">
-                  {/* Preview size */}
-                  <div class="absolute top-4 right-4 flex items-center gap-2">
-                    <span class="text-base-content/60 text-xs">预览大小</span>
-                    <select
-                      class="select select-bordered select-xs w-20"
-                      value={previewSize.value}
-                      onChange$={(e: any) =>
-                        (previewSize.value = Number(e.target.value))
-                      }
+                <div class="card-body p-5">
+                  {/* Preview (300×300) + color panel side by side */}
+                  <div class="flex flex-col gap-5 sm:flex-row sm:items-start">
+
+                    {/* 300×300 fixed preview */}
+                    <div
+                      class="mx-auto shrink-0 overflow-hidden rounded-xl sm:mx-0"
+                      style={{
+                        width: "300px",
+                        height: "300px",
+                        backgroundColor: "rgb(255,255,255)",
+                        backgroundImage:
+                          "linear-gradient(45deg,rgb(243,244,246) 25%,transparent 25%)," +
+                          "linear-gradient(-45deg,rgb(243,244,246) 25%,transparent 25%)," +
+                          "linear-gradient(45deg,transparent 75%,rgb(243,244,246) 75%)," +
+                          "linear-gradient(-45deg,transparent 75%,rgb(243,244,246) 75%)",
+                        backgroundSize: "20px 20px",
+                        backgroundPosition: "0 0,0 10px,10px -10px,-10px 0",
+                      }}
                     >
-                      <option value="32">32px</option>
-                      <option value="48">48px</option>
-                      <option value="64">64px</option>
-                      <option value="96">96px</option>
-                      <option value="128">128px</option>
-                      <option value="192">192px</option>
-                      <option value="256">256px</option>
-                    </select>
-                  </div>
+                      {!isEmpty && previewContent ? (
+                        <div class="flex h-full w-full items-center justify-center">
+                          <div
+                            style={{
+                              width: `${Math.min(previewSize.value, 260)}px`,
+                              height: `${Math.min(previewSize.value, 260)}px`,
+                            }}
+                          >
+                            <SvgPreview
+                              content={previewContent}
+                              class="h-full w-full object-contain"
+                              loading="eager"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div class="flex h-full flex-col items-center justify-center gap-2">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="40"
+                            height="40"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                            class="text-base-content/20"
+                          >
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                            <circle cx="8.5" cy="8.5" r="1.5" />
+                            <polyline points="21 15 16 10 5 21" />
+                          </svg>
+                          <p class="text-base-content/40 text-sm">暂无可预览的 SVG 内容</p>
+                        </div>
+                      )}
+                    </div>
 
-                  {/* Color pickers */}
-                  <div class="absolute top-4 left-4 flex items-center gap-2">
-                    <label class="flex items-center gap-1">
-                      <span class="text-base-content/60 text-xs">填充</span>
-                      <input
-                        type="color"
-                        class="h-6 w-6 cursor-pointer rounded border-0"
-                        value={fillColor.value}
-                        onInput$={(e: any) =>
-                          (fillColor.value = e.target.value)
-                        }
-                      />
-                    </label>
-                  </div>
+                    {/* Right: quick color options */}
+                    <div class="flex flex-1 flex-col gap-4">
+                      {/* Grayscale */}
+                      <div>
+                        <p class="text-base-content/50 mb-2 text-[11px] font-semibold uppercase tracking-wider">
+                          灰度
+                        </p>
+                        <div class="flex gap-1.5">
+                          {["#000000", "#333333", "#666666", "#999999", "#cccccc", "#ffffff"].map(
+                            (c) => (
+                              <button
+                                key={c}
+                                class={[
+                                  "h-8 flex-1 rounded-lg border-2 transition-all hover:scale-110 active:scale-95",
+                                  fillColor.value === c
+                                    ? "border-primary ring-primary/30 ring-2"
+                                    : "border-base-300",
+                                ].join(" ")}
+                                style={{ backgroundColor: c }}
+                                title={c}
+                                onClick$={() => (fillColor.value = c)}
+                              />
+                            ),
+                          )}
+                        </div>
+                      </div>
 
-                  {/* Preview */}
-                  <div
-                    class="border-base-300 rounded-box mt-8 flex min-h-75 items-center justify-center overflow-hidden border p-6"
-                    style={{
-                      backgroundColor: "rgb(255, 255, 255)",
-                      backgroundImage:
-                        "linear-gradient(45deg, rgb(243, 244, 246) 25%, transparent 25%), linear-gradient(-45deg, rgb(243, 244, 246) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgb(243, 244, 246) 75%), linear-gradient(-45deg, transparent 75%, rgb(243, 244, 246) 75%)",
-                      backgroundSize: "24px 24px",
-                      backgroundPosition:
-                        "0px 0px, 0px 12px, 12px -12px, -12px 0px",
-                    }}
-                  >
-                    {!isEmpty && previewContent ? (
-                      <div
-                        class="flex max-w-full items-center justify-center"
-                        style={{
-                          width: `${previewSize.value + 72}px`,
-                          height: `${previewSize.value + 72}px`,
-                        }}
-                      >
-                        <SvgPreview
-                          content={previewContent}
-                          class="h-full w-full object-contain"
-                          loading="eager"
-                        />
+                      {/* Accent colors */}
+                      <div>
+                        <p class="text-base-content/50 mb-2 text-[11px] font-semibold uppercase tracking-wider">
+                          彩色
+                        </p>
+                        <div class="grid grid-cols-6 gap-1.5">
+                          {[
+                            "#ef4444", "#f97316", "#eab308",
+                            "#22c55e", "#3b82f6", "#8b5cf6",
+                            "#ec4899", "#06b6d4", "#10b981",
+                            "#f59e0b", "#6366f1", "#e11d48",
+                          ].map((c) => (
+                            <button
+                              key={c}
+                              class={[
+                                "h-8 rounded-lg border-2 transition-all hover:scale-110 active:scale-95",
+                                fillColor.value === c
+                                  ? "border-primary ring-primary/30 ring-2"
+                                  : "border-base-300",
+                              ].join(" ")}
+                              style={{ backgroundColor: c }}
+                              title={c}
+                              onClick$={() => (fillColor.value = c)}
+                            />
+                          ))}
+                        </div>
                       </div>
-                    ) : (
-                      <div class="text-base-content/50 text-center text-sm">
-                        暂无可预览的 SVG 内容
+
+                      {/* Custom color picker */}
+                      <div>
+                        <p class="text-base-content/50 mb-2 text-[11px] font-semibold uppercase tracking-wider">
+                          自定义
+                        </p>
+                        <div class="flex items-center gap-2">
+                          <input
+                            type="color"
+                            class="border-base-300 h-9 w-9 cursor-pointer rounded-lg border-2 p-0.5"
+                            value={fillColor.value}
+                            onInput$={(e: any) => (fillColor.value = e.target.value)}
+                          />
+                          <code class="bg-base-100 flex-1 rounded-lg px-3 py-2 font-mono text-sm">
+                            {fillColor.value}
+                          </code>
+                        </div>
                       </div>
-                    )}
+
+                      {/* Preview size */}
+                      <div>
+                        <p class="text-base-content/50 mb-2 text-[11px] font-semibold uppercase tracking-wider">
+                          图标大小
+                        </p>
+                        <select
+                          class="select select-bordered select-sm w-full"
+                          value={previewSize.value}
+                          onChange$={(e: any) =>
+                            (previewSize.value = Number(e.target.value))
+                          }
+                        >
+                          <option value="32">32 px</option>
+                          <option value="64">64 px</option>
+                          <option value="96">96 px</option>
+                          <option value="128">128 px</option>
+                          <option value="192">192 px</option>
+                          <option value="256">256 px（最大）</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
 
                   {!svgIsValid.value && (
-                    <div class="alert alert-error py-2 text-sm">
+                    <div class="alert alert-error mt-4 py-2 text-sm">
                       当前 SVG 内容格式不正确，预览与保存会被禁用。
                     </div>
                   )}
-
-                  {/* Quick color palette */}
-                  <div class="flex flex-wrap justify-center gap-2">
-                    {[
-                      "#000000",
-                      "#333333",
-                      "#666666",
-                      "#999999",
-                      "#cccccc",
-                      "#ffffff",
-                      "#ef4444",
-                      "#f97316",
-                      "#eab308",
-                      "#22c55e",
-                      "#3b82f6",
-                      "#8b5cf6",
-                      "#ec4899",
-                    ].map((c) => (
-                      <button
-                        key={c}
-                        class={`h-7 w-7 rounded-full border transition-transform hover:scale-110 ${fillColor.value === c ? "border-primary ring-primary/20 ring-2" : "border-base-300"}`}
-                        style={{ backgroundColor: c }}
-                        onClick$={() => (fillColor.value = c)}
-                        title={c}
-                      />
-                    ))}
-                  </div>
                 </div>
               </div>
 
