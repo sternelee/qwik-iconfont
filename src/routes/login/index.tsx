@@ -1,6 +1,7 @@
 import { component$, useSignal, $, useVisibleTask$ } from "@builder.io/qwik";
 import { useNavigate } from "@builder.io/qwik-city";
 import { signIn, getSession, signInSocial } from "~/lib/auth-client";
+import { migrateLocalProjects } from "~/lib/local-migration";
 
 export default component$(() => {
   const email = useSignal("");
@@ -26,14 +27,16 @@ export default component$(() => {
       email: email.value,
       password: password.value,
     });
-    loading.value = false;
     if (authError) {
+      loading.value = false;
       error.value = authError.message;
       return;
     }
     if (data?.session) {
       await migrateLocalProjects();
       nav("/");
+    } else {
+      loading.value = false;
     }
   });
 
@@ -187,51 +190,3 @@ export default component$(() => {
     </div>
   );
 });
-
-async function migrateLocalProjects() {
-  try {
-    const raw = localStorage.getItem("iconfont_projects");
-    if (!raw) return;
-    const projects = JSON.parse(raw);
-    if (!Array.isArray(projects) || projects.length === 0) return;
-    for (const project of projects) {
-      const res = await fetch("/api/projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: project.name,
-          description: project.description,
-          font_family: project.font_family,
-          prefix: project.prefix,
-        }),
-      });
-      if (!res.ok) continue;
-      const { id: newProjectId } = (await res.json()) as { id: number };
-      const iconsKey = `iconfont_icons_${project.id}`;
-      const iconsRaw = localStorage.getItem(iconsKey);
-      if (!iconsRaw) continue;
-      const icons = JSON.parse(iconsRaw);
-      if (!Array.isArray(icons)) continue;
-      for (const icon of icons) {
-        const iconFormData = new FormData();
-        iconFormData.append("name", icon.name);
-        iconFormData.append("content", icon.content);
-        if (icon.unicode) iconFormData.append("unicode", icon.unicode);
-        if (icon.tags) iconFormData.append("tags", icon.tags);
-        await fetch(`/api/projects/${newProjectId}/icons`, {
-          method: "POST",
-          body: iconFormData,
-        });
-      }
-    }
-    localStorage.removeItem("iconfont_projects");
-    const keysToRemove: string[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith("iconfont_icons_")) keysToRemove.push(key);
-    }
-    keysToRemove.forEach((key) => localStorage.removeItem(key));
-  } catch {
-    /* Silent fail */
-  }
-}

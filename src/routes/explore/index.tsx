@@ -26,6 +26,9 @@ const SORT_OPTIONS = [
 
 type SortKey = (typeof SORT_OPTIONS)[number]["key"];
 
+// Module-level controller so concurrent search fetches can be cancelled
+let searchAbortController: AbortController | null = null;
+
 export const useInitialProjects = routeLoader$(
   async ({ platform, query }): Promise<PageData> => {
     const q = query.get("q") || "";
@@ -126,16 +129,22 @@ export default component$(() => {
   // Fetch from API (search + cursor)
   const fetchProjects = $(async (reset: boolean) => {
     if (reset) {
+      if (searchAbortController) searchAbortController.abort();
+      searchAbortController = new AbortController();
       loading.value = true;
     } else {
       loadingMore.value = true;
     }
+    const signal = reset ? searchAbortController!.signal : undefined;
     try {
       const params = new URLSearchParams({ visibility: "public", limit: "24" });
       if (search.value) params.set("q", search.value);
       if (!reset && state.nextCursor) params.set("cursor", state.nextCursor);
 
-      const res = await fetch(`/api/projects?${params}`);
+      const res = await fetch(
+        `/api/projects?${params}`,
+        signal ? { signal } : undefined,
+      );
       if (!res.ok) return;
       const data = (await res.json()) as PageData;
 
@@ -147,19 +156,27 @@ export default component$(() => {
       state.nextCursor = data.nextCursor;
       state.hasMore = data.hasMore;
       applySort();
+    } catch (err: any) {
+      if (err?.name === "AbortError") return;
     } finally {
-      loading.value = false;
-      loadingMore.value = false;
+      if (!signal?.aborted) {
+        loading.value = false;
+        loadingMore.value = false;
+      }
     }
   });
 
   const searchTick = useSignal(0);
 
-  // Search: refetch when user stops typing (track searchTick bumped by input)
+  // Search: debounce 300ms before fetching
   // eslint-disable-next-line qwik/no-use-visible-task
-  useVisibleTask$(({ track }) => {
+  useVisibleTask$(({ track, cleanup }) => {
     track(() => searchTick.value);
-    if (searchTick.value > 0) fetchProjects(true);
+    if (searchTick.value === 0) return;
+    const timer = setTimeout(() => {
+      fetchProjects(true);
+    }, 300);
+    cleanup(() => clearTimeout(timer));
   });
 
   // Re-sort when sort changes
@@ -171,6 +188,7 @@ export default component$(() => {
 
   // Infinite scroll sentinel
   const sentinel = useSignal<HTMLDivElement | undefined>();
+  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(({ cleanup }) => {
     if (!sentinel.value) return;
     const observer = new IntersectionObserver(

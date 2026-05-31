@@ -192,6 +192,7 @@ pnpm db:migrate:remote
 
 > **安全提示**：`wrangler.jsonc` 中的变量明文存储，建议将含 `_SECRET` / `_KEY` 的敏感值
 > 改用加密 Secrets（不出现在代码库中）：
+>
 > ```bash
 > wrangler secret put BETTER_AUTH_SECRET
 > wrangler secret put GITHUB_CLIENT_SECRET

@@ -1,6 +1,7 @@
 import { component$, useSignal, $, useVisibleTask$ } from "@builder.io/qwik";
 import { useNavigate } from "@builder.io/qwik-city";
 import { signUp, getSession, signInSocial } from "~/lib/auth-client";
+import { migrateLocalProjects } from "~/lib/local-migration";
 
 export default component$(() => {
   const name = useSignal("");
@@ -37,12 +38,17 @@ export default component$(() => {
       email: email.value,
       password: password.value,
     });
-    loading.value = false;
     if (authError) {
+      loading.value = false;
       error.value = authError.message;
       return;
     }
-    if (data?.session) nav("/");
+    if (data?.session) {
+      await migrateLocalProjects();
+      nav("/");
+    } else {
+      loading.value = false;
+    }
   });
 
   return (

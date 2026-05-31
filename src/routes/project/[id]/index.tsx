@@ -28,6 +28,7 @@ import { HighlightText } from "~/components/highlight-text/highlight-text";
 import { SvgEditor } from "~/components/svg-editor/svg-editor";
 import { IconDetailPanel } from "~/components/icon-detail/icon-detail";
 import { ProjectMembers } from "~/components/project-members/project-members";
+import { UserMenu } from "~/components/user-menu/user-menu";
 import { parseTags, resolveSvgViewBox } from "~/lib/types";
 import { getSessionFromRequest } from "~/lib/session";
 import {
@@ -1054,6 +1055,8 @@ ${classes}`;
                 </li>
               </ul>
             </div>
+            {/* User account menu (auth mode only) */}
+            {!isLocal && <UserMenu />}
           </div>
         </div>
       </header>
