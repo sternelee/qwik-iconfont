@@ -116,6 +116,9 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
   const allFilteredSelected =
     filteredIcons.length > 0 &&
     filteredIcons.every((ic) => selected.value.includes(ic.name));
+  // At 500-cap, show deselect even if not every filtered icon is selected
+  const atCap = selected.value.length >= 500;
+  const showDeselect = allFilteredSelected || atCap;
 
   // ── Render ────────────────────────────────────────────────────
   return (
@@ -154,7 +157,10 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
               <h2 class="font-['Nunito'] text-base leading-tight font-extrabold text-rose-950">
                 {step.value === "library" && "GitHub 图标库导入"}
                 {step.value === "browse" &&
-                  (lib?.name ?? (isCustom.value ? customLabel.value || "自定义仓库" : "浏览图标"))}
+                  (lib?.name ??
+                    (isCustom.value
+                      ? customLabel.value || "自定义仓库"
+                      : "浏览图标"))}
                 {step.value === "importing" && "正在导入..."}
                 {step.value === "done" && "导入完成 ✓"}
               </h2>
@@ -284,10 +290,13 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
                 </button>
               </div>
               {customUrlError.value && (
-                <p class="mt-1.5 text-xs text-red-600">{customUrlError.value}</p>
+                <p class="mt-1.5 text-xs text-red-600">
+                  {customUrlError.value}
+                </p>
               )}
               <p class="mt-2 text-[10px] text-rose-300">
-                示例： https://github.com/lobehub/lobe-icons/tree/master/packages/static-svg/icons
+                示例：
+                https://github.com/lobehub/lobe-icons/tree/master/packages/static-svg/icons
               </p>
             </div>
           </div>
@@ -342,13 +351,19 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
                 <button
                   class="shrink-0 rounded-xl border border-rose-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 active:scale-95"
                   onClick$={() => {
-                    if (allFilteredSelected) {
-                      const filteredSet = new Set(
-                        filteredIcons.map((ic) => ic.name),
-                      );
-                      selected.value = selected.value.filter(
-                        (n) => !filteredSet.has(n),
-                      );
+                    if (showDeselect) {
+                      if (atCap) {
+                        // At cap: clear everything
+                        selected.value = [];
+                      } else {
+                        // All filtered selected: deselect only filtered icons
+                        const filteredSet = new Set(
+                          filteredIcons.map((ic) => ic.name),
+                        );
+                        selected.value = selected.value.filter(
+                          (n) => !filteredSet.has(n),
+                        );
+                      }
                     } else {
                       const filteredNames = filteredIcons.map((ic) => ic.name);
                       const merged = [
@@ -361,7 +376,7 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
                     }
                   }}
                 >
-                  {allFilteredSelected
+                  {showDeselect
                     ? "取消全选"
                     : `全选 (${Math.min(filteredIcons.length, 500)})`}
                 </button>
