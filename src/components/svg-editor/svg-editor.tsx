@@ -337,16 +337,17 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
 
         {/* Body */}
         <div class="min-h-0 flex-1 overflow-y-auto px-6 py-5">
-          <div class="grid gap-4 xl:grid-cols-[minmax(0,0.95fr),minmax(0,1.05fr)]">
+          <div class="grid gap-4 xl:grid-cols-[minmax(0,1.5fr),minmax(0,0.8fr)]">
             {/* Left: Preview */}
             <div class="flex min-w-0 flex-col gap-4">
               <div class="card bg-base-200 border-base-300 border shadow-sm">
                 <div class="card-body p-5">
                   {/* Preview (300×300) + color panel side by side */}
-                  <div class="flex flex-col gap-5 sm:flex-row sm:items-start">
-                    {/* 300×300 fixed preview */}
+                  <div class="grid grid-cols-1 gap-4 lg:grid-cols-[300px_1fr_1fr]">
+
+                    {/* Col 1 — 300×300 preview */}
                     <div
-                      class="mx-auto shrink-0 overflow-hidden rounded-xl sm:mx-0"
+                      class="mx-auto shrink-0 overflow-hidden rounded-xl lg:mx-0"
                       style={{
                         width: "300px",
                         height: "300px",
@@ -387,254 +388,177 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                             stroke-width="1.5"
                             class="text-base-content/20"
                           >
-                            <rect
-                              x="3"
-                              y="3"
-                              width="18"
-                              height="18"
-                              rx="2"
-                              ry="2"
-                            />
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                             <circle cx="8.5" cy="8.5" r="1.5" />
                             <polyline points="21 15 16 10 5 21" />
                           </svg>
-                          <p class="text-base-content/40 text-sm">
-                            暂无可预览的 SVG 内容
-                          </p>
+                          <p class="text-base-content/40 text-sm">暂无可预览的 SVG 内容</p>
                         </div>
                       )}
                     </div>
 
-                    {/* Right: quick color options */}
-                    <div class="flex flex-1 flex-col gap-4">
-                      {/* Grayscale */}
+                    {/* Col 2 — 视图框 + 图标大小 */}
+                    <div class="flex flex-col gap-3">
                       <div>
-                        <p class="text-base-content/50 mb-2 text-[11px] font-semibold tracking-wider uppercase">
-                          灰度
-                        </p>
-                        <div class="flex gap-1.5">
-                          {[
-                            "#000000",
-                            "#333333",
-                            "#666666",
-                            "#999999",
-                            "#cccccc",
-                            "#ffffff",
-                          ].map((c) => (
+                        <div class="mb-1.5 flex items-center justify-between">
+                          <p class="text-base-content/50 text-[11px] font-semibold uppercase tracking-wider">视图框</p>
+                          <button class="btn btn-ghost btn-xs" onClick$={detectViewBox}>自动检测</button>
+                        </div>
+                        <input
+                          type="text"
+                          class="input input-bordered input-xs w-full font-mono"
+                          placeholder="0 0 1024 1024"
+                          value={viewBox.value}
+                          onInput$={(e: any) => { viewBox.value = e.target.value; }}
+                        />
+                      </div>
+
+                      <div class="grid grid-cols-4 gap-1.5">
+                        <div class="form-control">
+                          <label class="label py-0.5"><span class="label-text text-xs">X</span></label>
+                          <input type="number" class="input input-bordered input-xs" value={viewBoxParts.minX}
+                            onInput$={(e: any) => { viewBoxParts.minX = parseFloat(e.target.value) || 0; syncViewBox(); }} />
+                        </div>
+                        <div class="form-control">
+                          <label class="label py-0.5"><span class="label-text text-xs">Y</span></label>
+                          <input type="number" class="input input-bordered input-xs" value={viewBoxParts.minY}
+                            onInput$={(e: any) => { viewBoxParts.minY = parseFloat(e.target.value) || 0; syncViewBox(); }} />
+                        </div>
+                        <div class="form-control">
+                          <label class="label py-0.5"><span class="label-text text-xs">宽</span></label>
+                          <input type="number" class="input input-bordered input-xs" value={viewBoxParts.vbWidth}
+                            onInput$={(e: any) => { viewBoxParts.vbWidth = parseFloat(e.target.value) || 1024; syncViewBox(); }} />
+                        </div>
+                        <div class="form-control">
+                          <label class="label py-0.5"><span class="label-text text-xs">高</span></label>
+                          <input type="number" class="input input-bordered input-xs" value={viewBoxParts.vbHeight}
+                            onInput$={(e: any) => { viewBoxParts.vbHeight = parseFloat(e.target.value) || 1024; syncViewBox(); }} />
+                        </div>
+                      </div>
+
+                      <div>
+                        <p class="text-base-content/50 mb-1 text-[11px] font-semibold uppercase tracking-wider">快捷预设</p>
+                        <div class="flex flex-wrap gap-1">
+                          {["16 16","24 24","32 32","48 48","64 64","512 512","1024 1024"].map((p) => (
                             <button
-                              key={c}
-                              class={[
-                                "h-6 flex-1 rounded-lg border-2 transition-all hover:scale-110 active:scale-95",
-                                fillColor.value === c
-                                  ? "border-primary ring-primary/30 ring-2"
-                                  : "border-base-300",
-                              ].join(" ")}
-                              style={{ backgroundColor: c }}
-                              title={c}
-                              onClick$={() => (fillColor.value = c)}
-                            />
+                              key={p}
+                              class="btn btn-outline btn-xs"
+                              onClick$={() => {
+                                viewBox.value = `0 0 ${p}`;
+                                const [pw, ph] = p.split(" ").map(Number);
+                                viewBoxParts.minX = 0; viewBoxParts.minY = 0;
+                                viewBoxParts.vbWidth = pw; viewBoxParts.vbHeight = ph;
+                              }}
+                            >{p}</button>
                           ))}
                         </div>
                       </div>
 
-                      {/* Accent colors */}
                       <div>
-                        <p class="text-base-content/50 mb-2 text-[11px] font-semibold tracking-wider uppercase">
-                          彩色
-                        </p>
-                        <div class="grid grid-cols-6 gap-1.5">
-                          {[
-                            "#ef4444",
-                            "#f97316",
-                            "#eab308",
-                            "#22c55e",
-                            "#3b82f6",
-                            "#8b5cf6",
-                            "#ec4899",
-                            "#06b6d4",
-                            "#10b981",
-                            "#f59e0b",
-                            "#6366f1",
-                            "#e11d48",
-                          ].map((c) => (
-                            <button
-                              key={c}
-                              class={[
-                                "h-6 rounded-lg border-2 transition-all hover:scale-110 active:scale-95",
-                                fillColor.value === c
-                                  ? "border-primary ring-primary/30 ring-2"
-                                  : "border-base-300",
-                              ].join(" ")}
-                              style={{ backgroundColor: c }}
-                              title={c}
-                              onClick$={() => (fillColor.value = c)}
-                            />
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Custom color picker */}
-                      <div>
-                        <p class="text-base-content/50 mb-2 text-[11px] font-semibold tracking-wider uppercase">
-                          自定义
-                        </p>
-                        <div class="flex items-center gap-2">
-                          <input
-                            type="color"
-                            class="border-base-300 h-9 w-9 cursor-pointer rounded-lg border-2 p-0.5"
-                            value={fillColor.value}
-                            onInput$={(e: any) =>
-                              (fillColor.value = e.target.value)
-                            }
-                          />
-                          <code class="bg-base-100 flex-1 rounded-lg px-3 py-2 font-mono text-sm">
-                            {fillColor.value}
-                          </code>
-                        </div>
-                      </div>
-
-                      {/* Preview size */}
-                      <div>
-                        <p class="text-base-content/50 mb-2 text-[11px] font-semibold tracking-wider uppercase">
-                          图标大小
-                        </p>
+                        <p class="text-base-content/50 mb-1.5 text-[11px] font-semibold uppercase tracking-wider">图标大小</p>
                         <select
-                          class="select select-bordered select-sm w-full"
+                          class="select select-bordered select-xs w-full"
                           value={previewSize.value}
-                          onChange$={(e: any) =>
-                            (previewSize.value = Number(e.target.value))
-                          }
+                          onChange$={(e: any) => (previewSize.value = Number(e.target.value))}
                         >
                           <option value="32">32 px</option>
                           <option value="64">64 px</option>
                           <option value="96">96 px</option>
                           <option value="128">128 px</option>
                           <option value="192">192 px</option>
-                          <option value="256">256 px（最大）</option>
+                          <option value="256">256 px</option>
                         </select>
                       </div>
+                    </div>
 
-                      {/* Divider */}
+                    {/* Col 3 — 颜色 + 变换 */}
+                    <div class="flex flex-col gap-3">
+                      <div>
+                        <p class="text-base-content/50 mb-1.5 text-[11px] font-semibold uppercase tracking-wider">颜色</p>
+                        <div class="flex flex-wrap gap-1.5">
+                          {[
+                            "#000000","#555555","#aaaaaa","#ffffff",
+                            "#ef4444","#f97316","#eab308","#22c55e",
+                            "#3b82f6","#8b5cf6","#ec4899","#06b6d4",
+                          ].map((c) => (
+                            <button
+                              key={c}
+                              class={[
+                                "h-5 w-5 rounded border-2 transition-all hover:scale-110 active:scale-95",
+                                fillColor.value === c
+                                  ? "border-primary ring-1 ring-primary/50"
+                                  : "border-base-300",
+                              ].join(" ")}
+                              style={{ backgroundColor: c }}
+                              title={c}
+                              onClick$={() => (fillColor.value = c)}
+                            />
+                          ))}
+                        </div>
+                        <div class="mt-2 flex items-center gap-2">
+                          <input
+                            type="color"
+                            class="border-base-300 h-7 w-7 cursor-pointer rounded border-2 p-0.5"
+                            value={fillColor.value}
+                            onInput$={(e: any) => (fillColor.value = e.target.value)}
+                          />
+                          <code class="bg-base-100 flex-1 rounded px-2 py-1 font-mono text-xs">
+                            {fillColor.value}
+                          </code>
+                        </div>
+                      </div>
+
                       <div class="divider my-0" />
 
-                      {/* Transform controls — moved here from standalone card */}
                       <div>
-                        <p class="text-base-content/50 mb-2 text-[11px] font-semibold tracking-wider uppercase">
-                          变换
-                        </p>
+                        <p class="text-base-content/50 mb-1.5 text-[11px] font-semibold uppercase tracking-wider">变换</p>
                         <div class="grid grid-cols-2 gap-2">
                           <div class="form-control">
-                            <label class="label py-1">
-                              <span class="label-text text-xs">缩放 X</span>
-                            </label>
-                            <input
-                              type="number"
-                              class="input input-bordered input-sm"
-                              step="0.1"
-                              min="0.1"
-                              max="10"
+                            <label class="label py-0.5"><span class="label-text text-xs">缩放 X</span></label>
+                            <input type="number" class="input input-bordered input-xs" step="0.1" min="0.1" max="10"
                               value={transform.scaleX}
-                              onInput$={(e: any) =>
-                                (transform.scaleX = parseFloat(e.target.value) || 1)
-                              }
-                            />
+                              onInput$={(e: any) => (transform.scaleX = parseFloat(e.target.value) || 1)} />
                           </div>
                           <div class="form-control">
-                            <label class="label py-1">
-                              <span class="label-text text-xs">缩放 Y</span>
-                            </label>
-                            <input
-                              type="number"
-                              class="input input-bordered input-sm"
-                              step="0.1"
-                              min="0.1"
-                              max="10"
+                            <label class="label py-0.5"><span class="label-text text-xs">缩放 Y</span></label>
+                            <input type="number" class="input input-bordered input-xs" step="0.1" min="0.1" max="10"
                               value={transform.scaleY}
-                              onInput$={(e: any) =>
-                                (transform.scaleY = parseFloat(e.target.value) || 1)
-                              }
-                            />
+                              onInput$={(e: any) => (transform.scaleY = parseFloat(e.target.value) || 1)} />
                           </div>
                           <div class="form-control">
-                            <label class="label py-1">
-                              <span class="label-text text-xs">旋转 (°)</span>
-                            </label>
-                            <input
-                              type="number"
-                              class="input input-bordered input-sm"
-                              step="1"
-                              min="-360"
-                              max="360"
+                            <label class="label py-0.5"><span class="label-text text-xs">旋转 (°)</span></label>
+                            <input type="number" class="input input-bordered input-xs" step="1" min="-360" max="360"
                               value={transform.rotate}
-                              onInput$={(e: any) =>
-                                (transform.rotate = parseFloat(e.target.value) || 0)
-                              }
-                            />
+                              onInput$={(e: any) => (transform.rotate = parseFloat(e.target.value) || 0)} />
                           </div>
                           <div class="form-control">
-                            <label class="label py-1">
-                              <span class="label-text text-xs">偏移 X</span>
-                            </label>
-                            <input
-                              type="number"
-                              class="input input-bordered input-sm"
-                              step="1"
+                            <label class="label py-0.5"><span class="label-text text-xs">偏移 X</span></label>
+                            <input type="number" class="input input-bordered input-xs" step="1"
                               value={transform.translateX}
-                              onInput$={(e: any) =>
-                                (transform.translateX = parseFloat(e.target.value) || 0)
-                              }
-                            />
+                              onInput$={(e: any) => (transform.translateX = parseFloat(e.target.value) || 0)} />
                           </div>
                           <div class="form-control">
-                            <label class="label py-1">
-                              <span class="label-text text-xs">偏移 Y</span>
-                            </label>
-                            <input
-                              type="number"
-                              class="input input-bordered input-sm"
-                              step="1"
+                            <label class="label py-0.5"><span class="label-text text-xs">偏移 Y</span></label>
+                            <input type="number" class="input input-bordered input-xs" step="1"
                               value={transform.translateY}
-                              onInput$={(e: any) =>
-                                (transform.translateY = parseFloat(e.target.value) || 0)
-                              }
-                            />
+                              onInput$={(e: any) => (transform.translateY = parseFloat(e.target.value) || 0)} />
                           </div>
                           <div class="flex items-end gap-1">
-                            <button
-                              class="btn btn-outline btn-sm"
-                              title="水平翻转"
+                            <button class="btn btn-outline btn-xs" title="水平翻转"
+                              onClick$={() => { transform.scaleX = (transform.scaleX || 1) * -1; }}>↔</button>
+                            <button class="btn btn-outline btn-xs" title="垂直翻转"
+                              onClick$={() => { transform.scaleY = (transform.scaleY || 1) * -1; }}>↕</button>
+                            <button class="btn btn-outline btn-xs"
                               onClick$={() => {
-                                transform.scaleX = (transform.scaleX || 1) * -1;
-                              }}
-                            >
-                              ↔
-                            </button>
-                            <button
-                              class="btn btn-outline btn-sm"
-                              title="垂直翻转"
-                              onClick$={() => {
-                                transform.scaleY = (transform.scaleY || 1) * -1;
-                              }}
-                            >
-                              ↕
-                            </button>
-                            <button
-                              class="btn btn-outline btn-sm"
-                              onClick$={() => {
-                                transform.scaleX = 1;
-                                transform.scaleY = 1;
-                                transform.rotate = 0;
-                                transform.translateX = 0;
-                                transform.translateY = 0;
-                              }}
-                            >
-                              重置
-                            </button>
+                                transform.scaleX = 1; transform.scaleY = 1;
+                                transform.rotate = 0; transform.translateX = 0; transform.translateY = 0;
+                              }}>重置</button>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
+
 
                   {!svgIsValid.value && (
                     <div class="alert alert-error mt-4 py-2 text-sm">
@@ -736,145 +660,6 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                         value={tags.value}
                         onInput$={(e: any) => (tags.value = e.target.value)}
                       />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* ViewBox */}
-              <div class="card bg-base-200 border-base-300 border shadow-sm">
-                <div class="card-body p-5">
-                  <h4 class="mb-3 flex items-center justify-between text-sm font-medium">
-                    <span class="flex items-center gap-2">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                      >
-                        <rect
-                          x="3"
-                          y="3"
-                          width="18"
-                          height="18"
-                          rx="2"
-                          ry="2"
-                        />
-                        <line x1="3" x2="21" y1="9" y2="9" />
-                        <line x1="9" x2="9" y1="21" y2="9" />
-                      </svg>
-                      视图框
-                    </span>
-                    <button
-                      class="btn btn-outline btn-xs"
-                      onClick$={detectViewBox}
-                    >
-                      从SVG检测
-                    </button>
-                  </h4>
-                  <div class="space-y-3">
-                    <div class="form-control">
-                      <label class="label justify-start pb-2">
-                        <span class="label-text text-xs">ViewBox</span>
-                      </label>
-                      <input
-                        type="text"
-                        class="input input-bordered input-sm font-mono text-xs"
-                        placeholder="0 0 1024 1024"
-                        value={viewBox.value}
-                        onInput$={(e: any) => {
-                          viewBox.value = e.target.value;
-                        }}
-                      />
-                    </div>
-                    <div class="grid grid-cols-4 gap-2">
-                      <div class="form-control">
-                        <label class="label justify-start pb-2">
-                          <span class="label-text text-xs">X</span>
-                        </label>
-                        <input
-                          type="number"
-                          class="input input-bordered input-sm"
-                          value={viewBoxParts.minX}
-                          onInput$={(e: any) => {
-                            viewBoxParts.minX = parseFloat(e.target.value) || 0;
-                            syncViewBox();
-                          }}
-                        />
-                      </div>
-                      <div class="form-control">
-                        <label class="label justify-start pb-2">
-                          <span class="label-text text-xs">Y</span>
-                        </label>
-                        <input
-                          type="number"
-                          class="input input-bordered input-sm"
-                          value={viewBoxParts.minY}
-                          onInput$={(e: any) => {
-                            viewBoxParts.minY = parseFloat(e.target.value) || 0;
-                            syncViewBox();
-                          }}
-                        />
-                      </div>
-                      <div class="form-control">
-                        <label class="label justify-start pb-2">
-                          <span class="label-text text-xs">宽</span>
-                        </label>
-                        <input
-                          type="number"
-                          class="input input-bordered input-sm"
-                          value={viewBoxParts.vbWidth}
-                          onInput$={(e: any) => {
-                            viewBoxParts.vbWidth =
-                              parseFloat(e.target.value) || 1024;
-                            syncViewBox();
-                          }}
-                        />
-                      </div>
-                      <div class="form-control">
-                        <label class="label justify-start pb-2">
-                          <span class="label-text text-xs">高</span>
-                        </label>
-                        <input
-                          type="number"
-                          class="input input-bordered input-sm"
-                          value={viewBoxParts.vbHeight}
-                          onInput$={(e: any) => {
-                            viewBoxParts.vbHeight =
-                              parseFloat(e.target.value) || 1024;
-                            syncViewBox();
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <div class="flex flex-wrap gap-1">
-                      {[
-                        "16 16",
-                        "24 24",
-                        "32 32",
-                        "48 48",
-                        "64 64",
-                        "512 512",
-                        "1024 1024",
-                      ].map((p) => (
-                        <button
-                          key={p}
-                          class="btn btn-outline btn-xs"
-                          onClick$={() => {
-                            viewBox.value = `0 0 ${p}`;
-                            const [pw, ph] = p.split(" ").map(Number);
-                            viewBoxParts.minX = 0;
-                            viewBoxParts.minY = 0;
-                            viewBoxParts.vbWidth = pw;
-                            viewBoxParts.vbHeight = ph;
-                          }}
-                        >
-                          {p}
-                        </button>
-                      ))}
                     </div>
                   </div>
                 </div>
