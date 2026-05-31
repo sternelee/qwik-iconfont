@@ -109,6 +109,7 @@ export const icons = sqliteTable("icons", {
   height: integer("height", { mode: "number" }),
   content: text("content"),
   tags: text("tags"), // Comma-separated tags for categorization
+  color_layers: text("color_layers"), // JSON: StoredColorLayer[] for COLRv0 coloured glyphs
   sort_order: integer("sort_order", { mode: "number" }).default(0),
   created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),

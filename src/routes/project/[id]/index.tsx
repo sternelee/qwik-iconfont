@@ -16,7 +16,7 @@ import {
 } from "@builder.io/qwik-city";
 import type { Project, Icon } from "~/lib/types";
 import {
-  generateTTFFont,
+  generateFont,
   generateCSS,
   generateSymbolSVG,
   generateDemoHTML,
@@ -559,6 +559,16 @@ export default component$(() => {
       const formData = new FormData();
       formData.append("name", cleanName);
       formData.append("content", content);
+      // Detect multi-colour SVG and attach COLRv0 layer data
+      try {
+        const { detectColorLayers } = await import(
+          "~/components/color-layer-editor/color-layer-editor"
+        );
+        const colorLayers = await detectColorLayers(content);
+        if (colorLayers) {
+          formData.append("colorLayers", JSON.stringify(colorLayers));
+        }
+      } catch { /* skip on error */ }
       const res = await fetch(`/api/projects/${projectId}/icons`, {
         method: "POST",
         body: formData,
@@ -699,7 +709,7 @@ export default component$(() => {
     if (selected.length === 0) return;
     downloadLoading.value = "font";
     try {
-      const ttf = await generateTTFFont(
+      const ttf = await generateFont(
         project.font_family,
         selected,
         project.prefix,
@@ -740,7 +750,7 @@ export default component$(() => {
         "demo.html",
         await generateDemoHTML(project.font_family, project.prefix, selected),
       );
-      const ttf = await generateTTFFont(
+      const ttf = await generateFont(
         project.font_family,
         selected,
         project.prefix,
@@ -779,7 +789,7 @@ export default component$(() => {
       return;
     }
     const selected = icons.list.filter((i) => selectedIds.ids.has(i.id));
-    const ttf = await generateTTFFont(
+    const ttf = await generateFont(
       project.font_family,
       selected,
       project.prefix,

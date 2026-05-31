@@ -98,7 +98,19 @@ export const onPost: RequestHandler = async ({
   const name = formData.get("name") as string;
   const content = formData.get("content") as string;
   const unicode = (formData.get("unicode") as string) || null;
+  const colorLayersRaw = (formData.get("colorLayers") as string) || null;
   const viewBox = resolveSvgViewBox(formData.get("viewBox") as string, content);
+
+  // Validate color_layers JSON if provided
+  let colorLayers: string | null = null;
+  if (colorLayersRaw) {
+    try {
+      JSON.parse(colorLayersRaw); // validate JSON
+      colorLayers = colorLayersRaw;
+    } catch {
+      colorLayers = null;
+    }
+  }
 
   if (!name || !content) {
     json(400, { error: "name and content are required" });
@@ -117,6 +129,7 @@ export const onPost: RequestHandler = async ({
       svg_path: svgPath,
       view_box: viewBox,
       content,
+      color_layers: colorLayers,
     })
     .returning();
 

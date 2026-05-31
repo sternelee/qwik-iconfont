@@ -305,7 +305,7 @@ function flattenSVG(svg: SVGElement): { d: string; viewBox: string } | null {
   return { d: parts.join(" "), viewBox };
 }
 
-function extractSVGPath(
+export function extractSVGPath(
   svgContent: string,
 ): { d: string; viewBox: string } | null {
   const parser = new DOMParser();
@@ -429,6 +429,34 @@ export async function generateTTFFont(
     console.error("svg2ttf conversion failed:", e);
     return null;
   }
+}
+
+// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Unified font generator — auto-detects coloured icons
+// ---------------------------------------------------------------------------
+
+/**
+ * Generate a TTF (monochrome) or COLRv0 TTF (coloured) font automatically.
+ * Use this instead of calling generateTTFFont directly.
+ */
+export async function generateFont(
+  fontFamily: string,
+  icons: Icon[],
+  prefix: string,
+): Promise<ArrayBuffer | null> {
+  const hasColor = icons.some((ic) => ic.color_layers);
+  if (hasColor) {
+    const { generateCOLRFont } = await import("~/lib/colr-font-gen");
+    const withLayers = icons.map((ic) => ({
+      ...ic,
+      parsedColorLayers: ic.color_layers
+        ? (() => { try { return JSON.parse(ic.color_layers!); } catch { return undefined; } })()
+        : undefined,
+    }));
+    return generateCOLRFont(fontFamily, withLayers, prefix);
+  }
+  return generateTTFFont(fontFamily, icons, prefix);
 }
 
 // ---------------------------------------------------------------------------

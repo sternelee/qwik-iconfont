@@ -29,6 +29,7 @@ export interface Icon {
   height: number | null;
   content: string | null;
   tags: string | null; // Comma-separated tags for categorization
+  color_layers: string | null; // JSON: StoredColorLayer[] — present when icon has COLR colour data
   created_at: string;
   updated_at: string;
 }
