@@ -15,6 +15,10 @@ import {
   extractSvgViewBox,
 } from "~/lib/types";
 import { SvgPreview } from "~/components/svg-preview/svg-preview";
+import {
+  SvgColorEditor,
+  svgHasMultipleColors,
+} from "~/components/svg-color-editor/svg-color-editor";
 
 interface SvgEditorProps {
   icon: Partial<Icon>;
@@ -74,6 +78,17 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
   const svgContent = useSignal(icon.content || "");
   const tags = useSignal(parseTags(icon.tags ?? null).join(", "));
   const fillColor = useSignal("#000000");
+  const colorMode = useSignal(false); // true when editing per-path colours
+
+  // Detect multi-colour SVG (regex — fast, no DOM)
+  const isMultiColor = useComputed$(() =>
+    svgHasMultipleColors(svgContent.value),
+  );
+
+  // Handler: receive updated SVG from the colour editor and apply
+  const handleColorSvgChange = $((newSvg: string) => {
+    svgContent.value = newSvg;
+  });
 
   const previewSize = useSignal(256);
   const showRawCode = useSignal(false);
@@ -342,7 +357,36 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
             <div class="flex min-w-0 flex-col gap-4">
               <div class="card bg-base-200 border-base-300 border shadow-sm">
                 <div class="card-body p-5">
-                  {/* Preview (300×300) + color panel side by side */}
+                  {/* Colour-mode toggle (shown when SVG has 2+ fill colours) */}
+                  {isMultiColor.value && (
+                    <div class="mb-3 flex items-center justify-between">
+                      <p class="text-xs text-rose-500">
+                        {colorMode.value
+                          ? "点击图层路径修改颜色"
+                          : "检测到彩色 SVG"}
+                      </p>
+                      <button
+                        class={[
+                          "flex items-center gap-1.5 rounded-2xl border px-3 py-1 text-xs font-semibold transition-all",
+                          colorMode.value
+                            ? "border-rose-400 bg-rose-500 text-white"
+                            : "border-rose-200 bg-white text-rose-600 hover:bg-rose-50",
+                        ].join(" ")}
+                        onClick$={() => (colorMode.value = !colorMode.value)}
+                      >
+                        <span>🎨</span>
+                        {colorMode.value ? "退出彩色编辑" : "彩色编辑"}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Colour editor mode — replaces the 3-column preview grid */}
+                  {colorMode.value && isMultiColor.value ? (
+                    <SvgColorEditor
+                      initialSvg={svgContent.value}
+                      onChangeSvg$={handleColorSvgChange}
+                    />
+                  ) : (
                   <div class="grid grid-cols-1 gap-4 lg:grid-cols-[300px_1fr_1fr]">
                     {/* Col 1 — 300×300 preview */}
                     <div
@@ -720,6 +764,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                       </div>
                     </div>
                   </div>
+                  )}
 
                   {!svgIsValid.value && (
                     <div class="alert alert-error mt-4 py-2 text-sm">

@@ -61,8 +61,7 @@ export function normaliseColor(raw: string): string {
     const r = Math.round(parseFloat(rgb[1]));
     const g = Math.round(parseFloat(rgb[2]));
     const b = Math.round(parseFloat(rgb[3]));
-    const a =
-      rgb[4] !== undefined ? Math.round(parseFloat(rgb[4]) * 255) : 255;
+    const a = rgb[4] !== undefined ? Math.round(parseFloat(rgb[4]) * 255) : 255;
     if (a === 255) return `#${hexByte(r)}${hexByte(g)}${hexByte(b)}`;
     return `#${hexByte(r)}${hexByte(g)}${hexByte(b)}${hexByte(a)}`;
   }
@@ -81,7 +80,10 @@ function parseTransform(t: string): number[] {
     const match = cmd.match(/(\w+)\s*\(([^)]+)\)/);
     if (!match) continue;
     const [, name, argsStr] = match;
-    const args = argsStr.trim().split(/[\s,]+/).map(Number);
+    const args = argsStr
+      .trim()
+      .split(/[\s,]+/)
+      .map(Number);
     if (name === "matrix" && args.length === 6) return args;
     if (name === "translate") {
       m[4] = args[0] || 0;
@@ -91,7 +93,8 @@ function parseTransform(t: string): number[] {
       m[3] = args[1] ?? args[0];
     } else if (name === "rotate") {
       const a = ((args[0] || 0) * Math.PI) / 180;
-      const cos = Math.cos(a), sin = Math.sin(a);
+      const cos = Math.cos(a),
+        sin = Math.sin(a);
       return [cos, sin, -sin, cos, 0, 0];
     }
   }
@@ -120,8 +123,12 @@ function shapeToPath(el: Element): string {
     case "path":
       return a("d", "");
     case "rect": {
-      const x = n("x"), y = n("y"), w = n("width"), h = n("height");
-      const rx = Math.min(n("rx"), w / 2), ry = Math.min(n("ry") || n("rx"), h / 2);
+      const x = n("x"),
+        y = n("y"),
+        w = n("width"),
+        h = n("height");
+      const rx = Math.min(n("rx"), w / 2),
+        ry = Math.min(n("ry") || n("rx"), h / 2);
       if (rx || ry) {
         const r = Math.min(rx, ry);
         return (
@@ -136,7 +143,9 @@ function shapeToPath(el: Element): string {
       return `M${x},${y}H${x + w}V${y + h}H${x}Z`;
     }
     case "circle": {
-      const cx = n("cx"), cy = n("cy"), r = n("r");
+      const cx = n("cx"),
+        cy = n("cy"),
+        r = n("r");
       const k = r * 0.5523;
       return (
         `M${cx},${cy - r}` +
@@ -147,8 +156,12 @@ function shapeToPath(el: Element): string {
       );
     }
     case "ellipse": {
-      const cx = n("cx"), cy = n("cy"), rx = n("rx"), ry = n("ry");
-      const kx = rx * 0.5523, ky = ry * 0.5523;
+      const cx = n("cx"),
+        cy = n("cy"),
+        rx = n("rx"),
+        ry = n("ry");
+      const kx = rx * 0.5523,
+        ky = ry * 0.5523;
       return (
         `M${cx},${cy - ry}` +
         `C${cx + kx},${cy - ry} ${cx + rx},${cy - ky} ${cx + rx},${cy}` +
@@ -224,10 +237,16 @@ export interface SVGColorData {
   isMultiColor: boolean;
 }
 
-function parseViewBox(
-  vb: string,
-): { minX: number; minY: number; width: number; height: number } {
-  const p = vb.trim().split(/[\s,]+/).map(Number);
+function parseViewBox(vb: string): {
+  minX: number;
+  minY: number;
+  width: number;
+  height: number;
+} {
+  const p = vb
+    .trim()
+    .split(/[\s,]+/)
+    .map(Number);
   return {
     minX: p[0] ?? 0,
     minY: p[1] ?? 0,
@@ -243,9 +262,19 @@ export function extractSVGColorLayers(svgContent: string): SVGColorData {
   const svg = doc.querySelector("svg");
 
   const SKIP_TAGS = new Set([
-    "defs", "clippath", "mask", "metadata", "title",
-    "desc", "script", "style", "symbol", "lineargradient",
-    "radialgradient", "pattern", "filter",
+    "defs",
+    "clippath",
+    "mask",
+    "metadata",
+    "title",
+    "desc",
+    "script",
+    "style",
+    "symbol",
+    "lineargradient",
+    "radialgradient",
+    "pattern",
+    "filter",
   ]);
 
   const viewBoxAttr =
@@ -255,10 +284,7 @@ export function extractSVGColorLayers(svgContent: string): SVGColorData {
   const viewBox = parseViewBox(viewBoxAttr);
 
   // Map: normalised colour → {paths[], matrices[]}
-  const layerMap = new Map<
-    string,
-    { paths: string[]; matrices: number[][] }
-  >();
+  const layerMap = new Map<string, { paths: string[]; matrices: number[][] }>();
 
   function addPath(color: string, d: string, matrix: number[]) {
     if (!d) return;
@@ -283,8 +309,13 @@ export function extractSVGColorLayers(svgContent: string): SVGColorData {
     const fill = resolveElementFill(el, parentFill);
 
     const SHAPE_TAGS = new Set([
-      "path", "rect", "circle", "ellipse",
-      "line", "polyline", "polygon",
+      "path",
+      "rect",
+      "circle",
+      "ellipse",
+      "line",
+      "polyline",
+      "polygon",
     ]);
 
     if (SHAPE_TAGS.has(tag)) {
@@ -325,8 +356,7 @@ export async function mergeLayerPaths(
 ): Promise<string | null> {
   try {
     const svgpathMod = await import("svgpath");
-    const svgpathFn =
-      (svgpathMod as any).default ?? (svgpathMod as any);
+    const svgpathFn = (svgpathMod as any).default ?? (svgpathMod as any);
 
     const parts: string[] = [];
     for (let i = 0; i < layer.paths.length; i++) {

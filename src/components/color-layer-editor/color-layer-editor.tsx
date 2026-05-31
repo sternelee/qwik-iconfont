@@ -95,7 +95,7 @@ export const ColorLayerEditor = component$<ColorLayerEditorProps>(
             </svg>
           </div>
           <div>
-            <p class="text-[11px] font-semibold uppercase tracking-wide text-rose-500">
+            <p class="text-[11px] font-semibold tracking-wide text-rose-500 uppercase">
               彩色预览
             </p>
             <p class="text-xs text-rose-400">
@@ -124,7 +124,7 @@ export const ColorLayerEditor = component$<ColorLayerEditorProps>(
               </div>
 
               {/* Colour picker */}
-              <div class="flex flex-1 items-center gap-1.5 min-w-0">
+              <div class="flex min-w-0 flex-1 items-center gap-1.5">
                 <input
                   type="color"
                   class="h-7 w-7 shrink-0 cursor-pointer rounded-md border border-rose-200 p-0.5"
@@ -137,10 +137,17 @@ export const ColorLayerEditor = component$<ColorLayerEditorProps>(
                 <input
                   type="text"
                   class="w-24 rounded-xl border border-rose-100 bg-rose-50/50 px-2 py-1 font-mono text-xs text-rose-800 focus:border-rose-300 focus:outline-none"
-                  value={layer.color === "currentColor" ? "currentColor" : displayColor}
+                  value={
+                    layer.color === "currentColor"
+                      ? "currentColor"
+                      : displayColor
+                  }
                   onBlur$={(e) => {
                     const val = (e.target as HTMLInputElement).value.trim();
-                    if (val === "currentColor" || /^#[0-9a-fA-F]{3,8}$/.test(val)) {
+                    if (
+                      val === "currentColor" ||
+                      /^#[0-9a-fA-F]{3,8}$/.test(val)
+                    ) {
                       setColor(idx, val);
                     }
                   }}
@@ -201,9 +208,8 @@ export const ColorLayerEditor = component$<ColorLayerEditorProps>(
 export async function detectColorLayers(
   svgContent: string,
 ): Promise<StoredColorLayer[] | null> {
-  const { extractSVGColorLayers, mergeLayerPaths } = await import(
-    "~/lib/svg-color-extractor"
-  );
+  const { extractSVGColorLayers, mergeLayerPaths } =
+    await import("~/lib/svg-color-extractor");
   const { layers, isMultiColor } = extractSVGColorLayers(svgContent);
   if (!isMultiColor || layers.length < 2) return null;
 

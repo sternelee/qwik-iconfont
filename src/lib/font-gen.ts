@@ -451,7 +451,13 @@ export async function generateFont(
     const withLayers = icons.map((ic) => ({
       ...ic,
       parsedColorLayers: ic.color_layers
-        ? (() => { try { return JSON.parse(ic.color_layers!); } catch { return undefined; } })()
+        ? (() => {
+            try {
+              return JSON.parse(ic.color_layers!);
+            } catch {
+              return undefined;
+            }
+          })()
         : undefined,
     }));
     return generateCOLRFont(fontFamily, withLayers, prefix);

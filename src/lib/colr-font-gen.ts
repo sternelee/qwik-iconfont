@@ -133,27 +133,37 @@ function buildCOLRTable(
   const v = new DataView(buf);
   let off = 0;
 
-  v.setUint16((off += 0), 0, false); off += 2;              // version = 0
-  v.setUint16(off, numBase, false); off += 2;               // numBaseGlyphRecords
-  v.setUint32(off, headerSize, false); off += 4;            // offsetBaseGlyphRecord
-  v.setUint32(off, headerSize + numBase * 6, false); off += 4; // offsetLayerRecord
-  v.setUint16(off, totalLayers, false); off += 2;           // numLayerRecords
+  v.setUint16((off += 0), 0, false);
+  off += 2; // version = 0
+  v.setUint16(off, numBase, false);
+  off += 2; // numBaseGlyphRecords
+  v.setUint32(off, headerSize, false);
+  off += 4; // offsetBaseGlyphRecord
+  v.setUint32(off, headerSize + numBase * 6, false);
+  off += 4; // offsetLayerRecord
+  v.setUint16(off, totalLayers, false);
+  off += 2; // numLayerRecords
 
   // BaseGlyphRecords
   let layerIdx = 0;
   for (const gid of sorted) {
     const layers = layerMap.get(gid)!;
-    v.setUint16(off, gid, false); off += 2;
-    v.setUint16(off, layerIdx, false); off += 2;
-    v.setUint16(off, layers.length, false); off += 2;
+    v.setUint16(off, gid, false);
+    off += 2;
+    v.setUint16(off, layerIdx, false);
+    off += 2;
+    v.setUint16(off, layers.length, false);
+    off += 2;
     layerIdx += layers.length;
   }
 
   // LayerRecords
   for (const gid of sorted) {
     for (const lr of layerMap.get(gid)!) {
-      v.setUint16(off, lr.layerGID, false); off += 2;
-      v.setUint16(off, lr.paletteIndex, false); off += 2;
+      v.setUint16(off, lr.layerGID, false);
+      off += 2;
+      v.setUint16(off, lr.paletteIndex, false);
+      off += 2;
     }
   }
 
@@ -173,12 +183,18 @@ function buildCPALTable(palette: string[]): Uint8Array {
   const v = new DataView(buf);
   let off = 0;
 
-  v.setUint16(off, 0, false); off += 2;  // version = 0
-  v.setUint16(off, n, false); off += 2;  // numPaletteEntries
-  v.setUint16(off, 1, false); off += 2;  // numPalettes
-  v.setUint16(off, n, false); off += 2;  // numColorRecords
-  v.setUint32(off, headerSize, false); off += 4; // offsetFirstColorRecord
-  v.setUint16(off, 0, false); off += 2;  // colorRecordIndices[0] = 0
+  v.setUint16(off, 0, false);
+  off += 2; // version = 0
+  v.setUint16(off, n, false);
+  off += 2; // numPaletteEntries
+  v.setUint16(off, 1, false);
+  off += 2; // numPalettes
+  v.setUint16(off, n, false);
+  off += 2; // numColorRecords
+  v.setUint32(off, headerSize, false);
+  off += 4; // offsetFirstColorRecord
+  v.setUint16(off, 0, false);
+  off += 2; // colorRecordIndices[0] = 0
 
   for (const hex of palette) {
     const { r, g, b, a } = parseHex(hex);
@@ -272,8 +288,18 @@ function injectColorTables(
       ...t,
       offset: t.offset + shift,
     })),
-    { tag: "COLR", checksum: colrChecksum, offset: colrOffset, length: colrData.length },
-    { tag: "CPAL", checksum: cpalChecksum, offset: cpalOffset, length: cpalData.length },
+    {
+      tag: "COLR",
+      checksum: colrChecksum,
+      offset: colrOffset,
+      length: colrData.length,
+    },
+    {
+      tag: "CPAL",
+      checksum: cpalChecksum,
+      offset: cpalOffset,
+      length: cpalData.length,
+    },
   ].sort((a, b) => a.tag.localeCompare(b.tag));
 
   // Allocate new buffer
@@ -282,10 +308,7 @@ function injectColorTables(
   const newBytes = new Uint8Array(newBuf);
 
   // Copy existing table data (body, not directory)
-  newBytes.set(
-    new Uint8Array(ttf, oldDirEnd, existingDataSize),
-    newDirEnd,
-  );
+  newBytes.set(new Uint8Array(ttf, oldDirEnd, existingDataSize), newDirEnd);
 
   // Write new header
   const searchRange = Math.pow(2, Math.floor(Math.log2(numTablesNew))) * 16;
@@ -317,7 +340,11 @@ function injectColorTables(
   if (headEntry) {
     newView.setUint32(headEntry.offset + 8, 0, false); // zero it first
     const fontSum = calcChecksum(new Uint8Array(newBuf));
-    newView.setUint32(headEntry.offset + 8, (0xb1b0afba - fontSum) >>> 0, false);
+    newView.setUint32(
+      headEntry.offset + 8,
+      (0xb1b0afba - fontSum) >>> 0,
+      false,
+    );
   }
 
   return newBuf;
@@ -343,11 +370,22 @@ export async function generateCOLRFont(
   prefix: string,
 ): Promise<ArrayBuffer | null> {
   // ── Step 1: classify icons ──────────────────────────────────────
-  const viewBoxCache = new Map<number, { minX: number; minY: number; width: number; height: number }>();
+  const viewBoxCache = new Map<
+    number,
+    { minX: number; minY: number; width: number; height: number }
+  >();
 
   function parseVB(vb: string) {
-    const p = vb.trim().split(/[\s,]+/).map(Number);
-    return { minX: p[0] ?? 0, minY: p[1] ?? 0, width: p[2] ?? 1024, height: p[3] ?? 1024 };
+    const p = vb
+      .trim()
+      .split(/[\s,]+/)
+      .map(Number);
+    return {
+      minX: p[0] ?? 0,
+      minY: p[1] ?? 0,
+      width: p[2] ?? 1024,
+      height: p[3] ?? 1024,
+    };
   }
 
   // ── Step 2: build global colour palette ──────────────────────────
@@ -375,13 +413,19 @@ export async function generateCOLRFont(
   // Track layer glyph specs separately (appended after all base glyphs)
   const layerGlyphs: GlyphSpec[] = [];
   // COLR layer map: baseGID → [{layerGID, paletteIndex}]
-  const colrLayerMap = new Map<number, { layerGID: number; paletteIndex: number }[]>();
+  const colrLayerMap = new Map<
+    number,
+    { layerGID: number; paletteIndex: number }[]
+  >();
 
   // Base glyph GID = 1-based index in svgFontGlyphs array + 1 (for .notdef)
   for (let i = 0; i < icons.length; i++) {
     const icon = icons[i];
     const unicode = icon.unicode
-      ? parseInt(icon.unicode.replace(/^&#x?|^\\|^U\+/i, "").replace(/;$/, ""), 16)
+      ? parseInt(
+          icon.unicode.replace(/^&#x?|^\\|^U\+/i, "").replace(/;$/, ""),
+          16,
+        )
       : baseCharCode++;
 
     const vb = parseVB(icon.view_box || "0 0 1024 1024");
@@ -419,7 +463,8 @@ export async function generateCOLRFont(
         if (!transformedD) continue;
 
         const layerGID = svgFontGlyphs.length + layerGlyphs.length + 1; // +1 for .notdef
-        const colorKey = layer.color === "currentColor" ? "#000000" : layer.color;
+        const colorKey =
+          layer.color === "currentColor" ? "#000000" : layer.color;
         const pIdx = getPaletteIndex(colorKey);
 
         layerGlyphs.push({

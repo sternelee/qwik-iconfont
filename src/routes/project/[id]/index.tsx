@@ -561,14 +561,15 @@ export default component$(() => {
       formData.append("content", content);
       // Detect multi-colour SVG and attach COLRv0 layer data
       try {
-        const { detectColorLayers } = await import(
-          "~/components/color-layer-editor/color-layer-editor"
-        );
+        const { detectColorLayers } =
+          await import("~/components/color-layer-editor/color-layer-editor");
         const colorLayers = await detectColorLayers(content);
         if (colorLayers) {
           formData.append("colorLayers", JSON.stringify(colorLayers));
         }
-      } catch { /* skip on error */ }
+      } catch {
+        /* skip on error */
+      }
       const res = await fetch(`/api/projects/${projectId}/icons`, {
         method: "POST",
         body: formData,
