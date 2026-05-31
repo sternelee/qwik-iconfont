@@ -45,3 +45,4 @@ lerna-debug.log*
 !.yarn/releases
 
 .pi-lens
+.dev.vars

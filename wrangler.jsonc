@@ -11,18 +11,56 @@
   "observability": {
     "enabled": true,
   },
+
+  // ── Cloudflare 资源绑定 ─────────────────────────────────────────────────────
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "iconfont-db",
-      "database_id": "local",
+      "database_id": "YOUR_D1_DATABASE_ID", // wrangler d1 create iconfont-db → 复制此处
       "migrations_dir": "drizzle",
     },
   ],
   "r2_buckets": [
     {
       "binding": "BUCKET",
-      "bucket_name": "iconfont-assets",
+      "bucket_name": "iconfont-assets", // wrangler r2 bucket create iconfont-assets
     },
   ],
+
+  // ── 环境变量 ────────────────────────────────────────────────────────────────
+  // 敏感变量（Secret）推荐用 `wrangler secret put` 设置，避免明文提交。
+  // 本地开发时在 .dev.vars 文件中覆盖（已加入 .gitignore）。
+  "vars": {
+    // ── 必填：认证 ──────────────────────────────────────────────────────────
+    // 应用公开 URL，用于 OAuth 回调和邮件链接
+    // 本地开发：http://localhost:8788，生产：https://iconfont.example.com
+    "BETTER_AUTH_URL": "http://localhost:8788",
+
+    // Session 签名密钥，随机字符串（生产环境请用 wrangler secret put BETTER_AUTH_SECRET）
+    "BETTER_AUTH_SECRET": "change-me-to-a-random-secret-at-least-32-chars",
+
+    // ── 可选：GitHub OAuth ────────────────────────────────────────────────
+    // 创建地址：https://github.com/settings/developers → OAuth Apps
+    // Callback URL：<BETTER_AUTH_URL>/api/auth/callback/github
+    "GITHUB_CLIENT_ID": "",
+    "GITHUB_CLIENT_SECRET": "",
+
+    // ── 可选：Google OAuth ────────────────────────────────────────────────
+    // 创建地址：https://console.cloud.google.com → APIs & Services → Credentials
+    // 授权重定向 URI：<BETTER_AUTH_URL>/api/auth/callback/google
+    "GOOGLE_CLIENT_ID": "",
+    "GOOGLE_CLIENT_SECRET": "",
+
+    // ── 可选：邮件服务（Resend）──────────────────────────────────────────
+    // 注册地址：https://resend.com — 用于发送注册欢迎邮件
+    // 留空则跳过发送，不影响注册流程
+    "RESEND_API_KEY": "",
+    "EMAIL_FROM": "noreply@iconfont.app",
+
+    // ── 可选：GitHub Token ────────────────────────────────────────────────
+    // 用于 GitHub 图标库导入：未配置 60次/小时，配置后 5000次/小时
+    // 创建地址：https://github.com/settings/tokens（read:packages 权限即可）
+    "GITHUB_TOKEN": "",
+  },
 }

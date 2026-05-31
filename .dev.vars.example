@@ -1,0 +1,21 @@
+# .dev.vars — 本地开发环境变量（覆盖 wrangler.jsonc 中的 vars）
+# 此文件已加入 .gitignore，不会提交到 Git。
+# 参考 .dev.vars.example 创建此文件，或直接复制并填入真实值。
+
+BETTER_AUTH_URL=http://localhost:8788
+BETTER_AUTH_SECRET=local-dev-secret-change-in-production
+
+# GitHub OAuth（本地测试 OAuth 流程时填写）
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+
+# Google OAuth（本地测试 OAuth 流程时填写）
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+# Resend 邮件（留空则跳过发送）
+RESEND_API_KEY=
+EMAIL_FROM=noreply@iconfont.app
+
+# GitHub Token（留空则 60次/小时限速）
+GITHUB_TOKEN=

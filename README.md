@@ -179,38 +179,36 @@ pnpm db:migrate:remote
 
 ### 步骤 4：配置环境变量
 
-通过 Wrangler 或 Cloudflare Dashboard 设置 Secrets：
+所有变量已在 `wrangler.jsonc` 的 `vars` 节中预配置，直接填入对应值即可：
 
-```bash
-# 必填 — 认证密钥（随机字符串，建议 32+ 字符）
-wrangler secret put BETTER_AUTH_SECRET
-
-# 必填 — 应用公开 URL（用于 OAuth 回调、邮件链接等）
-wrangler secret put BETTER_AUTH_URL
-# 输入：https://iconfont.your-domain.com
+```jsonc
+"vars": {
+  "BETTER_AUTH_URL": "https://iconfont.your-domain.com",  // ← 替换为你的域名
+  "BETTER_AUTH_SECRET": "your-random-secret-32-chars",    // ← 替换为随机字符串
+  "GITHUB_CLIENT_ID": "your-github-client-id",
+  // ...
+}
 ```
 
-#### 可选环境变量
+> **安全提示**：`wrangler.jsonc` 中的变量明文存储，建议将含 `_SECRET` / `_KEY` 的敏感值
+> 改用加密 Secrets（不出现在代码库中）：
+> ```bash
+> wrangler secret put BETTER_AUTH_SECRET
+> wrangler secret put GITHUB_CLIENT_SECRET
+> wrangler secret put GOOGLE_CLIENT_SECRET
+> wrangler secret put RESEND_API_KEY
+> ```
 
-| 变量                   | 说明                         | 默认值                                   |
-| ---------------------- | ---------------------------- | ---------------------------------------- |
-| `GITHUB_CLIENT_ID`     | GitHub OAuth App Client ID   | 禁用 GitHub 登录                         |
-| `GITHUB_CLIENT_SECRET` | GitHub OAuth App Secret      | 禁用 GitHub 登录                         |
-| `GOOGLE_CLIENT_ID`     | Google OAuth Client ID       | 禁用 Google 登录                         |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret   | 禁用 Google 登录                         |
-| `RESEND_API_KEY`       | Resend 邮件服务 API Key      | 禁用欢迎邮件                             |
-| `EMAIL_FROM`           | 发件地址                     | `noreply@iconfont.app`                   |
-| `GITHUB_TOKEN`         | GitHub Personal Access Token | API 限速 60次/小时（配置后 5000次/小时） |
+#### 本地开发环境变量
+
+复制 `.dev.vars.example` 为 `.dev.vars`（已加入 `.gitignore`），填入本地值：
 
 ```bash
-# 批量设置（示例）
-wrangler secret put GITHUB_CLIENT_ID
-wrangler secret put GITHUB_CLIENT_SECRET
-wrangler secret put GOOGLE_CLIENT_ID
-wrangler secret put GOOGLE_CLIENT_SECRET
-wrangler secret put RESEND_API_KEY
-wrangler secret put GITHUB_TOKEN
+cp .dev.vars.example .dev.vars
+# 然后编辑 .dev.vars，填入本地开发使用的 Key
 ```
+
+`pnpm serve`（Wrangler 开发服务器）会自动读取 `.dev.vars`，优先级高于 `wrangler.jsonc vars`。
 
 #### 配置 OAuth 应用
 
