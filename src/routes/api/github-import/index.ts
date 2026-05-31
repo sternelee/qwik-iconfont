@@ -1,57 +1,10 @@
 import type { RequestHandler } from "@builder.io/qwik-city";
-import {
-  ICON_LIBRARIES,
-  getLibrary,
-  resolveIconsPath,
-  rawGitHubUrl,
-} from "~/lib/github-registry";
+import { parseGitHubUrl, rawGitHubUrl } from "~/lib/github-registry";
 import { extractSvgViewBox, DEFAULT_VIEW_BOX } from "~/lib/types";
 
-// ── Per-Worker in-memory cache (cleared on Worker restart) ──────────────────
+// ── Per-Worker in-memory cache ───────────────────────────────────────────────
 const treeCache = new Map<string, { names: string[]; cachedAt: number }>();
 const CACHE_TTL = 10 * 60 * 1000; // 10 min
-
-// ── GitHub URL parser ────────────────────────────────────────────────────────
-// Parses any GitHub tree URL into { repo, branch, path }.
-//
-// Supported formats:
-//   https://github.com/owner/repo/tree/branch/path/to/icons
-//   https://github.com/owner/repo/tree/branch          (root of branch)
-//   https://github.com/owner/repo                       (default branch, root)
-export interface ParsedGitHubUrl {
-  repo: string; // "owner/repo"
-  branch: string; // "main" | "master" | ...
-  path: string; // "packages/static-svg/icons" (no leading/trailing slash)
-  label: string; // human-readable display name
-}
-
-export function parseGitHubUrl(raw: string): ParsedGitHubUrl | null {
-  try {
-    const trimmed = raw.trim();
-    const normalized = trimmed.startsWith("http")
-      ? trimmed
-      : `https://${trimmed}`;
-    const u = new URL(normalized);
-    if (!u.hostname.endsWith("github.com")) return null;
-
-    // pathname: /owner/repo[/tree/branch[/path/...]]
-    const parts = u.pathname.replace(/^\/|\/$/g, "").split("/");
-    if (parts.length < 2 || !parts[0] || !parts[1]) return null;
-
-    const repo = `${parts[0]}/${parts[1].replace(/\.git$/, "")}`;
-
-    if (parts[2] === "tree") {
-      const branch = parts[3] ?? "main";
-      const path = parts.slice(4).join("/");
-      return { repo, branch, path, label: repo };
-    }
-
-    // Plain repo URL — assume main branch, root directory
-    return { repo, branch: "main", path: "", label: repo };
-  } catch {
-    return null;
-  }
-}
 
 // ── Fetch SVG names from GitHub Trees API ────────────────────────────────────
 async function fetchIconNames(
@@ -97,62 +50,27 @@ async function fetchIconNames(
         f.type === "blob" &&
         f.path.startsWith(prefix) &&
         f.path.endsWith(".svg") &&
-        // only direct children of iconsPath — skip nested subdirectories
         !f.path.slice(prefix.length).includes("/"),
     )
-    .map((f) => f.path.slice(prefix.length, -4)); // strip prefix + ".svg"
+    .map((f) => f.path.slice(prefix.length, -4));
 
   treeCache.set(key, { names, cachedAt: Date.now() });
   return names;
 }
 
-// ── Shared: resolve repo/branch/path from either registry or raw URL ─────────
-function resolveSource(
-  registryId: string | null,
-  variantId: string | undefined,
-  githubUrl: string | null,
-): ParsedGitHubUrl | { error: string } {
-  if (githubUrl) {
-    const parsed = parseGitHubUrl(githubUrl);
-    if (!parsed)
-      return {
-        error: "无效的 GitHub URL，请粘贴仓库目录页面的完整 URL",
-      };
-    return parsed;
-  }
-  if (registryId) {
-    const library = getLibrary(registryId);
-    if (!library) return { error: "未知图标库" };
-    const path = resolveIconsPath(library, variantId);
-    return {
-      repo: library.repo,
-      branch: library.branch,
-      path,
-      label: library.name,
-    };
-  }
-  return { error: "缺少 registry 或 url 参数" };
-}
-
-// ── GET /api/github-import ────────────────────────────────────────────────────
-// Curated:   ?registry=lucide[&variant=outline][&search=arrow]
-// Custom:    ?url=https://github.com/owner/repo/tree/branch/path[&search=...]
-// No params: returns library list (used by UI library picker)
+// ── GET /api/github-import?url=<github-tree-url>[&search=...] ────────────────
 export const onGet: RequestHandler = async ({ url, json, platform }) => {
-  const registryId = url.searchParams.get("registry");
-  const variantId = url.searchParams.get("variant") ?? undefined;
   const githubUrl = url.searchParams.get("url");
   const search = url.searchParams.get("search")?.toLowerCase().trim() ?? "";
 
-  // No source specified → return curated library list
-  if (!registryId && !githubUrl) {
-    json(200, { libraries: ICON_LIBRARIES });
+  if (!githubUrl) {
+    json(400, { error: "缺少 url 参数" });
     return;
   }
 
-  const source = resolveSource(registryId, variantId, githubUrl);
-  if ("error" in source) {
-    json(400, { error: source.error });
+  const parsed = parseGitHubUrl(githubUrl);
+  if (!parsed) {
+    json(400, { error: "无效的 GitHub URL，请粘贴仓库目录页面的完整 URL" });
     return;
   }
 
@@ -160,9 +78,9 @@ export const onGet: RequestHandler = async ({ url, json, platform }) => {
 
   try {
     let names = await fetchIconNames(
-      source.repo,
-      source.branch,
-      source.path,
+      parsed.repo,
+      parsed.branch,
+      parsed.path,
       token,
     );
 
@@ -170,15 +88,13 @@ export const onGet: RequestHandler = async ({ url, json, platform }) => {
       names = names.filter((n) => n.toLowerCase().includes(search));
     }
 
-    const baseRaw = rawGitHubUrl(source.repo, source.branch, source.path);
+    const baseRaw = rawGitHubUrl(parsed.repo, parsed.branch, parsed.path);
 
     json(200, {
-      library: registryId ?? null,
-      variant: variantId ?? null,
-      repo: source.repo,
-      branch: source.branch,
-      path: source.path,
-      label: source.label,
+      repo: parsed.repo,
+      branch: parsed.branch,
+      path: parsed.path,
+      label: parsed.label,
       total: names.length,
       icons: names.map((name) => ({
         name,
@@ -193,9 +109,7 @@ export const onGet: RequestHandler = async ({ url, json, platform }) => {
 };
 
 // ── POST /api/github-import ───────────────────────────────────────────────────
-// Curated:   { registry, variant?, icons, projectName }
-// Custom:    { url, icons, projectName }
-// Creates a project, fetches SVGs from GitHub, stores to R2 + D1.
+// Body: { url, icons: string[], projectName }
 export const onPost: RequestHandler = async ({ json, request, platform }) => {
   const { getSessionFromRequest } = await import("~/lib/session");
   const session = await getSessionFromRequest(platform, request);
@@ -205,21 +119,17 @@ export const onPost: RequestHandler = async ({ json, request, platform }) => {
   }
 
   const body = (await request.json()) as {
-    registry?: string;
-    variant?: string;
-    url?: string; // custom GitHub tree URL
+    url: string;
     icons: string[];
     projectName: string;
   };
 
-  const {
-    registry,
-    variant,
-    url: githubUrl,
-    icons: iconNames,
-    projectName,
-  } = body;
+  const { url: githubUrl, icons: iconNames, projectName } = body;
 
+  if (!githubUrl) {
+    json(400, { error: "缺少 url 参数" });
+    return;
+  }
   if (!Array.isArray(iconNames) || iconNames.length === 0) {
     json(400, { error: "请至少选择一个图标" });
     return;
@@ -232,14 +142,10 @@ export const onPost: RequestHandler = async ({ json, request, platform }) => {
     json(400, { error: "单次最多导入 500 个图标" });
     return;
   }
-  if (!registry && !githubUrl) {
-    json(400, { error: "缺少 registry 或 url 参数" });
-    return;
-  }
 
-  const source = resolveSource(registry ?? null, variant, githubUrl ?? null);
-  if ("error" in source) {
-    json(400, { error: source.error });
+  const parsed = parseGitHubUrl(githubUrl);
+  if (!parsed) {
+    json(400, { error: "无效的 GitHub URL" });
     return;
   }
 
@@ -272,7 +178,7 @@ export const onPost: RequestHandler = async ({ json, request, platform }) => {
     }
   }
 
-  // Create project (public visibility for imported icon libraries)
+  // Create project
   const fontFamily =
     projectName
       .trim()
@@ -285,7 +191,7 @@ export const onPost: RequestHandler = async ({ json, request, platform }) => {
     .values({
       user_id: session.user.id,
       name: projectName.trim(),
-      description: `从 ${source.label} 导入（${iconNames.length} 个图标）`,
+      description: `从 ${parsed.label} 导入（${iconNames.length} 个图标）`,
       font_family: fontFamily,
       prefix: "icon-",
       visibility: "public",
@@ -293,7 +199,7 @@ export const onPost: RequestHandler = async ({ json, request, platform }) => {
     .returning({ id: projects.id });
 
   const projectId = proj.id;
-  const baseRaw = rawGitHubUrl(source.repo, source.branch, source.path);
+  const baseRaw = rawGitHubUrl(parsed.repo, parsed.branch, parsed.path);
 
   const token = (platform as any)?.env?.GITHUB_TOKEN as string | undefined;
   const fetchHeaders: Record<string, string> = {
@@ -348,7 +254,6 @@ export const onPost: RequestHandler = async ({ json, request, platform }) => {
     }
 
     if (rows.length > 0) {
-      // Sub-batch inserts to stay within D1 parameter limits
       const SUB = 50;
       for (let j = 0; j < rows.length; j += SUB) {
         await db.insert(icons).values(rows.slice(j, j + SUB));

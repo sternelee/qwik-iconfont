@@ -103,7 +103,6 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
 
       {/* Modal */}
       <div class="relative z-10 flex h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-rose-100 bg-white shadow-2xl">
-
         {/* Header */}
         <div class="flex shrink-0 items-center justify-between border-b border-rose-100 px-5 py-3.5">
           <div class="flex items-center gap-2.5">
@@ -116,7 +115,7 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
               </button>
             )}
             <div>
-              <h2 class="font-['Nunito'] text-base font-extrabold leading-tight text-rose-950">
+              <h2 class="font-['Nunito'] text-base leading-tight font-extrabold text-rose-950">
                 {step.value === "input" && "从 GitHub 导入图标"}
                 {step.value === "browse" && (repoLabel.value || "浏览图标")}
                 {step.value === "importing" && "正在导入..."}
@@ -224,7 +223,7 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
               <div class="mt-4 rounded-xl bg-rose-50 px-4 py-3">
                 <p class="mb-1 text-xs font-semibold text-rose-500">示例</p>
                 <button
-                  class="w-full break-all text-left font-mono text-xs text-rose-400 hover:text-rose-600"
+                  class="w-full text-left font-mono text-xs break-all text-rose-400 hover:text-rose-600"
                   onClick$={() => {
                     urlInput.value =
                       "https://github.com/lucide-icons/lucide/tree/main/icons";
@@ -366,8 +365,8 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
                         class="rounded-2xl border border-rose-100 px-4 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50"
                         onClick$={() => (displayCount.value += 120)}
                       >
-                        加载更多（还有 {filteredIcons.length - displayCount.value}{" "}
-                        个）
+                        加载更多（还有{" "}
+                        {filteredIcons.length - displayCount.value} 个）
                       </button>
                     </div>
                   )}
@@ -400,7 +399,10 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
                     loadingIcons.value
                   }
                   onClick$={async () => {
-                    if (!projectName.value.trim() || selected.value.length === 0)
+                    if (
+                      !projectName.value.trim() ||
+                      selected.value.length === 0
+                    )
                       return;
 
                     step.value = "importing";
@@ -435,7 +437,10 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
                     }
                   }}
                 >
-                  导入{selected.value.length > 0 ? ` ${selected.value.length} 个` : ""}
+                  导入
+                  {selected.value.length > 0
+                    ? ` ${selected.value.length} 个`
+                    : ""}
                 </button>
               </div>
               {importError.value && (
@@ -478,7 +483,8 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
               </p>
               <p class="mt-2 text-sm text-rose-500">
                 成功导入{" "}
-                <strong class="text-rose-700">{importedCount.value}</strong> 个图标
+                <strong class="text-rose-700">{importedCount.value}</strong>{" "}
+                个图标
                 {importedFailed.value > 0 && (
                   <>，{importedFailed.value} 个下载失败</>
                 )}
