@@ -4,7 +4,8 @@
 
 /**
  * Global styles for Iconfont app.
- * Tailwind CSS v4 + daisyUI — Vibrant claymorphism theme
+ * Tailwind CSS v4 + daisyUI — High-contrast rose theme
+ * Design direction: lower shadow / blur, higher contrast borders & text
  */
 
 @import "tailwindcss";
@@ -17,10 +18,10 @@
   default: true;
   prefersdark: false;
   color-scheme: light;
-  --color-base-100: #fffbfb;
-  --color-base-200: #fff1f2;
-  --color-base-300: #ffe4e6;
-  --color-base-content: #4a0418;
+  --color-base-100: #ffffff;       /* 纯白背景，最大对比度 */
+  --color-base-200: #ffeaec;       /* 更深的卡片背景，与 base-100 区分明显 */
+  --color-base-300: #ffc5cb;       /* 深化边框色，提高分割线对比度 */
+  --color-base-content: #3d0114;   /* 加深正文色（原 #4a0418）*/
   --color-primary: #e11d48;
   --color-primary-content: #ffffff;
   --color-secondary: #fb7185;
@@ -38,8 +39,8 @@
   --color-error: #dc2626;
   --color-error-content: #ffffff;
   --radius-selector: 1rem;
-  --radius-field: 1rem;
-  --radius-box: 1.5rem;
+  --radius-field: 0.875rem;
+  --radius-box: 1.25rem;
   --border: 1px;
   --depth: 1;
   --noise: 0;
@@ -83,109 +84,106 @@ h6 {
   line-height: 1.2;
 }
 
-/* ── Claymorphism Utilities ───────────────────────────────────────── */
+/* ── Card / Button Utilities ──────────────────────────────────────── */
+/*
+ * 设计原则（修订版）：
+ *   - 阴影：单层、小扩散（max 12px blur），alpha ≤ 0.12
+ *   - 去掉白色内阴影（-x -y rgba(white)）——这会压低感知对比度
+ *   - 边框：接近不透明（opacity ≥ 0.8），让分割线清晰可见
+ *   - 背景：纯白卡片，无渐变——色差对比边界更锐利
+ */
 
 .clay-card {
-  border-radius: 28px;
-  background: linear-gradient(145deg, #ffffff 0%, #fff5f6 100%);
-  box-shadow:
-    8px 8px 20px rgba(225, 29, 72, 0.08),
-    -4px -4px 12px rgba(255, 255, 255, 0.9),
-    inset 1px 1px 1px rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(255, 228, 230, 0.6);
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.1);
+  border: 1px solid rgba(225, 29, 72, 0.15);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .clay-card:hover {
-  transform: translateY(-4px) scale(1.01);
-  box-shadow:
-    12px 16px 32px rgba(225, 29, 72, 0.12),
-    -4px -4px 12px rgba(255, 255, 255, 0.9),
-    inset 1px 1px 1px rgba(255, 255, 255, 0.6);
+  transform: translateY(-3px) scale(1.005);
+  box-shadow: 0 6px 16px rgba(225, 29, 72, 0.14);
+  border-color: rgba(225, 29, 72, 0.25);
 }
 
 .clay-card:active {
   transform: translateY(0) scale(0.99);
-  box-shadow:
-    4px 4px 12px rgba(225, 29, 72, 0.06),
-    -2px -2px 8px rgba(255, 255, 255, 0.8),
-    inset 2px 2px 4px rgba(225, 29, 72, 0.05);
+  box-shadow: 0 1px 4px rgba(225, 29, 72, 0.08);
 }
 
 .clay-button {
-  border-radius: 16px;
+  border-radius: 14px;
   font-family: "Nunito", sans-serif;
   font-weight: 700;
   letter-spacing: 0.01em;
+  /* 底部实色边 + 极小扩散光 */
   box-shadow:
-    0 4px 0 #be123c,
-    0 6px 12px rgba(225, 29, 72, 0.25);
+    0 3px 0 #be123c,
+    0 4px 8px rgba(225, 29, 72, 0.15);
   transition: all 0.15s ease;
 }
 
 .clay-button:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   box-shadow:
-    0 6px 0 #be123c,
-    0 8px 20px rgba(225, 29, 72, 0.35);
+    0 4px 0 #be123c,
+    0 6px 12px rgba(225, 29, 72, 0.2);
 }
 
 .clay-button:active {
   transform: translateY(2px);
   box-shadow:
-    0 2px 0 #be123c,
-    0 2px 6px rgba(225, 29, 72, 0.2);
+    0 1px 0 #be123c,
+    0 1px 4px rgba(225, 29, 72, 0.12);
 }
 
 .clay-button-secondary {
   box-shadow:
-    0 4px 0 #1d4ed8,
-    0 6px 12px rgba(37, 99, 235, 0.25);
+    0 3px 0 #1d4ed8,
+    0 4px 8px rgba(37, 99, 235, 0.15);
 }
 
 .clay-button-secondary:hover {
   box-shadow:
-    0 6px 0 #1d4ed8,
-    0 8px 20px rgba(37, 99, 235, 0.35);
+    0 4px 0 #1d4ed8,
+    0 6px 12px rgba(37, 99, 235, 0.2);
 }
 
 .clay-button-secondary:active {
   box-shadow:
-    0 2px 0 #1d4ed8,
-    0 2px 6px rgba(37, 99, 235, 0.2);
+    0 1px 0 #1d4ed8,
+    0 1px 4px rgba(37, 99, 235, 0.12);
 }
 
 .clay-icon-card {
-  border-radius: 24px;
-  background: linear-gradient(145deg, #ffffff 0%, #fff8f9 100%);
-  box-shadow:
-    4px 4px 12px rgba(225, 29, 72, 0.06),
-    -2px -2px 8px rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(255, 228, 230, 0.5);
-  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(225, 29, 72, 0.08);
+  border: 1px solid rgba(225, 29, 72, 0.12);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .clay-icon-card:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow:
-    6px 10px 20px rgba(225, 29, 72, 0.1),
-    -2px -2px 8px rgba(255, 255, 255, 0.8);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.12);
+  border-color: rgba(225, 29, 72, 0.22);
 }
 
 .clay-inset {
-  border-radius: 20px;
-  background: linear-gradient(145deg, #fff0f1 0%, #fffbfb 100%);
-  box-shadow:
-    inset 3px 3px 6px rgba(225, 29, 72, 0.06),
-    inset -2px -2px 5px rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(255, 228, 230, 0.4);
+  border-radius: 16px;
+  background: #ffeaec;
+  box-shadow: inset 0 1px 3px rgba(225, 29, 72, 0.08);
+  border: 1px solid rgba(225, 29, 72, 0.14);
 }
 
 .clay-navbar {
-  background: rgba(255, 251, 251, 0.85);
-  backdrop-filter: blur(20px) saturate(180%);
-  border-bottom: 1px solid rgba(255, 228, 230, 0.5);
-  box-shadow: 0 1px 20px rgba(225, 29, 72, 0.04);
+  background: rgba(255, 255, 255, 0.92);
+  /* 减少模糊：20px → 8px，饱和度收敛到 110% */
+  backdrop-filter: blur(8px) saturate(110%);
+  -webkit-backdrop-filter: blur(8px) saturate(110%);
+  border-bottom: 1px solid rgba(225, 29, 72, 0.12);
+  box-shadow: 0 1px 6px rgba(225, 29, 72, 0.06);
 }
 
 /* ── Hero Gradient Backgrounds ────────────────────────────────────── */
@@ -193,25 +191,20 @@ h6 {
 .hero-gradient {
   background:
     radial-gradient(
-      ellipse 80% 60% at 50% -20%,
-      rgba(251, 113, 133, 0.15),
+      ellipse 80% 50% at 50% -10%,
+      rgba(251, 113, 133, 0.12),
       transparent
     ),
     radial-gradient(
-      ellipse 60% 50% at 80% 50%,
-      rgba(37, 99, 235, 0.08),
+      ellipse 50% 40% at 80% 50%,
+      rgba(37, 99, 235, 0.06),
       transparent
     ),
-    radial-gradient(
-      ellipse 50% 40% at 20% 80%,
-      rgba(225, 29, 72, 0.06),
-      transparent
-    ),
-    linear-gradient(180deg, #fffbfb 0%, #fff1f2 50%, #fffbfb 100%);
+    #ffffff;
 }
 
 .warm-gradient {
-  background: linear-gradient(135deg, #fff1f2 0%, #fff7ed 50%, #eff6ff 100%);
+  background: linear-gradient(135deg, #ffeaec 0%, #fff7ed 50%, #eff6ff 100%);
 }
 
 /* ── Featured Icon Set Badge ──────────────────────────────────────── */
@@ -226,7 +219,7 @@ h6 {
   text-transform: uppercase;
   padding: 3px 10px;
   border-radius: 100px;
-  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.3);
+  box-shadow: 0 1px 4px rgba(225, 29, 72, 0.25);
 }
 
 /* ── Animations ───────────────────────────────────────────────────── */
@@ -449,30 +442,14 @@ h6 {
 }
 
 /* Stagger delays for grid items */
-.stagger-1 {
-  animation-delay: 0.04s;
-}
-.stagger-2 {
-  animation-delay: 0.08s;
-}
-.stagger-3 {
-  animation-delay: 0.12s;
-}
-.stagger-4 {
-  animation-delay: 0.16s;
-}
-.stagger-5 {
-  animation-delay: 0.2s;
-}
-.stagger-6 {
-  animation-delay: 0.24s;
-}
-.stagger-7 {
-  animation-delay: 0.28s;
-}
-.stagger-8 {
-  animation-delay: 0.32s;
-}
+.stagger-1 { animation-delay: 0.04s; }
+.stagger-2 { animation-delay: 0.08s; }
+.stagger-3 { animation-delay: 0.12s; }
+.stagger-4 { animation-delay: 0.16s; }
+.stagger-5 { animation-delay: 0.2s; }
+.stagger-6 { animation-delay: 0.24s; }
+.stagger-7 { animation-delay: 0.28s; }
+.stagger-8 { animation-delay: 0.32s; }
 
 /* ── Component Styles ─────────────────────────────────────────────── */
 
@@ -483,7 +460,7 @@ h6 {
 }
 .card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px oklch(0 0 0 / 0.06);
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.08);
 }
 
 .btn-press:active {
@@ -501,12 +478,8 @@ h6 {
 }
 
 @keyframes toast-progress-shrink {
-  from {
-    width: 100%;
-  }
-  to {
-    width: 0%;
-  }
+  from { width: 100%; }
+  to   { width: 0%; }
 }
 
 /* Drop zone */
@@ -548,17 +521,18 @@ h6 {
 }
 
 /* ── Decorative Blobs ─────────────────────────────────────────────── */
+/* blur 减半：视觉更清晰，不再模糊整个背景区域 */
 
 .blob-1 {
   position: absolute;
-  width: 400px;
-  height: 400px;
+  width: 360px;
+  height: 360px;
   background: linear-gradient(
     135deg,
-    rgba(251, 113, 133, 0.2),
-    rgba(225, 29, 72, 0.1)
+    rgba(251, 113, 133, 0.16),
+    rgba(225, 29, 72, 0.08)
   );
-  filter: blur(60px);
+  filter: blur(28px);   /* 原 60px → 28px */
   border-radius: 50%;
   animation: blob 8s ease-in-out infinite;
   pointer-events: none;
@@ -566,14 +540,14 @@ h6 {
 
 .blob-2 {
   position: absolute;
-  width: 300px;
-  height: 300px;
+  width: 280px;
+  height: 280px;
   background: linear-gradient(
     135deg,
-    rgba(37, 99, 235, 0.12),
-    rgba(59, 130, 246, 0.06)
+    rgba(37, 99, 235, 0.1),
+    rgba(59, 130, 246, 0.05)
   );
-  filter: blur(50px);
+  filter: blur(24px);   /* 原 50px → 24px */
   border-radius: 50%;
   animation: blob 10s ease-in-out infinite reverse;
   pointer-events: none;
@@ -585,35 +559,32 @@ h6 {
   background:
     radial-gradient(
       circle at 30% 30%,
-      rgba(251, 113, 133, 0.08) 0%,
+      rgba(251, 113, 133, 0.06) 0%,
       transparent 50%
     ),
     radial-gradient(
       circle at 70% 70%,
-      rgba(37, 99, 235, 0.06) 0%,
+      rgba(37, 99, 235, 0.04) 0%,
       transparent 50%
     ),
-    #fffbfb;
-  border-radius: 20px;
+    #fafafa;
+  border-radius: 16px;
 }
 
 /* ── Input Clay Style ─────────────────────────────────────────────── */
 
 .input-clay {
-  border-radius: 14px;
-  background: linear-gradient(145deg, #ffffff 0%, #fff8f9 100%);
-  box-shadow:
-    inset 2px 2px 4px rgba(225, 29, 72, 0.04),
-    inset -1px -1px 3px rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(255, 228, 230, 0.5);
-  transition: all 0.2s ease;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: inset 0 1px 3px rgba(225, 29, 72, 0.06);
+  border: 1px solid rgba(225, 29, 72, 0.18);
+  transition: all 0.15s ease;
 }
 
 .input-clay:focus {
   outline: none;
   box-shadow:
-    inset 2px 2px 4px rgba(225, 29, 72, 0.06),
-    inset -1px -1px 3px rgba(255, 255, 255, 0.8),
-    0 0 0 3px rgba(225, 29, 72, 0.1);
-  border-color: rgba(225, 29, 72, 0.3);
+    inset 0 1px 3px rgba(225, 29, 72, 0.06),
+    0 0 0 2px rgba(225, 29, 72, 0.12);
+  border-color: rgba(225, 29, 72, 0.4);
 }
