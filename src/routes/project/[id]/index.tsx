@@ -40,6 +40,11 @@ import {
   type LocalProject,
   type LocalIcon,
 } from "~/lib/local-storage";
+import {
+  getAIUserSettings,
+  saveAIUserSettings,
+  clearAIUserSettings,
+} from "~/lib/ai-settings";
 
 type ProjectLoadResult =
   | { mode: "server"; project: Project; icons: Icon[] }
@@ -368,6 +373,20 @@ export default component$(() => {
   const aiModifyInstruction = useSignal("");
   const aiModifying = useSignal(false);
   const aiModifiedSvg = useSignal("");
+
+  // AI settings (BYOA)
+  const showAISettings = useSignal(false);
+  const aiApiKey = useSignal("");
+  const aiBaseUrl = useSignal("");
+  const aiModel = useSignal("");
+
+  // Hydrate AI settings from localStorage on client
+  useVisibleTask$(() => {
+    const s = getAIUserSettings();
+    aiApiKey.value = s.apiKey;
+    aiBaseUrl.value = s.baseUrl;
+    aiModel.value = s.model;
+  });
   const allTags = useComputed$(() => {
     const tagSet = new Set<string>();
     icons.list.forEach((icon) => {
@@ -401,6 +420,35 @@ export default component$(() => {
 
   // ── AI handlers ────────────────────────────────────────────────────────────
 
+  /** Save BYOA API settings to localStorage. */
+  const saveAISettings = $(() => {
+    saveAIUserSettings({
+      apiKey: aiApiKey.value.trim(),
+      baseUrl: aiBaseUrl.value.trim(),
+      model: aiModel.value.trim(),
+    });
+    showAISettings.value = false;
+    showToast("AI 设置已保存", "success");
+  });
+
+  /** Clear BYOA settings from localStorage and reset signals. */
+  const clearAISettings = $(() => {
+    clearAIUserSettings();
+    aiApiKey.value = "";
+    aiBaseUrl.value = "";
+    aiModel.value = "";
+    showToast("AI 设置已清除", "info");
+  });
+
+  /** Reactive credentials for BYOA — only populated when apiKey is set. */
+  const aiCredentials = useComputed$(() => {
+    if (!aiApiKey.value.trim()) return {} as Record<string, string>;
+    const creds: Record<string, string> = { apiKey: aiApiKey.value.trim() };
+    if (aiBaseUrl.value.trim()) creds.baseUrl = aiBaseUrl.value.trim();
+    if (aiModel.value.trim()) creds.model = aiModel.value.trim();
+    return creds;
+  });
+
   const generateAIIcon = $(async () => {
     if (!aiPrompt.value.trim()) return;
     aiGenerating.value = true;
@@ -409,7 +457,11 @@ export default component$(() => {
       const res = await fetch("/api/ai/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: aiPrompt.value, style: aiStyle.value }),
+        body: JSON.stringify({
+          prompt: aiPrompt.value,
+          style: aiStyle.value,
+          ...aiCredentials.value,
+        }),
       });
       const data = (await res.json()) as { svg?: string; error?: string };
       if (!res.ok || data.error) throw new Error(data.error || "生成失败");
@@ -487,6 +539,7 @@ export default component$(() => {
         body: JSON.stringify({
           svg: aiModifyIcon.content,
           instruction: aiModifyInstruction.value,
+          ...aiCredentials.value,
         }),
       });
       const data = (await res.json()) as { svg?: string; error?: string };
@@ -1417,6 +1470,26 @@ ${classes}`;
               onClick$={() => (showAIGenerate.value = true)}
             >
               ✨ AI 生成
+            </button>
+            <button
+              class="clay-button flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 transition-all hover:bg-violet-200"
+              title="AI 设置"
+              onClick$={() => (showAISettings.value = true)}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
             </button>
           </div>
         </div>
@@ -2867,9 +2940,16 @@ ${classes}`;
         <div class="modal modal-open z-50">
           <div class="clay-card animate-modal mx-4 w-full max-w-lg">
             <div class="flex items-center justify-between border-b border-rose-100 px-6 py-4">
-              <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
-                ✨ AI 生成图标
-              </h3>
+              <div>
+                <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
+                  ✨ AI 生成图标
+                </h3>
+                {aiApiKey.value && (
+                  <span class="mt-0.5 inline-block text-xs text-violet-500">
+                    ✦ 使用自定义 API Key
+                  </span>
+                )}
+              </div>
               <button
                 class="flex h-8 w-8 items-center justify-center rounded-xl text-rose-400 transition-all hover:bg-rose-50 hover:text-rose-600"
                 onClick$={() => {
@@ -2969,9 +3049,16 @@ ${classes}`;
         <div class="modal modal-open z-50">
           <div class="clay-card animate-modal mx-4 w-full max-w-lg">
             <div class="flex items-center justify-between border-b border-rose-100 px-6 py-4">
-              <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
-                ✨ AI 修改 · {aiModifyIcon.name}
-              </h3>
+              <div>
+                <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
+                  ✨ AI 修改 · {aiModifyIcon.name}
+                </h3>
+                {aiApiKey.value && (
+                  <span class="mt-0.5 inline-block text-xs text-violet-500">
+                    ✦ 使用自定义 API Key
+                  </span>
+                )}
+              </div>
               <button
                 class="flex h-8 w-8 items-center justify-center rounded-xl text-rose-400 transition-all hover:bg-rose-50 hover:text-rose-600"
                 onClick$={() => {
@@ -3068,6 +3155,92 @@ ${classes}`;
               aiModifyInstruction.value = "";
             }}
           />
+        </div>
+      )}
+
+      {/* ── AI Settings Modal ────────────────────────────────── */}
+      {showAISettings.value && (
+        <div class="modal modal-open z-50">
+          <div class="clay-card animate-modal mx-4 w-full max-w-md">
+            <div class="flex items-center justify-between border-b border-rose-100 px-6 py-4">
+              <div>
+                <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
+                  ⚙️ AI 设置
+                </h3>
+                <p class="mt-0.5 text-xs text-rose-400">使用自己的 API Key（BYOA）</p>
+              </div>
+              <button
+                class="flex h-8 w-8 items-center justify-center rounded-xl text-rose-400 transition-all hover:bg-rose-50 hover:text-rose-600"
+                onClick$={() => (showAISettings.value = false)}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" x2="6" y1="6" y2="18" /><line x1="6" x2="18" y1="6" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <div class="space-y-4 p-6">
+              <div>
+                <label class="mb-1 block text-sm font-semibold text-rose-700">
+                  API Key <span class="text-rose-400">*</span>
+                </label>
+                <input
+                  type="password"
+                  class="input-clay w-full px-3 py-2.5 text-sm font-mono"
+                  placeholder="sk-..."
+                  value={aiApiKey.value}
+                  onInput$={(e: any) => (aiApiKey.value = e.target.value)}
+                />
+              </div>
+              <div>
+                <label class="mb-1 block text-sm font-semibold text-rose-700">
+                  Base URL
+                  <span class="ml-1 font-normal text-rose-400">（可选）</span>
+                </label>
+                <input
+                  type="url"
+                  class="input-clay w-full px-3 py-2.5 text-sm"
+                  placeholder="https://api.openai.com/v1"
+                  value={aiBaseUrl.value}
+                  onInput$={(e: any) => (aiBaseUrl.value = e.target.value)}
+                />
+                <p class="mt-1 text-xs text-rose-400">
+                  兼容 OpenAI API 的服务均可使用，例如 DeepSeek、Groq、Mistral 等
+                </p>
+              </div>
+              <div>
+                <label class="mb-1 block text-sm font-semibold text-rose-700">
+                  模型
+                  <span class="ml-1 font-normal text-rose-400">（可选）</span>
+                </label>
+                <input
+                  type="text"
+                  class="input-clay w-full px-3 py-2.5 text-sm font-mono"
+                  placeholder="gpt-4o-mini"
+                  value={aiModel.value}
+                  onInput$={(e: any) => (aiModel.value = e.target.value)}
+                />
+              </div>
+              <p class="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                🔒 设置保存在浏览器本地，仅在调用 AI 时经由服务端转发，不会被记录或持久化。
+              </p>
+              <div class="flex gap-2 pt-1">
+                <button
+                  class="clay-button rounded-2xl bg-rose-100 px-4 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-200"
+                  onClick$={clearAISettings}
+                >
+                  清除设置
+                </button>
+                <button
+                  class="clay-button flex-1 rounded-2xl bg-violet-500 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  onClick$={saveAISettings}
+                  disabled={!aiApiKey.value.trim()}
+                >
+                  保存
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="modal-backdrop" onClick$={() => (showAISettings.value = false)} />
         </div>
       )}
 
