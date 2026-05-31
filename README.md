@@ -1,206 +1,476 @@
-# Iconfont 开源版
+# Qwik Iconfont
 
-一个开源的 iconfont 管理和生成服务，帮助你轻松上传 SVG 图标、管理图标项目，并生成可用于 Web 的字体文件（TTF）、CSS、Symbol SVG 和演示页面。
+一个开源的 SVG 图标集管理与字体生成平台，基于 **Qwik City + Cloudflare Workers**。支持上传、编辑、预览、导出图标字体，并提供公开图标库探索与 SaaS 多租户管理能力。
 
-## 功能特性
+---
 
-- **项目管理**：创建多个图标库项目，每个项目独立配置 font-family 和 class 前缀
-- **批量上传**：支持拖拽上传多个 SVG 文件
-- **图标管理**：搜索、排序、批量选择、批量重命名、批量删除
-- **元数据编辑**：调整图标名称、Unicode 编码、ViewBox
-- **实时预览**：字体预览、Symbol 预览、颜色切换
-- **多种输出格式**：
-  - **Font Class**：生成 `@font-face` CSS，通过 class 引用图标
-  - **Symbol**：生成 SVG Symbol 精灵图，通过 `<use>` 引用
-  - **Unicode**：生成 Unicode 内联 HTML
-- **一键下载**：单独下载 TTF 字体，或打包下载（TTF + CSS + Symbol SVG + Demo HTML）
-- **键盘快捷键**：`/` 搜索聚焦、`?` 快捷键帮助、`Esc` 关闭弹窗
+## 功能概览
 
-## 技术架构
+### 图标管理
 
-- **前端框架**：[Qwik City](https://qwik.dev/) + Vite
-- **样式**：Tailwind CSS v4 + daisyUI
-- **数据库**：Cloudflare D1（SQLite）
-- **对象存储**：Cloudflare R2（SVG 文件存储）
-- **字体生成**：[opentype.js](https://opentype.js.org/)（客户端生成 TTF）
-- **打包下载**：[jszip](https://stuk.github.io/jszip/)
-- **部署**：Cloudflare Workers
+- 创建多个图标项目，每个项目独立配置 `font-family` 和 class 前缀
+- 批量上传 SVG（拖拽 / 文件选择），自动过滤非 SVG 文件
+- 搜索、排序、批量选择、重命名、删除
+- SVG 编辑器：视图框调整、尺寸预览、颜色覆盖、路径变换（缩放 / 旋转 / 位移）
+- **彩色图标编辑**：自动识别多色 SVG，点击路径即可修改颜色；导出 COLRv0 字体
 
-## 快速开始
+### 字体导出
 
-### 本地开发
+| 格式       | 说明                                |
+| ---------- | ----------------------------------- |
+| TTF        | TrueType 字体（单色或 COLRv0 彩色） |
+| CSS        | `@font-face` + icon class 规则      |
+| Symbol SVG | SVG 精灵图，通过 `<use>` 引用       |
+| Demo HTML  | 独立演示页面                        |
+| ZIP        | 以上全部打包                        |
+
+### 探索与社区
+
+- 公开图标集探索页（含浏览量 / 收藏数排序）
+- Fork 他人图标集到自己账户
+- 收藏公开项目（无需登录可浏览，登录才可收藏）
+- 公开项目详情页：点击图标复制名称；悬浮 `+` 按钮→「添加到我的项目」Drawer（支持未登录本地暂存）
+
+### GitHub 导入
+
+- 粘贴任意 GitHub 目录 URL，从仓库一键批量导入 SVG
+- 支持格式：`https://github.com/owner/repo/tree/branch/path`
+- 支持搜索、全选（上限 500）、自定义项目名
+- 10 分钟内存缓存 GitHub Trees API 响应
+
+### SaaS 功能
+
+- **用户认证**：邮件密码 + GitHub / Google OAuth（better-auth）
+- **配额管理**：Free 10 项目 / 200 图标；Pro 无限制
+- **API Token**：Bearer Token 程序化访问，SHA-256 哈希存储
+- **Webhook**：项目事件推送（icon.created / deleted 等）
+- **协作**：项目成员管理（owner / editor / viewer）
+- **CDN 发布**：客户端生成字体 → base64 → 上传 R2，全球 CDN 访问
+
+---
+
+## 技术栈
+
+| 层       | 技术                                        |
+| -------- | ------------------------------------------- |
+| 框架     | [Qwik City](https://qwik.dev/) SSR + Vite   |
+| 样式     | Tailwind CSS v4 + daisyUI                   |
+| 数据库   | Cloudflare D1（SQLite，Drizzle ORM）        |
+| 对象存储 | Cloudflare R2                               |
+| 认证     | [better-auth](https://www.better-auth.com/) |
+| 字体生成 | svg2ttf + svgpath（客户端）                 |
+| 彩色字体 | COLRv0 手动二进制构建（COLR/CPAL 表注入）   |
+| 打包     | jszip（客户端 ZIP）                         |
+| 部署     | Cloudflare Workers                          |
+
+---
+
+## 本地开发
+
+### 前提条件
+
+- Node.js ≥ 18 或 Bun ≥ 1.0
+- pnpm ≥ 8
+- （可选）Wrangler CLI：`pnpm add -g wrangler`
+
+### 快速启动
 
 ```bash
+# 克隆仓库
+git clone https://github.com/your-org/qwik-iconfont.git
+cd qwik-iconfont
+
 # 安装依赖
 pnpm install
 
-# 启动开发服务器
+# 启动 Vite 开发服务器（内存 Mock DB + R2，无需配置）
 pnpm dev
-
-# 或启动并自动打开浏览器
-pnpm start
 ```
 
-本地开发时，数据库和对象存储会自动使用内存模拟（Mock），无需配置 Cloudflare 绑定即可运行。
+访问 http://localhost:5173
 
-### 构建
+> **说明**：`pnpm dev` 使用内存 Mock 数据库和 Mock R2，登录/注册功能不可用（需要真实 D1）。如需完整功能，使用 `pnpm serve`（见下文）。
+
+### 使用 Wrangler 本地运行（完整功能）
 
 ```bash
-# 类型检查 + 客户端构建 + 服务端构建
-pnpm build
+# 创建本地 D1 数据库并运行迁移
+pnpm db:migrate
 
-# 仅类型检查
-pnpm build.types
-
-# 本地预览生产构建
-pnpm preview
+# 启动 Wrangler 开发服务器（完整 Workers 运行时）
+pnpm serve
 ```
 
-### 代码规范
+访问 http://localhost:8788
+
+### 常用命令
 
 ```bash
-pnpm lint      # ESLint 检查
-pnpm fmt       # Prettier 格式化
-pnpm fmt.check # 检查格式化
+pnpm dev              # Vite SSR 开发服务器（快速，无 Workers 运行时）
+pnpm serve            # Wrangler 开发服务器（完整功能）
+pnpm build            # 生产构建
+pnpm preview          # 预览生产构建
+pnpm lint             # ESLint 检查
+pnpm fmt              # Prettier 格式化
+pnpm fmt.check        # 检查格式化
+pnpm build.types      # TypeScript 类型检查
 ```
 
-## 使用指南
+---
 
-### 1. 创建项目
+## Cloudflare Workers 部署
 
-进入首页，点击"新建项目"按钮，填写：
+### 步骤 1：创建 Cloudflare 资源
 
-- **项目名称**：项目的标识名称
-- **描述**（可选）：项目说明
-- **Font Family**：CSS 中使用的字体族名称，默认 `iconfont`
-- **Class 前缀**：图标 class 的前缀，默认 `icon-`
+#### D1 数据库
 
-### 2. 上传图标
+```bash
+# 创建数据库
+wrangler d1 create iconfont-db
 
-进入项目详情页，点击"上传图标"按钮选择 SVG 文件，或直接将 SVG 文件拖拽到页面中。
-
-> **提示**：系统会自动过滤非 SVG 文件，上传成功后会自动添加到图标列表。
-
-### 3. 管理图标
-
-- **搜索**：在搜索框输入图标名称快速查找
-- **排序**：按名称、时间或 Unicode 排序
-- **选择**：点击图标卡片左上角的复选框进行选择，或使用"全选"
-- **批量操作**：选中多个图标后，可以进行批量重命名或批量删除
-- **编辑**：点击图标名称进入编辑弹窗，可修改：
-  - 图标名称（影响 class 名和文件名）
-  - Unicode 编码（可点击"自动生成"）
-  - ViewBox（影响字体生成时的缩放比例）
-
-### 4. 生成字体
-
-选中需要生成的图标，点击"生成代码"按钮，在弹窗中切换三种模式：
-
-#### Font Class 模式
-
-生成 `@font-face` CSS 代码。在 HTML 中使用方式：
-
-```html
-<i class="iconfont icon-home"></i>
+# 记录输出的 database_id，填入 wrangler.jsonc
 ```
 
-#### Symbol 模式
+#### R2 存储桶
 
-生成 SVG Symbol 精灵图。在 HTML 中使用方式：
-
-```html
-<svg aria-hidden="true">
-  <use href="#icon-home"></use>
-</svg>
+```bash
+# 创建 R2 桶（存储 SVG 文件和生成的字体）
+wrangler r2 bucket create iconfont-assets
 ```
 
-#### Unicode 模式
+### 步骤 2：配置 wrangler.jsonc
 
-生成 Unicode 内联 HTML：
-
-```html
-<i class="iconfont">&#xe600;</i>
-```
-
-### 5. 下载字体
-
-- **下载字体**：仅下载 `.ttf` 字体文件
-- **打包下载**：下载 zip 包，包含 TTF + CSS + Symbol SVG + Demo HTML
-
-### 6. 项目设置
-
-点击"项目设置"可修改项目的 font-family、class 前缀等配置。
-
-## 键盘快捷键
-
-| 快捷键   | 功能                   |
-| -------- | ---------------------- |
-| `/`      | 聚焦搜索框             |
-| `?`      | 显示快捷键帮助         |
-| `Esc`    | 关闭弹窗/取消选择      |
-| `Ctrl+A` | 全选当前过滤结果的图标 |
-
-## 部署
-
-本项目配置为部署到 Cloudflare Workers。
-
-### 配置 wrangler
-
-编辑 `wrangler.jsonc`，配置 D1 数据库和 R2 存储桶绑定：
+编辑项目根目录的 `wrangler.jsonc`：
 
 ```jsonc
 {
+  "name": "iconfont", // Workers 名称（也是子域名前缀）
+  "main": "./dist/_worker.js",
+  "compatibility_date": "2025-01-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "binding": "ASSET",
+    "directory": "./dist",
+  },
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "your-db-name",
-      "database_id": "your-db-id",
+      "database_name": "iconfont-db",
+      "database_id": "YOUR_DATABASE_ID", // ← 替换为步骤 1 的 ID
+      "migrations_dir": "drizzle",
     },
   ],
   "r2_buckets": [
     {
       "binding": "BUCKET",
-      "bucket_name": "your-bucket-name",
+      "bucket_name": "iconfont-assets", // ← 与步骤 1 创建的桶名一致
     },
   ],
 }
 ```
 
-### 部署命令
+### 步骤 3：运行数据库迁移
 
 ```bash
-# 使用 wrangler 部署
-npx wrangler deploy
+# 应用所有迁移到远程 D1
+pnpm db:migrate:remote
+# 等同于：wrangler d1 migrations apply iconfont-db --remote
 ```
 
-## 数据结构
+### 步骤 4：配置环境变量
 
-### projects 表
+通过 Wrangler 或 Cloudflare Dashboard 设置 Secrets：
 
-| 字段        | 说明           |
-| ----------- | -------------- |
-| id          | 项目 ID        |
-| name        | 项目名称       |
-| description | 项目描述       |
-| font_family | 字体族名称     |
-| prefix      | CSS class 前缀 |
-| created_at  | 创建时间       |
-| updated_at  | 更新时间       |
+```bash
+# 必填 — 认证密钥（随机字符串，建议 32+ 字符）
+wrangler secret put BETTER_AUTH_SECRET
 
-### icons 表
+# 必填 — 应用公开 URL（用于 OAuth 回调、邮件链接等）
+wrangler secret put BETTER_AUTH_URL
+# 输入：https://iconfont.your-domain.com
+```
 
-| 字段       | 说明             |
-| ---------- | ---------------- |
-| id         | 图标 ID          |
-| project_id | 所属项目 ID      |
-| name       | 图标名称         |
-| unicode    | Unicode 编码     |
-| svg_path   | R2 存储路径      |
-| view_box   | SVG viewBox      |
-| content    | SVG 内容（缓存） |
-| created_at | 创建时间         |
-| updated_at | 更新时间         |
+#### 可选环境变量
+
+| 变量                   | 说明                         | 默认值                                   |
+| ---------------------- | ---------------------------- | ---------------------------------------- |
+| `GITHUB_CLIENT_ID`     | GitHub OAuth App Client ID   | 禁用 GitHub 登录                         |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth App Secret      | 禁用 GitHub 登录                         |
+| `GOOGLE_CLIENT_ID`     | Google OAuth Client ID       | 禁用 Google 登录                         |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret   | 禁用 Google 登录                         |
+| `RESEND_API_KEY`       | Resend 邮件服务 API Key      | 禁用欢迎邮件                             |
+| `EMAIL_FROM`           | 发件地址                     | `noreply@iconfont.app`                   |
+| `GITHUB_TOKEN`         | GitHub Personal Access Token | API 限速 60次/小时（配置后 5000次/小时） |
+
+```bash
+# 批量设置（示例）
+wrangler secret put GITHUB_CLIENT_ID
+wrangler secret put GITHUB_CLIENT_SECRET
+wrangler secret put GOOGLE_CLIENT_ID
+wrangler secret put GOOGLE_CLIENT_SECRET
+wrangler secret put RESEND_API_KEY
+wrangler secret put GITHUB_TOKEN
+```
+
+#### 配置 OAuth 应用
+
+**GitHub OAuth App**
+
+1. 进入 https://github.com/settings/developers → OAuth Apps → New
+2. Homepage URL：`https://iconfont.your-domain.com`
+3. Callback URL：`https://iconfont.your-domain.com/api/auth/callback/github`
+
+**Google OAuth**
+
+1. 进入 https://console.cloud.google.com → APIs & Services → Credentials
+2. 创建 OAuth 2.0 Client ID（Web application）
+3. 授权重定向 URI：`https://iconfont.your-domain.com/api/auth/callback/google`
+
+### 步骤 5：构建并部署
+
+```bash
+# 构建
+pnpm build
+
+# 部署到 Cloudflare Workers
+pnpm deploy
+# 等同于：wrangler deploy
+```
+
+部署完成后访问：`https://iconfont.<your-subdomain>.workers.dev`
+
+### 步骤 6：绑定自定义域名（可选）
+
+```bash
+# 在 Cloudflare Dashboard：
+# Workers & Pages → iconfont → Settings → Domains & Routes → Add Custom Domain
+# 输入你的域名，Cloudflare 自动配置 DNS 和 SSL
+```
+
+---
+
+## 数据库迁移
+
+项目使用 **Drizzle ORM** 管理 Schema，迁移文件在 `drizzle/` 目录。
+
+```bash
+# 生成新的迁移文件（修改 src/lib/schema.ts 后执行）
+pnpm db:generate
+# 等同于：drizzle-kit generate
+
+# 应用到本地 D1（开发）
+pnpm db:migrate
+# 等同于：wrangler d1 migrations apply iconfont-db --local
+
+# 应用到远程 D1（生产）
+pnpm db:migrate:remote
+# 等同于：wrangler d1 migrations apply iconfont-db --remote
+```
+
+### Schema 概览
+
+```
+projects    — 图标集项目（owner, font_family, prefix, visibility...）
+icons       — 图标记录（name, unicode, svg_path, content, color_layers...）
+user        — 用户（better-auth 管理）
+session     — 会话（better-auth 管理）
+account     — OAuth 账户绑定（better-auth 管理）
+favorites   — 用户收藏
+members     — 项目成员（协作）
+api_tokens  — API Token（SHA-256 哈希存储）
+webhooks    — Webhook 配置
+```
+
+---
+
+## 环境变量速查
+
+| 变量                   | 必填 | 说明                                  |
+| ---------------------- | ---- | ------------------------------------- |
+| `BETTER_AUTH_SECRET`   | ✅   | Session 签名密钥，随机字符串          |
+| `BETTER_AUTH_URL`      | ✅   | 应用公开 URL，用于 OAuth 回调         |
+| `GITHUB_CLIENT_ID`     | ⬜   | GitHub OAuth，留空则禁用              |
+| `GITHUB_CLIENT_SECRET` | ⬜   | GitHub OAuth                          |
+| `GOOGLE_CLIENT_ID`     | ⬜   | Google OAuth，留空则禁用              |
+| `GOOGLE_CLIENT_SECRET` | ⬜   | Google OAuth                          |
+| `RESEND_API_KEY`       | ⬜   | 注册欢迎邮件，留空则跳过              |
+| `EMAIL_FROM`           | ⬜   | 发件地址，默认 `noreply@iconfont.app` |
+| `GITHUB_TOKEN`         | ⬜   | GitHub 导入速率提升 60→5000/h         |
+
+---
+
+## API 参考
+
+所有 API 支持 Bearer Token 认证（在「个人设置 → API Token」中生成）：
+
+```http
+Authorization: Bearer <your-token>
+```
+
+### 项目
+
+```
+GET    /api/projects              列出我的项目
+POST   /api/projects              创建项目
+GET    /api/projects/:id          获取项目详情
+PUT    /api/projects/:id          更新项目
+DELETE /api/projects/:id          删除项目
+POST   /api/projects/:id/fork     Fork 公开项目
+POST   /api/projects/:id/publish  发布/更新 CDN
+```
+
+### 图标
+
+```
+GET    /api/projects/:id/icons         列出图标
+POST   /api/projects/:id/icons         上传图标（multipart: name, content, [colorLayers]）
+POST   /api/projects/:id/icons/reorder 批量排序
+GET    /api/icons/:id                  图标详情
+PUT    /api/icons/:id                  更新图标元数据
+DELETE /api/icons/:id                  删除图标
+GET    /api/icons/:id/svg              下载原始 SVG
+```
+
+### GitHub 导入
+
+```
+GET  /api/github-import?url=<github-tree-url>       预览图标列表
+POST /api/github-import                              执行导入
+     Body: { url, icons: string[], projectName }
+```
+
+### Webhook
+
+```
+GET    /api/webhooks         列出 Webhook
+POST   /api/webhooks         创建 Webhook
+PUT    /api/webhooks/:id     更新
+DELETE /api/webhooks/:id     删除
+```
+
+事件类型：`icon.created` `icon.updated` `icon.deleted` `project.updated`
+
+---
+
+## 使用指南
+
+### 快速上手
+
+1. **注册 / 登录**
+2. **新建项目**：填写名称、font-family、class 前缀
+3. **上传图标**：拖拽 SVG 文件到项目页面
+4. **选择图标** → 点击「生成代码」→ 复制 CSS/HTML 代码
+5. **下载字体**：下载 TTF，或「打包下载」获取完整资源包
+
+### 彩色图标
+
+1. 上传多色 SVG（包含多个不同 `fill` 颜色的 path）
+2. 点击「编辑」进入 SVG 编辑器
+3. 编辑器左侧自动显示彩色画布（可点击 path 选择）
+4. 右侧「颜色」面板显示路径色块，点击修改颜色
+5. 保存后导出 COLRv0 TTF 字体（IE9 / iOS 11+ 支持）
+
+### 从 GitHub 导入图标库
+
+1. 在首页点击「从 GitHub 导入」
+2. 粘贴 GitHub 目录 URL，例如：
+   ```
+   https://github.com/lucide-icons/lucide/tree/main/icons
+   ```
+3. 搜索 / 勾选需要的图标（最多 500 个）
+4. 填写项目名称，点击「导入」
+
+### 公开图标集
+
+- 探索页（`/explore`）浏览所有公开项目，按热门 / 最新排序
+- 点击项目进入公开详情页，悬浮图标卡片右上角出现 `+`
+- 点击 `+` 打开「添加到项目」侧边栏，选择目标项目后保存
+
+### Font Class 使用方式
+
+```html
+<!-- 引入 CSS -->
+<link rel="stylesheet" href="https://cdn.example.com/iconfont.css" />
+
+<!-- 使用图标 -->
+<i class="icon icon-home"></i>
+<i class="icon icon-user"></i>
+```
+
+### Symbol SVG 使用方式
+
+```html
+<!-- 引入 Symbol 精灵图（通常放在 body 开头） -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <!-- iconfont.symbol.svg 内容 -->
+</svg>
+
+<!-- 引用图标 -->
+<svg width="24" height="24" aria-hidden="true">
+  <use href="#icon-home"></use>
+</svg>
+```
+
+---
+
+## 键盘快捷键
+
+| 快捷键   | 功能                |
+| -------- | ------------------- |
+| `/`      | 聚焦搜索框          |
+| `?`      | 显示快捷键帮助      |
+| `Esc`    | 关闭弹窗 / 取消选择 |
+| `Ctrl+A` | 全选当前过滤结果    |
+
+---
+
+## 项目结构
+
+```
+src/
+├── components/          UI 组件
+│   ├── svg-editor/      SVG 编辑器（ViewBox / 变换 / 颜色）
+│   ├── svg-color-editor/ 彩色路径编辑器（COLRv0）
+│   ├── color-layer-editor/ COLR 图层管理
+│   ├── add-to-project/  「添加到项目」Drawer
+│   ├── github-import/   GitHub 导入 Modal
+│   └── ...
+├── lib/
+│   ├── auth.ts          better-auth 实例工厂
+│   ├── db.ts            D1 适配器（含 Date→ISO 代理）
+│   ├── schema.ts        Drizzle ORM Schema
+│   ├── storage.ts       R2 存储（+ MockBucket 开发回退）
+│   ├── font-gen.ts      SVG→TTF 生成（svg2ttf pipeline）
+│   ├── colr-font-gen.ts COLRv0 彩色字体生成
+│   ├── svg-color-extractor.ts 多色 SVG 解析
+│   ├── quota.ts         配额配置（free / pro）
+│   ├── webhook.ts       Webhook 触发逻辑
+│   ├── local-storage.ts 匿名用户本地数据
+│   └── types.ts         TypeScript 接口
+├── routes/
+│   ├── index.tsx        首页（项目列表）
+│   ├── explore/         公开探索页
+│   ├── favorites/       我的收藏
+│   ├── project/[id]/    项目详情 + 公开详情
+│   ├── settings/        个人资料 / API Token / Webhook
+│   ├── login/ register/ 认证页
+│   └── api/             REST API 路由
+drizzle/                 数据库迁移文件
+adapters/                Cloudflare Workers 构建适配器
+```
+
+---
+
+## 贡献指南
+
+1. Fork 本仓库
+2. 创建功能分支：`git checkout -b feat/your-feature`
+3. 提交：`git commit -m "feat: description"`
+4. 确保 `pnpm lint` 和 `npx tsc --noEmit` 无报错
+5. 发起 Pull Request
+
+---
 
 ## 许可证
 
-MIT
+[MIT](LICENSE)
