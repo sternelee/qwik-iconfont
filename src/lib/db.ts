@@ -3,10 +3,6 @@ import { drizzle as drizzleProxy } from "drizzle-orm/sqlite-proxy";
 import * as schema from "./schema";
 import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 
-function unquote(s: string): string {
-  return s.replace(/^"|"$/g, "").replace(/"/g, "");
-}
-
 function parseColumns(selectPart: string): string[] {
   const cols: string[] = [];
   let depth = 0;
@@ -39,7 +35,6 @@ function extractAlias(colExpr: string): string {
 
 /** Extract ordered column aliases from SELECT or RETURNING clause */
 function extractResultColumns(sql: string): string[] {
-  const lower = sql.toLowerCase();
   let colsPart: string | null = null;
 
   // SELECT col1, col2 FROM ...
@@ -228,7 +223,6 @@ class MockExecutor {
     if (!match) return [];
     const table = match[1];
     const cols = match[2].split(",").map((c) => c.trim().replace(/"/g, ""));
-    // Parse VALUES expressions: handle "?" as param placeholder, literals as-is
     const rawValues = this.splitValues(match[3]);
     const paramQueue = [...params];
     const obj: any = {};
@@ -348,9 +342,44 @@ function getMockExecutor(): MockExecutor {
 
 export type AppDatabase = BaseSQLiteDatabase<"async", any, typeof schema>;
 
+/** D1 does not accept Date objects as bind parameters.
+ *  better-auth generates `new Date()` for timestamps, so we wrap D1
+ *  to convert Date → ISO string before binding. */
+function wrapD1(d1: any): any {
+  const origPrepare = d1.prepare.bind(d1);
+  const wrapStmt = (stmt: any): any => {
+    const origBind = stmt.bind.bind(stmt);
+    return new Proxy(stmt, {
+      get(target, prop, receiver) {
+        if (prop === "bind") {
+          return function (...params: any[]) {
+            const fixed = params.map((p) =>
+              p instanceof Date ? p.toISOString() : p,
+            );
+            return wrapStmt(origBind(...fixed));
+          };
+        }
+        const val = Reflect.get(target, prop, receiver);
+        return typeof val === "function" ? val.bind(target) : val;
+      },
+    });
+  };
+  return new Proxy(d1, {
+    get(target, prop, receiver) {
+      if (prop === "prepare") {
+        return function (sql: string) {
+          return wrapStmt(origPrepare(sql));
+        };
+      }
+      const val = Reflect.get(target, prop, receiver);
+      return typeof val === "function" ? val.bind(target) : val;
+    },
+  });
+}
+
 export function getDB(platform: any): AppDatabase {
   if (platform?.env?.DB) {
-    return drizzleD1(platform.env.DB, {
+    return drizzleD1(wrapD1(platform.env.DB), {
       schema,
     }) as AppDatabase;
   }
@@ -376,6 +405,7 @@ export async function initDB(_db: AppDatabase, platform?: any) {
           `email TEXT NOT NULL UNIQUE, ` +
           `emailVerified INTEGER NOT NULL DEFAULT 0, ` +
           `image TEXT, ` +
+          `plan TEXT DEFAULT 'free', ` +
           `createdAt TEXT DEFAULT CURRENT_TIMESTAMP, ` +
           `updatedAt TEXT DEFAULT CURRENT_TIMESTAMP` +
           `);` +
@@ -420,6 +450,10 @@ export async function initDB(_db: AppDatabase, platform?: any) {
           `description TEXT, ` +
           `font_family TEXT DEFAULT 'iconfont' NOT NULL, ` +
           `prefix TEXT DEFAULT 'icon-' NOT NULL, ` +
+          `visibility TEXT DEFAULT 'private' NOT NULL, ` +
+          `favorites_count INTEGER DEFAULT 0 NOT NULL, ` +
+          `views_count INTEGER DEFAULT 0 NOT NULL, ` +
+          `downloads_count INTEGER DEFAULT 0 NOT NULL, ` +
           `created_at TEXT DEFAULT CURRENT_TIMESTAMP, ` +
           `updated_at TEXT DEFAULT CURRENT_TIMESTAMP` +
           `);` +
@@ -434,8 +468,40 @@ export async function initDB(_db: AppDatabase, platform?: any) {
           `height INTEGER, ` +
           `content TEXT, ` +
           `tags TEXT, ` +
+          `sort_order INTEGER DEFAULT 0, ` +
           `created_at TEXT DEFAULT CURRENT_TIMESTAMP, ` +
           `updated_at TEXT DEFAULT CURRENT_TIMESTAMP` +
+          `);` +
+          `CREATE TABLE IF NOT EXISTS favorites (` +
+          `id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, ` +
+          `user_id TEXT NOT NULL, ` +
+          `project_id INTEGER NOT NULL, ` +
+          `created_at TEXT DEFAULT CURRENT_TIMESTAMP` +
+          `);` +
+          `CREATE TABLE IF NOT EXISTS api_tokens (` +
+          `id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, ` +
+          `user_id TEXT NOT NULL, ` +
+          `name TEXT NOT NULL, ` +
+          `token_hash TEXT NOT NULL UNIQUE, ` +
+          `last_used_at TEXT, ` +
+          `created_at TEXT DEFAULT CURRENT_TIMESTAMP` +
+          `);` +
+          `CREATE TABLE IF NOT EXISTS project_members (` +
+          `id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, ` +
+          `project_id INTEGER NOT NULL, ` +
+          `user_id TEXT NOT NULL, ` +
+          `role TEXT DEFAULT 'editor' NOT NULL, ` +
+          `created_at TEXT DEFAULT CURRENT_TIMESTAMP` +
+          `);` +
+          `CREATE TABLE IF NOT EXISTS webhooks (` +
+          `id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, ` +
+          `user_id TEXT NOT NULL, ` +
+          `project_id INTEGER NOT NULL, ` +
+          `url TEXT NOT NULL, ` +
+          `events TEXT DEFAULT '*' NOT NULL, ` +
+          `secret TEXT, ` +
+          `active INTEGER DEFAULT 1 NOT NULL, ` +
+          `created_at TEXT DEFAULT CURRENT_TIMESTAMP` +
           `);`,
       );
       // Add user_id column if it doesn't exist (migration for existing databases)
@@ -443,6 +509,52 @@ export async function initDB(_db: AppDatabase, platform?: any) {
         await d1.exec(`ALTER TABLE projects ADD COLUMN user_id TEXT`);
       } catch {
         // Column may already exist
+      }
+      // Add visibility column if it doesn't exist
+      try {
+        await d1.exec(
+          `ALTER TABLE projects ADD COLUMN visibility TEXT DEFAULT 'private'`,
+        );
+      } catch {
+        // Column may already exist
+      }
+      // Add favorites_count column if it doesn't exist
+      try {
+        await d1.exec(
+          `ALTER TABLE projects ADD COLUMN favorites_count INTEGER DEFAULT 0`,
+        );
+      } catch {
+        // Column may already exist
+      }
+      // Add sort_order column if it doesn't exist
+      try {
+        await d1.exec(
+          `ALTER TABLE icons ADD COLUMN sort_order INTEGER DEFAULT 0`,
+        );
+      } catch {
+        /* Column may already exist */
+      }
+      // Add views_count column if it doesn't exist
+      try {
+        await d1.exec(
+          `ALTER TABLE projects ADD COLUMN views_count INTEGER DEFAULT 0`,
+        );
+      } catch {
+        /* Column may already exist */
+      }
+      // Add downloads_count column if it doesn't exist
+      try {
+        await d1.exec(
+          `ALTER TABLE projects ADD COLUMN downloads_count INTEGER DEFAULT 0`,
+        );
+      } catch {
+        /* Column may already exist */
+      }
+      // Add plan column if it doesn't exist
+      try {
+        await d1.exec(`ALTER TABLE "user" ADD COLUMN plan TEXT DEFAULT 'free'`);
+      } catch {
+        /* Column may already exist */
       }
       // Add tags column if it doesn't exist
       try {

@@ -63,7 +63,7 @@ export const onPut: RequestHandler = async ({
   await initDB(db, platform);
   const id = parseInt(params.id, 10);
   const body = (await request.json()) as any;
-  const { name, description, font_family, prefix } = body;
+  const { name, description, font_family, prefix, visibility } = body;
 
   const existing = await db
     .select()
@@ -81,6 +81,7 @@ export const onPut: RequestHandler = async ({
       description: description ?? null,
       font_family: font_family ?? "iconfont",
       prefix: prefix ?? "icon-",
+      visibility: visibility ?? existing[0].visibility ?? "private",
       updated_at: new Date().toISOString(),
     })
     .where(eq(projects.id, id));

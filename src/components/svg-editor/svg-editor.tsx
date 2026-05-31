@@ -548,7 +548,25 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                         }
                       />
                     </div>
-                    <div class="flex items-end">
+                    <div class="flex items-end gap-1">
+                      <button
+                        class="btn btn-outline btn-sm"
+                        title="水平翻转"
+                        onClick$={() => {
+                          transform.scaleX = (transform.scaleX || 1) * -1;
+                        }}
+                      >
+                        ↔
+                      </button>
+                      <button
+                        class="btn btn-outline btn-sm"
+                        title="垂直翻转"
+                        onClick$={() => {
+                          transform.scaleY = (transform.scaleY || 1) * -1;
+                        }}
+                      >
+                        ↕
+                      </button>
                       <button
                         class="btn btn-outline btn-sm"
                         onClick$={() => {

@@ -1,0 +1,172 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family:
+          Inter,
+          -apple-system,
+          sans-serif;
+        padding: 16px;
+        background: #fff;
+        color: #333;
+      }
+      .field {
+        margin-bottom: 12px;
+      }
+      label {
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        color: #666;
+        margin-bottom: 4px;
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid #e5e5e5;
+        border-radius: 6px;
+        font-size: 13px;
+      }
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: #18a0fb;
+      }
+      button {
+        width: 100%;
+        padding: 10px;
+        background: #18a0fb;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      button:hover:not(:disabled) {
+        background: #0d8ee5;
+      }
+      .message {
+        margin-top: 12px;
+        padding: 10px;
+        border-radius: 6px;
+        font-size: 12px;
+      }
+      .message.error {
+        background: #fef2f2;
+        color: #b91c1c;
+      }
+      .message.success {
+        background: #f0fdf4;
+        color: #15803d;
+      }
+      .progress {
+        margin-top: 12px;
+      }
+      .progress-bar {
+        height: 6px;
+        background: #e5e5e5;
+        border-radius: 3px;
+        overflow: hidden;
+      }
+      .progress-bar-inner {
+        height: 100%;
+        background: #18a0fb;
+        border-radius: 3px;
+        transition: width 0.3s;
+      }
+      .hint {
+        font-size: 11px;
+        color: #999;
+        margin-top: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="field">
+      <label>API Token</label>
+      <input type="password" id="token" placeholder="从设置页复制 API Token" />
+      <p class="hint">在 Iconfont 设置页生成 API Token</p>
+    </div>
+    <div class="field">
+      <label>Project ID</label>
+      <input type="text" id="projectId" placeholder="例如: 123" />
+    </div>
+    <div class="field">
+      <label>Base URL</label>
+      <input type="text" id="baseUrl" value="https://iconfont.example.com" />
+    </div>
+    <button id="exportBtn">导出到 Iconfont</button>
+    <div id="message"></div>
+    <div id="progress" class="progress" style="display: none">
+      <div class="progress-bar">
+        <div class="progress-bar-inner" id="progressBar"></div>
+      </div>
+      <p class="hint" id="progressText"></p>
+    </div>
+
+    <script>
+      const token = document.getElementById("token");
+      const projectId = document.getElementById("projectId");
+      const baseUrl = document.getElementById("baseUrl");
+      const exportBtn = document.getElementById("exportBtn");
+      const message = document.getElementById("message");
+      const progress = document.getElementById("progress");
+      const progressBar = document.getElementById("progressBar");
+      const progressText = document.getElementById("progressText");
+
+      exportBtn.addEventListener("click", () => {
+        message.innerHTML = "";
+        progress.style.display = "block";
+        progressBar.style.width = "0%";
+        progressText.textContent = "准备导出...";
+        exportBtn.disabled = true;
+
+        parent.postMessage(
+          {
+            pluginMessage: {
+              type: "export",
+              token: token.value,
+              projectId: projectId.value,
+              baseUrl: baseUrl.value,
+            },
+          },
+          "*",
+        );
+      });
+
+      onmessage = (event) => {
+        const msg = event.data.pluginMessage;
+        if (!msg) return;
+
+        if (msg.type === "error") {
+          message.innerHTML = `<div class="message error">${msg.message}</div>`;
+          progress.style.display = "none";
+          exportBtn.disabled = false;
+        }
+        if (msg.type === "progress") {
+          const pct = Math.round((msg.done / msg.total) * 100);
+          progressBar.style.width = pct + "%";
+          progressText.textContent = `已导出 ${msg.done}/${msg.total}`;
+        }
+        if (msg.type === "done") {
+          progressBar.style.width = "100%";
+          message.innerHTML = `<div class="message success">成功 ${msg.success} 个，失败 ${msg.failed} 个</div>`;
+          exportBtn.disabled = false;
+        }
+      };
+    </script>
+  </body>
+</html>

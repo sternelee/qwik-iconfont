@@ -1,9 +1,18 @@
 export interface Project {
   id: number;
+  user_id: string | null; // author id
   name: string;
   description: string | null;
   font_family: string;
   prefix: string;
+  visibility: "private" | "public";
+  favorites_count: number;
+  views_count: number;
+  downloads_count: number;
+  // author info — joined from user table
+  author_name: string | null;
+  author_email: string | null;
+  author_image: string | null;
   icon_count?: number;
   created_at: string;
   updated_at: string;
@@ -37,7 +46,9 @@ export interface IconUpload {
 
 export const DEFAULT_VIEW_BOX = "0 0 1024 1024";
 
-export function extractSvgViewBox(svg: string | null | undefined): string | null {
+export function extractSvgViewBox(
+  svg: string | null | undefined,
+): string | null {
   if (!svg) return null;
 
   const viewBoxMatch = svg.match(/viewBox=["']([^"']+)["']/i);
@@ -74,7 +85,10 @@ export function resolveSvgViewBox(
 // Tag management helpers
 export function parseTags(tags: string | null): string[] {
   if (!tags) return [];
-  return tags.split(",").map((t) => t.trim()).filter(Boolean);
+  return tags
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
 }
 
 export function formatTags(tags: string[]): string {

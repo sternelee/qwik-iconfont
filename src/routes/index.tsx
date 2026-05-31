@@ -21,8 +21,16 @@ import {
 } from "~/lib/local-storage";
 
 type LoadResult =
-  | { mode: "server"; projects: (Project & { icon_count: number })[] }
-  | { mode: "local"; projects: LocalProject[] };
+  | {
+      mode: "server";
+      projects: (Project & { icon_count: number })[];
+      quota: {
+        plan: string;
+        maxProjects: number;
+        maxIconsPerProject: number;
+      } | null;
+    }
+  | { mode: "local"; projects: LocalProject[]; quota: null };
 
 export const useProjects = routeLoader$(
   async ({ platform, request }): Promise<LoadResult> => {
@@ -31,30 +39,51 @@ export const useProjects = routeLoader$(
       const { getDB, initDB } = await import("~/lib/db");
       const db = getDB(platform);
       await initDB(db, platform);
-      const { projects, icons } = await import("~/lib/schema");
+      const { projects, icons, user } = await import("~/lib/schema");
       const { eq, desc, count } = await import("drizzle-orm");
       const result = await db
         .select({
           id: projects.id,
+          user_id: projects.user_id,
           name: projects.name,
           description: projects.description,
           font_family: projects.font_family,
           prefix: projects.prefix,
+          visibility: projects.visibility,
+          favorites_count: projects.favorites_count,
+          author_name: user.name,
+          author_email: user.email,
+          author_image: user.image,
           created_at: projects.created_at,
           updated_at: projects.updated_at,
           icon_count: count(icons.id),
         })
         .from(projects)
         .leftJoin(icons, eq(projects.id, icons.project_id))
+        .leftJoin(user, eq(projects.user_id, user.id))
         .where(eq(projects.user_id, session.user.id))
         .groupBy(projects.id)
         .orderBy(desc(projects.updated_at));
+      // Fetch user plan for quota display
+      const { getQuota } = await import("~/lib/quota");
+      const userResult = await db
+        .select({ plan: user.plan })
+        .from(user)
+        .where(eq(user.id, session.user.id));
+      const plan = userResult[0]?.plan ?? "free";
+      const quota = getQuota(plan);
+
       return {
         mode: "server",
         projects: result as (Project & { icon_count: number })[],
+        quota: {
+          plan,
+          maxProjects: quota.maxProjects,
+          maxIconsPerProject: quota.maxIconsPerProject,
+        },
       };
     }
-    return { mode: "local", projects: [] };
+    return { mode: "local", projects: [], quota: null };
   },
 );
 
@@ -75,6 +104,7 @@ export const useCreateProject = routeAction$(
         description: (data.description as string) ?? null,
         font_family: (data.font_family as string) ?? "iconfont",
         prefix: (data.prefix as string) ?? "icon-",
+        visibility: (data.visibility as string) ?? "private",
       })
       .returning();
     return { success: true, id: result[0].id, mode: "server" };
@@ -179,6 +209,30 @@ export default component$(() => {
   });
   const toasts = useStore<{ items: ToastItem[] }>({ items: [] });
   const toastId = useSignal(0);
+
+  // Public projects for homepage recommendations
+  const publicProjects = useStore<{
+    items: (Project & { icon_count: number })[];
+    loaded: boolean;
+  }>({
+    items: [],
+    loaded: false,
+  });
+
+  // eslint-disable-next-line qwik/no-use-visible-task
+  useVisibleTask$(() => {
+    fetch("/api/projects?visibility=public")
+      .then((res) => res.json())
+      .then((data: any) => {
+        if (data.projects) {
+          publicProjects.items = data.projects;
+        }
+        publicProjects.loaded = true;
+      })
+      .catch(() => {
+        publicProjects.loaded = true;
+      });
+  });
 
   const showToast = $((message: string, type: ToastItem["type"] = "info") => {
     const id = ++toastId.value;
@@ -370,7 +424,7 @@ export default component$(() => {
               <span class="font-['Nunito'] text-lg font-extrabold tracking-tight text-rose-600">
                 Iconfont
               </span>
-              <span class="text-[10px] font-medium tracking-wider text-rose-400/70 -mt-0.5">
+              <span class="-mt-0.5 text-[10px] font-medium tracking-wider text-rose-400/70">
                 开源版
               </span>
             </div>
@@ -378,6 +432,13 @@ export default component$(() => {
 
           {/* Right: Actions */}
           <div class="flex items-center gap-3">
+            {/* Explore link */}
+            <a
+              href="/explore"
+              class="hidden rounded-2xl px-3 py-2 text-sm font-semibold text-rose-600 transition-all hover:bg-rose-50 sm:block"
+            >
+              探索
+            </a>
             {isLocal && (
               <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
                 本地模式
@@ -431,13 +492,13 @@ export default component$(() => {
             </span>
           </div>
 
-          <h1 class="animate-fade-in-up font-['Nunito'] text-4xl font-black tracking-tight text-rose-950 sm:text-5xl lg:text-6xl"
+          <h1
+            class="animate-fade-in-up font-['Nunito'] text-4xl font-black tracking-tight text-rose-950 sm:text-5xl lg:text-6xl"
             style="animation-delay: 0.08s"
           >
             创建你的专属
             <br />
-            <span class="bg-gradient-to-r from-rose-500 via-rose-400 to-blue-500 bg-clip-text text-transparent"
-            >
+            <span class="bg-gradient-to-r from-rose-500 via-rose-400 to-blue-500 bg-clip-text text-transparent">
               图标字体
             </span>
           </h1>
@@ -538,7 +599,10 @@ export default component$(() => {
       </section>
 
       {/* ── Featured Icon Sets ────────────────────────────────── */}
-      <section id="featured" class="relative z-10 mx-auto max-w-7xl px-4 py-12 sm:px-6">
+      <section
+        id="featured"
+        class="relative z-10 mx-auto max-w-7xl px-4 py-12 sm:px-6"
+      >
         <div class="mb-8 flex items-end justify-between">
           <div>
             <h2 class="font-['Nunito'] text-2xl font-extrabold text-rose-950 sm:text-3xl">
@@ -552,71 +616,150 @@ export default component$(() => {
         </div>
 
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {FEATURED_SETS.map((set, idx) => (
-            <div
-              key={set.id}
-              class="animate-fade-in-up clay-card group cursor-pointer p-5"
-              style={`animation-delay: ${idx * 0.08}s`}
-              onClick$={() => {
-                showModal.value = true;
-              }}
-            >
-              {/* Icon preview grid */}
-              <div class="mb-4 grid grid-cols-2 gap-3">
-                {set.icons.map((iconPath, i) => (
-                  <div
-                    key={i}
-                    class="icon-preview-canvas flex aspect-square items-center justify-center transition-transform duration-300 group-hover:scale-105"
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke={set.color}
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="h-7 w-7"
-                    >
-                      <path d={iconPath} />
-                    </svg>
+          {publicProjects.loaded && publicProjects.items.length > 0
+            ? publicProjects.items.slice(0, 8).map((project, idx) => (
+                <div
+                  key={project.id}
+                  class="animate-fade-in-up clay-card group cursor-pointer p-5"
+                  style={`animation-delay: ${idx * 0.08}s`}
+                  onClick$={() => nav(`/project/${project.id}`)}
+                >
+                  {/* Project preview */}
+                  <div class="mb-4 flex items-center gap-3">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-400 to-rose-500 text-lg font-extrabold text-white shadow-md shadow-rose-500/20">
+                      {project.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <h3 class="truncate font-['Nunito'] text-base font-bold text-rose-950">
+                        {project.name}
+                      </h3>
+                      <div class="mt-0.5 flex items-center gap-2">
+                        <span class="text-[10px] font-medium text-rose-400/70">
+                          {project.author_name || "匿名作者"}
+                        </span>
+                        {project.visibility === "public" && (
+                          <span class="rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-600">
+                            公开
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                ))}
-              </div>
 
-              <div class="flex items-center justify-between">
-                <div>
-                  <h3 class="font-['Nunito'] text-base font-bold text-rose-950"
-                  >
-                    {set.name}
-                  </h3>
-                  <p class="text-xs text-rose-600/60">
-                    {set.count} 个图标
+                  <div class="clay-inset mb-3 flex items-center gap-3 px-3 py-2">
+                    <div class="flex items-center gap-1">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#E11D48"
+                        stroke-width="2"
+                        class="text-rose-400"
+                      >
+                        <rect
+                          x="3"
+                          y="3"
+                          width="18"
+                          height="18"
+                          rx="2"
+                          ry="2"
+                        />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                      </svg>
+                      <span class="text-xs font-semibold text-rose-800/70">
+                        {project.icon_count || 0}
+                      </span>
+                    </div>
+                    <div class="h-3 w-px bg-rose-200" />
+                    <div class="flex items-center gap-1">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#E11D48"
+                        stroke-width="2"
+                        class="text-rose-400"
+                      >
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                      </svg>
+                      <span class="text-xs font-semibold text-rose-800/70">
+                        {project.favorites_count || 0}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p class="line-clamp-2 text-xs text-rose-600/50">
+                    {project.description || "暂无描述"}
                   </p>
                 </div>
+              ))
+            : FEATURED_SETS.map((set, idx) => (
                 <div
-                  class="flex h-9 w-9 items-center justify-center rounded-xl transition-all"
-                  style={{
-                    background: `${set.color}15`,
-                    color: set.color,
+                  key={set.id}
+                  class="animate-fade-in-up clay-card group cursor-pointer p-5"
+                  style={`animation-delay: ${idx * 0.08}s`}
+                  onClick$={() => {
+                    showModal.value = true;
                   }}
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="m9 18 6-6-6-6" />
-                  </svg>
+                  {/* Icon preview grid */}
+                  <div class="mb-4 grid grid-cols-2 gap-3">
+                    {set.icons.map((iconPath, i) => (
+                      <div
+                        key={i}
+                        class="icon-preview-canvas flex aspect-square items-center justify-center transition-transform duration-300 group-hover:scale-105"
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke={set.color}
+                          stroke-width="1.5"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="h-7 w-7"
+                        >
+                          <path d={iconPath} />
+                        </svg>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h3 class="font-['Nunito'] text-base font-bold text-rose-950">
+                        {set.name}
+                      </h3>
+                      <p class="text-xs text-rose-600/60">{set.count} 个图标</p>
+                    </div>
+                    <div
+                      class="flex h-9 w-9 items-center justify-center rounded-xl transition-all"
+                      style={{
+                        background: `${set.color}15`,
+                        color: set.color,
+                      }}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path d="m9 18 6-6-6-6" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
+              ))}
         </div>
       </section>
 
@@ -629,9 +772,28 @@ export default component$(() => {
               我的项目
             </h2>
             <p class="mt-1 text-sm text-rose-700/60">
-              {projectList.length} 个项目 ·{" "}
-              {totalIcons} 个图标
+              {projectList.length} 个项目 · {totalIcons} 个图标
             </p>
+            {/* Quota bar */}
+            {loaderData.value.mode === "server" &&
+              loaderData.value.quota &&
+              loaderData.value.quota.maxProjects !== Infinity && (
+                <div class="mt-2 flex items-center gap-2 text-xs text-rose-500">
+                  <span class="rounded-full bg-rose-100 px-2 py-0.5 font-medium">
+                    {loaderData.value.quota.plan}
+                  </span>
+                  <span>
+                    项目 {projectList.length}/
+                    {loaderData.value.quota.maxProjects}
+                  </span>
+                  <div class="h-1.5 w-16 overflow-hidden rounded-full bg-rose-100">
+                    <div
+                      class="h-full rounded-full bg-rose-400"
+                      style={`width:${Math.min(100, (projectList.length / loaderData.value.quota.maxProjects) * 100)}%`}
+                    />
+                  </div>
+                </div>
+              )}
           </div>
 
           <div class="flex items-center gap-2">
@@ -671,10 +833,8 @@ export default component$(() => {
 
         {/* Empty State */}
         {projectList.length === 0 ? (
-          <div class="animate-fade-in-up clay-card flex flex-col items-center justify-center py-20"
-          >
-            <div class="mb-5 flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-rose-100 to-pink-100"
-            >
+          <div class="animate-fade-in-up clay-card flex flex-col items-center justify-center py-20">
+            <div class="mb-5 flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-rose-100 to-pink-100">
               <svg
                 class="h-12 w-12 text-rose-400"
                 xmlns="http://www.w3.org/2000/svg"
@@ -690,12 +850,10 @@ export default component$(() => {
                 <polyline points="21 15 16 10 5 21" />
               </svg>
             </div>
-            <h2 class="font-['Nunito'] mb-2 text-lg font-bold text-rose-950"
-            >
+            <h2 class="mb-2 font-['Nunito'] text-lg font-bold text-rose-950">
               {debouncedQuery.value ? "未找到匹配的项目" : "还没有项目"}
             </h2>
-            <p class="mb-6 max-w-sm text-center text-sm text-rose-700/60"
-            >
+            <p class="mb-6 max-w-sm text-center text-sm text-rose-700/60">
               {debouncedQuery.value
                 ? "尝试其他关键词"
                 : isLocal
@@ -727,8 +885,7 @@ export default component$(() => {
           </div>
         ) : (
           /* Project Grid */
-          <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
-          >
+          <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {createProject.isRunning && <SkeletonProjectCard />}
             {projectList.map((project: any, idx: number) => (
               <div
@@ -739,27 +896,51 @@ export default component$(() => {
                   class="cursor-pointer p-6"
                   onClick$={() => nav(`/project/${project.id}`)}
                 >
-                  <div class="mb-4 flex items-start justify-between"
-                  >
-                    <div class="flex items-center gap-3"
-                    >
-                      <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-400 to-rose-500 text-white shadow-lg shadow-rose-500/20"
-                      >
-                        <span class="font-['Nunito'] text-lg font-bold"
-                        >
+                  <div class="mb-4 flex items-start justify-between">
+                    <div class="flex items-center gap-3">
+                      <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-400 to-rose-500 text-white shadow-lg shadow-rose-500/20">
+                        <span class="font-['Nunito'] text-lg font-bold">
                           {project.name.charAt(0).toUpperCase()}
                         </span>
                       </div>
-                      <h3 class="font-['Nunito'] text-lg font-bold text-rose-950"
-                      >
-                        <HighlightText
-                          text={project.name}
-                          query={debouncedQuery.value}
-                        />
-                      </h3>
+                      <div class="flex flex-col">
+                        <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
+                          <HighlightText
+                            text={project.name}
+                            query={debouncedQuery.value}
+                          />
+                        </h3>
+                        <div class="mt-0.5 flex items-center gap-1.5">
+                          {project.visibility === "public" ? (
+                            <span class="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
+                              公开
+                            </span>
+                          ) : (
+                            <span class="rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-500">
+                              私有
+                            </span>
+                          )}
+                          {project.favorites_count > 0 && (
+                            <span class="flex items-center gap-0.5 text-[10px] text-rose-400/70">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="10"
+                                height="10"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                              >
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                              </svg>
+                              {project.favorites_count}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                     <button
-                      class="flex h-8 w-8 items-center justify-center rounded-xl text-rose-400 opacity-0 transition-all hover:bg-rose-50 hover:text-rose-600 group-hover:opacity-100"
+                      class="flex h-8 w-8 items-center justify-center rounded-xl text-rose-400 opacity-0 transition-all group-hover:opacity-100 hover:bg-rose-50 hover:text-rose-600"
                       onClick$={(ev: any) => {
                         ev.stopPropagation();
                         handleDelete(project);
@@ -788,8 +969,7 @@ export default component$(() => {
                   </div>
 
                   {project.description && (
-                    <p class="mb-4 line-clamp-2 text-sm leading-relaxed text-rose-800/50"
-                    >
+                    <p class="mb-4 line-clamp-2 text-sm leading-relaxed text-rose-800/50">
                       <HighlightText
                         text={project.description}
                         query={debouncedQuery.value}
@@ -798,10 +978,8 @@ export default component$(() => {
                   )}
 
                   {/* Stats bar */}
-                  <div class="clay-inset mb-4 flex items-center gap-4 px-4 py-2.5"
-                  >
-                    <div class="flex items-center gap-1.5"
-                    >
+                  <div class="clay-inset mb-4 flex items-center gap-4 px-4 py-2.5">
+                    <div class="flex items-center gap-1.5">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="14"
@@ -812,35 +990,40 @@ export default component$(() => {
                         stroke-width="2"
                         class="text-rose-400"
                       >
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                        <rect
+                          x="3"
+                          y="3"
+                          width="18"
+                          height="18"
+                          rx="2"
+                          ry="2"
+                        />
                         <circle cx="8.5" cy="8.5" r="1.5" />
                         <polyline points="21 15 16 10 5 21" />
                       </svg>
-                      <span class="text-xs font-semibold text-rose-800/70"
-                      >
+                      <span class="text-xs font-semibold text-rose-800/70">
                         {project.icon_count ?? 0}
                       </span>
                     </div>
                     <div class="h-4 w-px bg-rose-200" />
-                    <span class="font-mono text-xs text-rose-600/50"
-                    >
+                    <span class="max-w-[80px] truncate text-xs text-rose-600/50">
+                      {project.author_name || "我"}
+                    </span>
+                    <div class="h-4 w-px bg-rose-200" />
+                    <span class="font-mono text-xs text-rose-600/50">
                       {project.font_family}
                     </span>
                     <div class="h-4 w-px bg-rose-200" />
-                    <span class="font-mono text-xs text-rose-600/50"
-                    >
+                    <span class="font-mono text-xs text-rose-600/50">
                       {project.prefix}
                     </span>
                   </div>
 
-                  <div class="flex items-center justify-between"
-                  >
-                    <span class="text-xs text-rose-400/60"
-                    >
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs text-rose-400/60">
                       {new Date(project.updated_at).toLocaleDateString("zh-CN")}
                     </span>
-                    <span class="flex items-center gap-1 text-xs font-semibold text-rose-500 transition-colors group-hover:text-rose-600"
-                    >
+                    <span class="flex items-center gap-1 text-xs font-semibold text-rose-500 transition-colors group-hover:text-rose-600">
                       管理
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -869,12 +1052,10 @@ export default component$(() => {
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-lg">
             <div class="border-b border-rose-100 px-6 py-4">
-              <h3 class="font-['Nunito'] text-lg font-bold text-rose-950"
-              >
+              <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
                 新建项目
               </h3>
-              <p class="mt-1 text-sm text-rose-700/60"
-              >
+              <p class="mt-1 text-sm text-rose-700/60">
                 设置项目名称和配置，后续上传图标后用于代码生成。
               </p>
             </div>
@@ -882,8 +1063,7 @@ export default component$(() => {
               <div class="space-y-4 px-6 py-5">
                 <div class="form-control">
                   <label class="label py-1">
-                    <span class="label-text text-sm font-semibold text-rose-800"
-                    >
+                    <span class="label-text text-sm font-semibold text-rose-800">
                       项目名称 *
                     </span>
                   </label>
@@ -897,8 +1077,9 @@ export default component$(() => {
                 </div>
                 <div class="form-control">
                   <label class="label py-1">
-                    <span class="label-text text-sm font-semibold text-rose-800"
-                    >描述</span>
+                    <span class="label-text text-sm font-semibold text-rose-800">
+                      描述
+                    </span>
                   </label>
                   <textarea
                     name="description"
@@ -910,8 +1091,7 @@ export default component$(() => {
                 <div class="grid grid-cols-2 gap-3">
                   <div class="form-control">
                     <label class="label py-1">
-                      <span class="label-text text-sm font-semibold text-rose-800"
-                      >
+                      <span class="label-text text-sm font-semibold text-rose-800">
                         Font Family
                       </span>
                     </label>
@@ -924,8 +1104,7 @@ export default component$(() => {
                   </div>
                   <div class="form-control">
                     <label class="label py-1">
-                      <span class="label-text text-sm font-semibold text-rose-800"
-                      >
+                      <span class="label-text text-sm font-semibold text-rose-800">
                         Class 前缀
                       </span>
                     </label>
@@ -937,15 +1116,46 @@ export default component$(() => {
                     />
                   </div>
                 </div>
-                <div class="rounded-2xl bg-blue-50 px-4 py-3 text-xs text-blue-700"
-                >
+                <div class="form-control">
+                  <label class="label py-1">
+                    <span class="label-text text-sm font-semibold text-rose-800">
+                      可见性
+                    </span>
+                  </label>
+                  <div class="flex gap-2">
+                    <label class="flex flex-1 cursor-pointer items-center gap-2 rounded-2xl border border-rose-200 bg-white/60 px-4 py-2.5 transition-all has-[:checked]:border-rose-400 has-[:checked]:bg-rose-50">
+                      <input
+                        type="radio"
+                        name="visibility"
+                        value="private"
+                        class="radio radio-sm"
+                        defaultChecked
+                      />
+                      <span class="text-sm text-rose-800">私有</span>
+                    </label>
+                    <label class="flex flex-1 cursor-pointer items-center gap-2 rounded-2xl border border-rose-200 bg-white/60 px-4 py-2.5 transition-all has-[:checked]:border-emerald-400 has-[:checked]:bg-emerald-50">
+                      <input
+                        type="radio"
+                        name="visibility"
+                        value="public"
+                        class="radio radio-sm"
+                      />
+                      <span class="text-sm text-rose-800">公开</span>
+                    </label>
+                  </div>
+                  <label class="label">
+                    <span class="label-text-alt text-xs text-rose-400/60">
+                      公开项目将展示在首页推荐中，所有人可见
+                    </span>
+                  </label>
+                </div>
+                <div class="rounded-2xl bg-blue-50 px-4 py-3 text-xs text-blue-700">
                   生成 class 时会得到类似{" "}
                   <span class="font-mono font-semibold">icon-home</span>{" "}
                   的名称。
                 </div>
               </div>
-              <div class="flex justify-end gap-3 border-t border-rose-100 px-6 py-4"
-              >
+              <div class="flex justify-end gap-3 border-t border-rose-100 px-6 py-4">
                 <button
                   type="button"
                   class="rounded-2xl px-5 py-2.5 text-sm font-semibold text-rose-700 transition-all hover:bg-rose-50"
@@ -972,11 +1182,9 @@ export default component$(() => {
       {/* ── Confirm Delete Modal ──────────────────────────────── */}
       {confirmState.show && (
         <div class="modal modal-open">
-          <div class="clay-card animate-modal mx-4 max-w-sm text-center"
-          >
+          <div class="clay-card animate-modal mx-4 max-w-sm text-center">
             <div class="p-6">
-              <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-100"
-              >
+              <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-100">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="28"
@@ -992,17 +1200,14 @@ export default component$(() => {
                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                 </svg>
               </div>
-              <h3 class="font-['Nunito'] text-lg font-bold text-rose-950"
-              >
+              <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
                 确认删除
               </h3>
-              <p class="mt-2 text-sm text-rose-700/60"
-              >
+              <p class="mt-2 text-sm text-rose-700/60">
                 确定要删除项目 "{confirmState.project?.name}"
                 吗？此操作将删除项目下的所有图标，不可恢复。
               </p>
-              <div class="mt-5 flex justify-center gap-3"
-              >
+              <div class="mt-5 flex justify-center gap-3">
                 <button
                   class="rounded-2xl px-5 py-2.5 text-sm font-semibold text-rose-700 transition-all hover:bg-rose-50"
                   onClick$={() => {
@@ -1036,8 +1241,7 @@ export default component$(() => {
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-xs">
             <div class="p-5">
-              <h3 class="font-['Nunito'] mb-4 text-base font-bold text-rose-950"
-              >
+              <h3 class="mb-4 font-['Nunito'] text-base font-bold text-rose-950">
                 键盘快捷键
               </h3>
               <div class="space-y-2 text-sm">
@@ -1046,18 +1250,18 @@ export default component$(() => {
                   ["关闭弹窗", "Esc"],
                   ["快捷键帮助", "?"],
                 ].map(([label, key]) => (
-                  <div class="flex items-center justify-between py-1" key={label}
+                  <div
+                    class="flex items-center justify-between py-1"
+                    key={label}
                   >
                     <span class="text-rose-700/60">{label}</span>
-                    <kbd class="rounded-lg bg-rose-50 px-2 py-1 text-xs font-semibold text-rose-600"
-                    >
+                    <kbd class="rounded-lg bg-rose-50 px-2 py-1 text-xs font-semibold text-rose-600">
                       {key}
                     </kbd>
                   </div>
                 ))}
               </div>
-              <div class="mt-4 flex justify-end"
-              >
+              <div class="mt-4 flex justify-end">
                 <button
                   class="rounded-2xl px-4 py-2 text-sm font-semibold text-rose-700 transition-all hover:bg-rose-50"
                   onClick$={() => (showShortcuts.value = false)}
@@ -1107,9 +1311,24 @@ const UserMenu = component$(() => {
         </svg>
       </label>
       {showMenu.value && (
-        <ul class="menu dropdown-content clay-card z-10 mt-2 w-36 p-1.5"
-        >
+        <ul class="menu dropdown-content clay-card z-10 mt-2 w-40 p-1.5">
           <li>
+            <a
+              href="/favorites"
+              class="rounded-xl px-3 py-2 text-sm text-rose-800 transition-all hover:bg-rose-50"
+            >
+              ♥️ 我的收藏
+            </a>
+          </li>
+          <li>
+            <a
+              href="/settings/profile"
+              class="rounded-xl px-3 py-2 text-sm text-rose-800 transition-all hover:bg-rose-50"
+            >
+              👤 个人资料
+            </a>
+          </li>
+          <li class="mt-1 border-t border-rose-50 pt-1">
             <button
               class="rounded-xl px-3 py-2 text-sm text-rose-800 transition-all hover:bg-rose-50"
               onClick$={handleSignOut}

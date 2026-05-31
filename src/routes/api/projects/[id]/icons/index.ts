@@ -3,8 +3,9 @@ import { getDB, initDB } from "~/lib/db";
 import { uploadSVG } from "~/lib/storage";
 import { getSessionFromRequest } from "~/lib/session";
 import { icons, projects } from "~/lib/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, count } from "drizzle-orm";
 import { resolveSvgViewBox, type Icon } from "~/lib/types";
+import { getQuota } from "~/lib/quota";
 
 export const onGet: RequestHandler = async ({
   params,
@@ -71,6 +72,28 @@ export const onPost: RequestHandler = async ({
     return;
   }
 
+  // Quota check
+  const { user } = await import("~/lib/schema");
+  const userResult = await db
+    .select({ plan: user.plan })
+    .from(user)
+    .where(eq(user.id, session.user.id));
+  const plan = userResult[0]?.plan ?? "free";
+  const quota = getQuota(plan);
+
+  if (quota.maxIconsPerProject !== Infinity) {
+    const [{ count: iconCount }] = await db
+      .select({ count: count() })
+      .from(icons)
+      .where(eq(icons.project_id, projectId));
+    if ((iconCount ?? 0) >= quota.maxIconsPerProject) {
+      json(403, {
+        error: `图标数量已达上限 (${quota.maxIconsPerProject} 个)。请升级 Pro 计划。`,
+      });
+      return;
+    }
+  }
+
   const formData = await request.formData();
   const name = formData.get("name") as string;
   const content = formData.get("content") as string;
@@ -96,6 +119,12 @@ export const onPost: RequestHandler = async ({
       content,
     })
     .returning();
+
+  // Trigger webhooks
+  const { triggerWebhooks } = await import("~/lib/webhook");
+  await triggerWebhooks(db, projectId, "icon.created", {
+    icon: result[0],
+  });
 
   json(201, { icon: result[0] });
 };

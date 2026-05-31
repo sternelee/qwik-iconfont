@@ -9,6 +9,9 @@ export interface LocalProject {
   description: string | null;
   font_family: string;
   prefix: string;
+  visibility: "private" | "public";
+  favorites_count: number;
+  author_name: string | null;
   icon_count: number;
   created_at: string;
   updated_at: string;
@@ -62,6 +65,8 @@ export function createLocalProject(params: {
   description?: string;
   font_family?: string;
   prefix?: string;
+  visibility?: "private" | "public";
+  author_name?: string;
 }): LocalProject {
   const now = new Date().toISOString();
   const project: LocalProject = {
@@ -70,6 +75,9 @@ export function createLocalProject(params: {
     description: params.description || null,
     font_family: params.font_family || "iconfont",
     prefix: params.prefix || "icon-",
+    visibility: params.visibility || "private",
+    favorites_count: 0,
+    author_name: params.author_name || null,
     icon_count: 0,
     created_at: now,
     updated_at: now,
@@ -95,7 +103,7 @@ export function getLocalProject(id: number): LocalProject | null {
 export function updateLocalProject(
   id: number,
   updates: Partial<
-    Pick<LocalProject, "name" | "description" | "font_family" | "prefix">
+    Pick<LocalProject, "name" | "description" | "font_family" | "prefix" | "visibility" | "author_name">
   >,
 ): LocalProject | null {
   const projects = getLocalProjects();

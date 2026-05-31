@@ -94,6 +94,21 @@ export async function signIn(params: {
   });
 }
 
+/** Initiate OAuth sign-in — redirects to provider */
+export async function signInSocial(
+  provider: "github" | "google",
+): Promise<void> {
+  const res = await fetch(`${BASE}/sign-in/social`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ provider, callbackURL: "/" }),
+  });
+  const data = (await res.json()) as any;
+  if (data?.url) {
+    window.location.href = data.url;
+  }
+}
+
 /** Sign out the current user */
 export async function signOut(): Promise<AuthResult> {
   return authFetch("/sign-out", {

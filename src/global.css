@@ -1,3 +1,7 @@
+/* ── Google Fonts ─────────────────────────────────────────────────── */
+
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Nunito:ital,wght@0,700;0,800;0,900;1,700&display=swap");
+
 /**
  * Global styles for Iconfont app.
  * Tailwind CSS v4 + daisyUI — Vibrant claymorphism theme
@@ -6,10 +10,6 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
-/* ── Google Fonts ─────────────────────────────────────────────────── */
-
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Nunito:ital,wght@0,700;0,800;0,900;1,700&display=swap');
-
 /* ── Theme ─────────────────────────────────────────────────────────── */
 
 @plugin "daisyui/theme" {
@@ -17,26 +17,26 @@
   default: true;
   prefersdark: false;
   color-scheme: light;
-  --color-base-100: #FFFBFB;
-  --color-base-200: #FFF1F2;
-  --color-base-300: #FFE4E6;
-  --color-base-content: #4A0418;
-  --color-primary: #E11D48;
-  --color-primary-content: #FFFFFF;
-  --color-secondary: #FB7185;
-  --color-secondary-content: #FFFFFF;
-  --color-accent: #2563EB;
-  --color-accent-content: #FFFFFF;
-  --color-neutral: #1E1B4B;
-  --color-neutral-content: #F8FAFC;
-  --color-info: #3B82F6;
-  --color-info-content: #FFFFFF;
-  --color-success: #22C55E;
-  --color-success-content: #FFFFFF;
-  --color-warning: #F59E0B;
-  --color-warning-content: #FFFFFF;
-  --color-error: #DC2626;
-  --color-error-content: #FFFFFF;
+  --color-base-100: #fffbfb;
+  --color-base-200: #fff1f2;
+  --color-base-300: #ffe4e6;
+  --color-base-content: #4a0418;
+  --color-primary: #e11d48;
+  --color-primary-content: #ffffff;
+  --color-secondary: #fb7185;
+  --color-secondary-content: #ffffff;
+  --color-accent: #2563eb;
+  --color-accent-content: #ffffff;
+  --color-neutral: #1e1b4b;
+  --color-neutral-content: #f8fafc;
+  --color-info: #3b82f6;
+  --color-info-content: #ffffff;
+  --color-success: #22c55e;
+  --color-success-content: #ffffff;
+  --color-warning: #f59e0b;
+  --color-warning-content: #ffffff;
+  --color-error: #dc2626;
+  --color-error-content: #ffffff;
   --radius-selector: 1rem;
   --radius-field: 1rem;
   --radius-box: 1.5rem;
@@ -60,13 +60,24 @@ body {
   padding: 0;
   margin: 0;
   line-height: inherit;
-  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    "DM Sans",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
   color: var(--color-base-content);
   background: var(--color-base-100);
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Nunito', sans-serif;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Nunito", sans-serif;
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.2;
@@ -76,7 +87,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .clay-card {
   border-radius: 28px;
-  background: linear-gradient(145deg, #ffffff 0%, #FFF5F6 100%);
+  background: linear-gradient(145deg, #ffffff 0%, #fff5f6 100%);
   box-shadow:
     8px 8px 20px rgba(225, 29, 72, 0.08),
     -4px -4px 12px rgba(255, 255, 255, 0.9),
@@ -103,11 +114,11 @@ h1, h2, h3, h4, h5, h6 {
 
 .clay-button {
   border-radius: 16px;
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
   font-weight: 700;
   letter-spacing: 0.01em;
   box-shadow:
-    0 4px 0 #BE123C,
+    0 4px 0 #be123c,
     0 6px 12px rgba(225, 29, 72, 0.25);
   transition: all 0.15s ease;
 }
@@ -115,38 +126,38 @@ h1, h2, h3, h4, h5, h6 {
 .clay-button:hover {
   transform: translateY(-2px);
   box-shadow:
-    0 6px 0 #BE123C,
+    0 6px 0 #be123c,
     0 8px 20px rgba(225, 29, 72, 0.35);
 }
 
 .clay-button:active {
   transform: translateY(2px);
   box-shadow:
-    0 2px 0 #BE123C,
+    0 2px 0 #be123c,
     0 2px 6px rgba(225, 29, 72, 0.2);
 }
 
 .clay-button-secondary {
   box-shadow:
-    0 4px 0 #1D4ED8,
+    0 4px 0 #1d4ed8,
     0 6px 12px rgba(37, 99, 235, 0.25);
 }
 
 .clay-button-secondary:hover {
   box-shadow:
-    0 6px 0 #1D4ED8,
+    0 6px 0 #1d4ed8,
     0 8px 20px rgba(37, 99, 235, 0.35);
 }
 
 .clay-button-secondary:active {
   box-shadow:
-    0 2px 0 #1D4ED8,
+    0 2px 0 #1d4ed8,
     0 2px 6px rgba(37, 99, 235, 0.2);
 }
 
 .clay-icon-card {
   border-radius: 24px;
-  background: linear-gradient(145deg, #ffffff 0%, #FFF8F9 100%);
+  background: linear-gradient(145deg, #ffffff 0%, #fff8f9 100%);
   box-shadow:
     4px 4px 12px rgba(225, 29, 72, 0.06),
     -2px -2px 8px rgba(255, 255, 255, 0.8);
@@ -163,7 +174,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .clay-inset {
   border-radius: 20px;
-  background: linear-gradient(145deg, #FFF0F1 0%, #FFFBFB 100%);
+  background: linear-gradient(145deg, #fff0f1 0%, #fffbfb 100%);
   box-shadow:
     inset 3px 3px 6px rgba(225, 29, 72, 0.06),
     inset -2px -2px 5px rgba(255, 255, 255, 0.8);
@@ -181,22 +192,34 @@ h1, h2, h3, h4, h5, h6 {
 
 .hero-gradient {
   background:
-    radial-gradient(ellipse 80% 60% at 50% -20%, rgba(251, 113, 133, 0.15), transparent),
-    radial-gradient(ellipse 60% 50% at 80% 50%, rgba(37, 99, 235, 0.08), transparent),
-    radial-gradient(ellipse 50% 40% at 20% 80%, rgba(225, 29, 72, 0.06), transparent),
-    linear-gradient(180deg, #FFFBFB 0%, #FFF1F2 50%, #FFFBFB 100%);
+    radial-gradient(
+      ellipse 80% 60% at 50% -20%,
+      rgba(251, 113, 133, 0.15),
+      transparent
+    ),
+    radial-gradient(
+      ellipse 60% 50% at 80% 50%,
+      rgba(37, 99, 235, 0.08),
+      transparent
+    ),
+    radial-gradient(
+      ellipse 50% 40% at 20% 80%,
+      rgba(225, 29, 72, 0.06),
+      transparent
+    ),
+    linear-gradient(180deg, #fffbfb 0%, #fff1f2 50%, #fffbfb 100%);
 }
 
 .warm-gradient {
-  background: linear-gradient(135deg, #FFF1F2 0%, #FFF7ED 50%, #EFF6FF 100%);
+  background: linear-gradient(135deg, #fff1f2 0%, #fff7ed 50%, #eff6ff 100%);
 }
 
 /* ── Featured Icon Set Badge ──────────────────────────────────────── */
 
 .featured-badge {
-  background: linear-gradient(135deg, #E11D48 0%, #FB7185 100%);
+  background: linear-gradient(135deg, #e11d48 0%, #fb7185 100%);
   color: white;
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
   font-weight: 800;
   font-size: 0.65rem;
   letter-spacing: 0.08em;
@@ -264,8 +287,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes backdrop-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes toast-in {
@@ -291,8 +318,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
 }
 
 @keyframes pop {
@@ -300,7 +332,9 @@ h1, h2, h3, h4, h5, h6 {
     transform: scale(0.8);
     opacity: 0;
   }
-  60% { transform: scale(1.05); }
+  60% {
+    transform: scale(1.05);
+  }
   100% {
     transform: scale(1);
     opacity: 1;
@@ -308,24 +342,45 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes pulse-ring {
-  0%, 100% { box-shadow: 0 0 0 0 oklch(var(--p) / 0.15); }
-  50% { box-shadow: 0 0 0 6px oklch(var(--p) / 0); }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 oklch(var(--p) / 0.15);
+  }
+  50% {
+    box-shadow: 0 0 0 6px oklch(var(--p) / 0);
+  }
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 @keyframes wiggle {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(-3deg); }
-  75% { transform: rotate(3deg); }
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-3deg);
+  }
+  75% {
+    transform: rotate(3deg);
+  }
 }
 
 @keyframes blob {
-  0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
-  50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+  0%,
+  100% {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+  }
+  50% {
+    border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+  }
 }
 
 /* ── Animation Utility Classes ────────────────────────────────────── */
@@ -375,7 +430,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .animate-shimmer {
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
 }
@@ -389,19 +449,37 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Stagger delays for grid items */
-.stagger-1 { animation-delay: 0.04s; }
-.stagger-2 { animation-delay: 0.08s; }
-.stagger-3 { animation-delay: 0.12s; }
-.stagger-4 { animation-delay: 0.16s; }
-.stagger-5 { animation-delay: 0.20s; }
-.stagger-6 { animation-delay: 0.24s; }
-.stagger-7 { animation-delay: 0.28s; }
-.stagger-8 { animation-delay: 0.32s; }
+.stagger-1 {
+  animation-delay: 0.04s;
+}
+.stagger-2 {
+  animation-delay: 0.08s;
+}
+.stagger-3 {
+  animation-delay: 0.12s;
+}
+.stagger-4 {
+  animation-delay: 0.16s;
+}
+.stagger-5 {
+  animation-delay: 0.2s;
+}
+.stagger-6 {
+  animation-delay: 0.24s;
+}
+.stagger-7 {
+  animation-delay: 0.28s;
+}
+.stagger-8 {
+  animation-delay: 0.32s;
+}
 
 /* ── Component Styles ─────────────────────────────────────────────── */
 
 .card-hover {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 .card-hover:hover {
   transform: translateY(-2px);
@@ -423,8 +501,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes toast-progress-shrink {
-  from { width: 100%; }
-  to { width: 0%; }
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
 }
 
 /* Drop zone */
@@ -471,7 +553,11 @@ h1, h2, h3, h4, h5, h6 {
   position: absolute;
   width: 400px;
   height: 400px;
-  background: linear-gradient(135deg, rgba(251, 113, 133, 0.2), rgba(225, 29, 72, 0.1));
+  background: linear-gradient(
+    135deg,
+    rgba(251, 113, 133, 0.2),
+    rgba(225, 29, 72, 0.1)
+  );
   filter: blur(60px);
   border-radius: 50%;
   animation: blob 8s ease-in-out infinite;
@@ -482,7 +568,11 @@ h1, h2, h3, h4, h5, h6 {
   position: absolute;
   width: 300px;
   height: 300px;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(59, 130, 246, 0.06));
+  background: linear-gradient(
+    135deg,
+    rgba(37, 99, 235, 0.12),
+    rgba(59, 130, 246, 0.06)
+  );
   filter: blur(50px);
   border-radius: 50%;
   animation: blob 10s ease-in-out infinite reverse;
@@ -493,9 +583,17 @@ h1, h2, h3, h4, h5, h6 {
 
 .icon-preview-canvas {
   background:
-    radial-gradient(circle at 30% 30%, rgba(251, 113, 133, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 70% 70%, rgba(37, 99, 235, 0.06) 0%, transparent 50%),
-    #FFFBFB;
+    radial-gradient(
+      circle at 30% 30%,
+      rgba(251, 113, 133, 0.08) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 70% 70%,
+      rgba(37, 99, 235, 0.06) 0%,
+      transparent 50%
+    ),
+    #fffbfb;
   border-radius: 20px;
 }
 
@@ -503,7 +601,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .input-clay {
   border-radius: 14px;
-  background: linear-gradient(145deg, #ffffff 0%, #FFF8F9 100%);
+  background: linear-gradient(145deg, #ffffff 0%, #fff8f9 100%);
   box-shadow:
     inset 2px 2px 4px rgba(225, 29, 72, 0.04),
     inset -1px -1px 3px rgba(255, 255, 255, 0.8);

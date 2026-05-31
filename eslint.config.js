@@ -44,6 +44,7 @@ const ignores = [
   "**/yarn.lock",
   "**/server",
   "eslint.config.js",
+  "**/figma-plugin",
 ];
 
 export default tseslint.config(

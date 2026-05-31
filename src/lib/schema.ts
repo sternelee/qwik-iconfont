@@ -11,6 +11,7 @@ export const user = sqliteTable("user", {
     .notNull()
     .default(false),
   image: text("image"),
+  plan: text("plan").default("free"), // 'free' | 'pro'
   createdAt: text("createdAt").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text("updatedAt").default(sql`CURRENT_TIMESTAMP`),
 });
@@ -85,6 +86,14 @@ export const projects = sqliteTable("projects", {
   description: text("description"),
   font_family: text("font_family").notNull().default("iconfont"),
   prefix: text("prefix").notNull().default("icon-"),
+  visibility: text("visibility").notNull().default("private"), // 'private' | 'public'
+  favorites_count: integer("favorites_count", { mode: "number" })
+    .notNull()
+    .default(0),
+  views_count: integer("views_count", { mode: "number" }).notNull().default(0),
+  downloads_count: integer("downloads_count", { mode: "number" })
+    .notNull()
+    .default(0),
   created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
@@ -100,6 +109,7 @@ export const icons = sqliteTable("icons", {
   height: integer("height", { mode: "number" }),
   content: text("content"),
   tags: text("tags"), // Comma-separated tags for categorization
+  sort_order: integer("sort_order", { mode: "number" }).default(0),
   created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
   updated_at: text("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
@@ -112,9 +122,51 @@ export const projectsRelations = relations(projects, ({ many, one }) => ({
   }),
 }));
 
+export const favorites = sqliteTable("favorites", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  user_id: text("user_id").notNull(),
+  project_id: integer("project_id", { mode: "number" }).notNull(),
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const favoritesRelations = relations(favorites, ({ one }) => ({
+  project: one(projects, {
+    fields: [favorites.project_id],
+    references: [projects.id],
+  }),
+}));
+
 export const iconsRelations = relations(icons, ({ one }) => ({
   project: one(projects, {
     fields: [icons.project_id],
     references: [projects.id],
   }),
 }));
+
+export const apiTokens = sqliteTable("api_tokens", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  user_id: text("user_id").notNull(),
+  name: text("name").notNull(),
+  token_hash: text("token_hash").notNull().unique(),
+  last_used_at: text("last_used_at"),
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const projectMembers = sqliteTable("project_members", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  project_id: integer("project_id", { mode: "number" }).notNull(),
+  user_id: text("user_id").notNull(),
+  role: text("role").notNull().default("editor"), // 'editor' | 'viewer'
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const webhooks = sqliteTable("webhooks", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  user_id: text("user_id").notNull(),
+  project_id: integer("project_id", { mode: "number" }).notNull(),
+  url: text("url").notNull(),
+  events: text("events").notNull().default("*"), // comma-separated, e.g. "icon.created,icon.deleted"
+  secret: text("secret"), // for HMAC signature
+  active: integer("active", { mode: "boolean" }).notNull().default(true),
+  created_at: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
