@@ -79,16 +79,24 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
   const tags = useSignal(parseTags(icon.tags ?? null).join(", "));
   const fillColor = useSignal("#000000");
   const colorMode = useSignal(false); // true when editing per-path colours
+  /** Set true when user explicitly clicks "退出彩色编辑" — suppresses auto-re-entry. */
+  const colorModeExited = useSignal(false);
 
   // Detect multi-colour SVG (regex — fast, no DOM)
   const isMultiColor = useComputed$(() =>
     svgHasMultipleColors(svgContent.value),
   );
 
-  // Auto-enter colour mode when SVG is detected as multi-colour
+  // Auto-enter colour mode on first detection, but respect explicit exit.
   useTask$(({ track }) => {
     const multi = track(() => isMultiColor.value);
-    if (multi) colorMode.value = true;
+    if (multi && !colorModeExited.value) colorMode.value = true;
+  });
+
+  // Handler: exit colour mode and remember the user's choice.
+  const handleColorModeExit = $(() => {
+    colorMode.value = false;
+    colorModeExited.value = true;
   });
 
   // Handler: receive updated SVG from the colour editor and apply
@@ -391,6 +399,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                     <SvgColorEditor
                       initialSvg={svgContent.value}
                       onChangeSvg$={handleColorSvgChange}
+                      onExit$={handleColorModeExit}
                     />
                   ) : (
                     <div class="grid grid-cols-1 gap-4 lg:grid-cols-[300px_1fr_1fr]">

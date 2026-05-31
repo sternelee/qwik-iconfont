@@ -31,6 +31,8 @@ export interface PathEntry {
 export interface SvgColorEditorProps {
   initialSvg: string;
   onChangeSvg$: QRL<(svg: string) => void>;
+  /** Called when the user clicks the exit button. */
+  onExit$: QRL<() => void>;
 }
 
 // ── SVG sanitisation ─────────────────────────────────────────────────────────
@@ -89,7 +91,7 @@ const SEL_FILTER =
 // ── Component ────────────────────────────────────────────────────────────────
 
 export const SvgColorEditor = component$<SvgColorEditorProps>(
-  ({ initialSvg, onChangeSvg$ }) => {
+  ({ initialSvg, onChangeSvg$, onExit$ }) => {
     const containerRef = useSignal<Element>();
     const selectedIdx = useSignal(-1);
     const entries = useSignal<PathEntry[]>([]);
@@ -212,9 +214,18 @@ export const SvgColorEditor = component$<SvgColorEditorProps>(
 
         {/* Colour panel */}
         <div class="flex min-w-0 flex-1 flex-col gap-3">
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-rose-400">
-            {sel < 0 ? "👆 点击路径选择" : `已选 · 路径 ${sel + 1} · ${selEntry?.tag}`}
-          </p>
+          {/* Header: label + exit button */}
+          <div class="flex items-center justify-between">
+            <p class="text-[11px] font-semibold uppercase tracking-wide text-rose-400">
+              {sel < 0 ? "👆 点击路径选择" : `已选 · 路径 ${sel + 1} · ${selEntry?.tag}`}
+            </p>
+            <button
+              class="flex items-center gap-1 rounded-xl border border-rose-200 px-2.5 py-1 text-[11px] font-semibold text-rose-500 hover:bg-rose-50 active:scale-95"
+              onClick$={onExit$}
+            >
+              ← 退出彩色编辑
+            </button>
+          </div>
 
           {/* Path swatches */}
           <div class="flex flex-wrap gap-1.5">
