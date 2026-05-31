@@ -1,5 +1,4 @@
 import { component$, useSignal, $, type QRL } from "@builder.io/qwik";
-import { ICON_LIBRARIES, type IconLibrary } from "~/lib/github-registry";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -9,84 +8,50 @@ interface IconItem {
 }
 
 export interface GithubImportProps {
-  /** QRL called when the modal should close */
   onClose$: QRL<() => void>;
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
 
 export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
-  // ── Navigation state ──────────────────────────────────────────
-  type Step = "library" | "browse" | "importing" | "done";
-  const step = useSignal<Step>("library");
+  type Step = "input" | "browse" | "importing" | "done";
+  const step = useSignal<Step>("input");
 
-  // ── Library / variant selection ───────────────────────────────
-  const selectedLibId = useSignal("");
-  const selectedVariant = useSignal("");
+  // URL input
+  const urlInput = useSignal("");
+  const urlError = useSignal("");
+  const githubUrl = useSignal(""); // confirmed URL for browse/import
+  const repoLabel = useSignal(""); // display name e.g. "lobehub/lobe-icons"
 
-  // Custom GitHub URL state
-  const customUrlInput = useSignal("");
-  const customUrlError = useSignal("");
-  /** true when browsing a custom repo (not a curated library) */
-  const isCustom = useSignal(false);
-  /** raw URL stored for POST body when isCustom=true */
-  const customGithubUrl = useSignal("");
-  /** human-readable display name e.g. "lobehub/lobe-icons" */
-  const customLabel = useSignal("");
-
-  // ── Icon list + display ───────────────────────────────────────
+  // Icon list + display
   const iconList = useSignal<IconItem[]>([]);
   const loadingIcons = useSignal(false);
   const loadError = useSignal("");
   const search = useSignal("");
   const displayCount = useSignal(120);
 
-  // ── Selection ─────────────────────────────────────────────────
+  // Selection
   const selected = useSignal<string[]>([]);
 
-  // ── Import config + result ────────────────────────────────────
+  // Import config + result
   const projectName = useSignal("");
   const importedId = useSignal(0);
   const importedCount = useSignal(0);
   const importedFailed = useSignal(0);
   const importError = useSignal("");
 
-  // ── Helper: load icon list from API ──────────────────────────
-  const loadIcons$ = $(async (libId: string, variantId: string) => {
-    loadingIcons.value = true;
+  // Load icons from a GitHub tree URL
+  const loadIconsFromUrl$ = $(async (url: string) => {
+    urlError.value = "";
     loadError.value = "";
-    iconList.value = [];
-    selected.value = [];
-    displayCount.value = 120;
-
-    try {
-      const qs = variantId ? `&variant=${variantId}` : "";
-      const res = await fetch(`/api/github-import?registry=${libId}${qs}`);
-      const data = (await res.json()) as {
-        icons?: IconItem[];
-        error?: string;
-      };
-      if (!res.ok) throw new Error(data.error ?? "加载图标列表失败");
-      iconList.value = data.icons ?? [];
-    } catch (e: any) {
-      loadError.value = e.message;
-    } finally {
-      loadingIcons.value = false;
-    }
-  });
-
-  /** Load icons from an arbitrary GitHub tree URL */
-  const loadIconsFromUrl$ = $(async (githubUrl: string) => {
-    customUrlError.value = "";
     loadingIcons.value = true;
-    loadError.value = "";
     iconList.value = [];
     selected.value = [];
     displayCount.value = 120;
 
     try {
       const res = await fetch(
-        `/api/github-import?url=${encodeURIComponent(githubUrl)}`,
+        `/api/github-import?url=${encodeURIComponent(url)}`,
       );
       const data = (await res.json()) as {
         icons?: IconItem[];
@@ -95,8 +60,7 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
       };
       if (!res.ok) throw new Error(data.error ?? "加载失败");
       iconList.value = data.icons ?? [];
-      // Update display label from server response (parsed from URL)
-      if (data.label) customLabel.value = data.label;
+      if (data.label) repoLabel.value = data.label;
     } catch (e: any) {
       loadError.value = e.message;
     } finally {
@@ -104,63 +68,57 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
     }
   });
 
-  // ── Derived (computed inline — reruns on signal change) ───────
-  const lib: IconLibrary | undefined = ICON_LIBRARIES.find(
-    (l) => l.id === selectedLibId.value,
-  );
+  // Derived
   const q = search.value.toLowerCase().trim();
   const filteredIcons = q
     ? iconList.value.filter((ic) => ic.name.toLowerCase().includes(q))
     : iconList.value;
   const visibleIcons = filteredIcons.slice(0, displayCount.value);
-  const allFilteredSelected =
+  const atCap = selected.value.length >= 500;
+  const allSelected =
     filteredIcons.length > 0 &&
     filteredIcons.every((ic) => selected.value.includes(ic.name));
-  // At 500-cap, show deselect even if not every filtered icon is selected
-  const atCap = selected.value.length >= 500;
-  const showDeselect = allFilteredSelected || atCap;
+  const showDeselect = allSelected || atCap;
 
-  // ── Render ────────────────────────────────────────────────────
+  const resetToInput = $(() => {
+    step.value = "input";
+    urlInput.value = "";
+    urlError.value = "";
+    githubUrl.value = "";
+    repoLabel.value = "";
+    iconList.value = [];
+    selected.value = [];
+    search.value = "";
+    projectName.value = "";
+    importedId.value = 0;
+  });
+
   return (
     <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6">
-      {/* Backdrop — clicking it closes the modal (direct QRL reference, no closure) */}
+      {/* Backdrop */}
       <div
         class="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick$={onClose$}
       />
 
-      {/* Modal panel */}
-      <div class="relative z-10 flex h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-rose-100 bg-white shadow-2xl">
-        {/* ── Header ──────────────────────────────────────────── */}
+      {/* Modal */}
+      <div class="relative z-10 flex h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-rose-100 bg-white shadow-2xl">
+
+        {/* Header */}
         <div class="flex shrink-0 items-center justify-between border-b border-rose-100 px-5 py-3.5">
           <div class="flex items-center gap-2.5">
-            {/* Back button — only closes/resets local state (signals), no prop callback needed */}
-            {step.value !== "library" && step.value !== "importing" && (
+            {step.value === "browse" && (
               <button
                 class="flex h-7 w-7 items-center justify-center rounded-lg text-rose-400 hover:bg-rose-50"
-                onClick$={() => {
-                  step.value = "library";
-                  iconList.value = [];
-                  selected.value = [];
-                  search.value = "";
-                  importedId.value = 0;
-                  isCustom.value = false;
-                  customGithubUrl.value = "";
-                  customLabel.value = "";
-                  customUrlError.value = "";
-                }}
+                onClick$={resetToInput}
               >
                 ←
               </button>
             )}
             <div>
-              <h2 class="font-['Nunito'] text-base leading-tight font-extrabold text-rose-950">
-                {step.value === "library" && "GitHub 图标库导入"}
-                {step.value === "browse" &&
-                  (lib?.name ??
-                    (isCustom.value
-                      ? customLabel.value || "自定义仓库"
-                      : "浏览图标"))}
+              <h2 class="font-['Nunito'] text-base font-extrabold leading-tight text-rose-950">
+                {step.value === "input" && "从 GitHub 导入图标"}
+                {step.value === "browse" && (repoLabel.value || "浏览图标")}
                 {step.value === "importing" && "正在导入..."}
                 {step.value === "done" && "导入完成 ✓"}
               </h2>
@@ -173,7 +131,6 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
               )}
             </div>
           </div>
-          {/* Close button — direct QRL reference, no closure */}
           <button
             class="flex h-7 w-7 items-center justify-center rounded-lg text-rose-400 hover:bg-rose-100"
             onClick$={onClose$}
@@ -182,155 +139,111 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
           </button>
         </div>
 
-        {/* ── Step: Library Selection ──────────────────────────── */}
-        {step.value === "library" && (
-          <div class="flex-1 overflow-y-auto p-5">
-            <p class="mb-4 text-sm text-rose-500">
-              选择一个开源图标库，预览后一键导入并创建公开图标集
-            </p>
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {ICON_LIBRARIES.map((l) => (
-                <button
-                  key={l.id}
-                  class="group rounded-2xl border border-rose-100 bg-white p-4 text-left shadow-sm transition-all hover:border-rose-300 hover:shadow-md active:scale-[0.98]"
-                  style={{ borderLeftColor: l.color, borderLeftWidth: "4px" }}
-                  onClick$={async () => {
-                    selectedLibId.value = l.id;
-                    const defVariant =
-                      l.defaultVariant ?? l.variants?.[0]?.id ?? "";
-                    selectedVariant.value = defVariant;
-                    projectName.value = l.name;
-                    step.value = "browse";
-                    await loadIcons$(l.id, defVariant);
-                  }}
-                >
-                  <div class="mb-1.5 flex items-center justify-between">
-                    <span class="font-['Nunito'] text-sm font-bold text-rose-950">
-                      {l.name}
-                    </span>
-                    <span class="text-[10px] font-medium text-rose-300">
-                      {l.license}
-                    </span>
-                  </div>
-                  <p class="mb-3 text-xs leading-relaxed text-rose-500">
-                    {l.description}
-                  </p>
-                  <div class="flex flex-wrap items-center gap-2">
-                    <span
-                      class="rounded-full px-2 py-0.5 text-[11px] font-semibold text-white"
-                      style={{ backgroundColor: l.color }}
-                    >
-                      {l.iconCount.toLocaleString()}+ 图标
-                    </span>
-                    {l.variants && (
-                      <span class="text-[11px] text-rose-400">
-                        {l.variants.length} 种风格
-                      </span>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
+        {/* Step: input */}
+        {step.value === "input" && (
+          <div class="flex flex-1 flex-col items-center justify-center gap-6 p-8">
+            <div class="w-full max-w-lg">
+              {/* Icon */}
+              <div class="mb-5 flex justify-center">
+                <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-2xl">
+                  🌐
+                </div>
+              </div>
 
-            {/* Custom GitHub repo URL input */}
-            <div class="mt-4 rounded-2xl border-2 border-dashed border-rose-200 bg-rose-50/30 p-4">
-              <p class="mb-1 text-sm font-semibold text-rose-800">
-                🔗 自定义 GitHub 仓库
+              <h3 class="mb-1.5 text-center font-['Nunito'] text-lg font-extrabold text-rose-950">
+                粘贴 GitHub 目录 URL
+              </h3>
+              <p class="mb-6 text-center text-sm text-rose-400">
+                支持任意 GitHub 仓库中的 SVG 图标目录
               </p>
-              <p class="mb-3 text-xs leading-relaxed text-rose-500">
-                粘贴任意 GitHub 目录页面的 URL，导入其中的 SVG 图标
-              </p>
-              <div class="flex items-center gap-2">
+
+              {/* URL input */}
+              <div class="flex gap-2">
                 <input
                   type="url"
                   placeholder="https://github.com/owner/repo/tree/branch/icons"
-                  class="flex-1 rounded-xl border border-rose-100 bg-white px-3 py-2 text-xs text-rose-900 placeholder:text-rose-300 focus:border-rose-300 focus:outline-none"
-                  value={customUrlInput.value}
+                  class="flex-1 rounded-2xl border border-rose-200 bg-rose-50/50 px-4 py-2.5 text-sm text-rose-900 placeholder:text-rose-300 focus:border-rose-400 focus:outline-none"
+                  value={urlInput.value}
                   onInput$={(e) => {
-                    customUrlInput.value = (e.target as HTMLInputElement).value;
-                    customUrlError.value = "";
+                    urlInput.value = (e.target as HTMLInputElement).value;
+                    urlError.value = "";
+                  }}
+                  onKeyDown$={(e) => {
+                    if (e.key === "Enter") {
+                      const raw = urlInput.value.trim();
+                      if (!raw) return;
+                      if (!raw.includes("github.com")) {
+                        urlError.value = "请输入有效的 GitHub URL";
+                        return;
+                      }
+                      const parts = raw
+                        .replace(/^https?:\/\/github\.com\//, "")
+                        .split("/");
+                      repoLabel.value = parts.slice(0, 2).join("/");
+                      projectName.value = parts[1] || "imported-icons";
+                      githubUrl.value = raw;
+                      step.value = "browse";
+                      loadIconsFromUrl$(raw);
+                    }
                   }}
                 />
                 <button
                   class={[
-                    "shrink-0 rounded-xl px-3 py-2 text-xs font-bold text-white transition-all",
-                    customUrlInput.value.trim()
+                    "shrink-0 rounded-2xl px-5 py-2.5 text-sm font-bold text-white transition-all",
+                    urlInput.value.trim()
                       ? "bg-rose-500 hover:bg-rose-600 active:scale-95"
                       : "cursor-not-allowed bg-rose-200",
                   ].join(" ")}
-                  disabled={!customUrlInput.value.trim() || loadingIcons.value}
+                  disabled={!urlInput.value.trim() || loadingIcons.value}
                   onClick$={async () => {
-                    const raw = customUrlInput.value.trim();
+                    const raw = urlInput.value.trim();
                     if (!raw) return;
-
-                    // Basic validation: must look like a GitHub URL
                     if (!raw.includes("github.com")) {
-                      customUrlError.value = "请输入有效的 GitHub URL";
+                      urlError.value = "请输入有效的 GitHub URL";
                       return;
                     }
-
-                    // Derive a display name from the URL
                     const parts = raw
                       .replace(/^https?:\/\/github\.com\//, "")
                       .split("/");
-                    const label = parts.slice(0, 2).join("/");
-                    const repoName = parts[1] || "imported-icons";
-
-                    // Mark as custom mode
-                    isCustom.value = true;
-                    customGithubUrl.value = raw;
-                    customLabel.value = label;
-                    projectName.value = repoName;
+                    repoLabel.value = parts.slice(0, 2).join("/");
+                    projectName.value = parts[1] || "imported-icons";
+                    githubUrl.value = raw;
                     step.value = "browse";
-
                     await loadIconsFromUrl$(raw);
                   }}
                 >
                   {loadingIcons.value ? "加载中..." : "加载图标"}
                 </button>
               </div>
-              {customUrlError.value && (
-                <p class="mt-1.5 text-xs text-red-600">
-                  {customUrlError.value}
-                </p>
+
+              {urlError.value && (
+                <p class="mt-2 text-xs text-red-500">{urlError.value}</p>
               )}
-              <p class="mt-2 text-[10px] text-rose-300">
-                示例：
-                https://github.com/lobehub/lobe-icons/tree/master/packages/static-svg/icons
-              </p>
+
+              {/* Example */}
+              <div class="mt-4 rounded-xl bg-rose-50 px-4 py-3">
+                <p class="mb-1 text-xs font-semibold text-rose-500">示例</p>
+                <button
+                  class="w-full break-all text-left font-mono text-xs text-rose-400 hover:text-rose-600"
+                  onClick$={() => {
+                    urlInput.value =
+                      "https://github.com/lucide-icons/lucide/tree/main/icons";
+                    urlError.value = "";
+                  }}
+                >
+                  https://github.com/lucide-icons/lucide/tree/main/icons
+                </button>
+              </div>
             </div>
           </div>
         )}
 
-        {/* ── Step: Browse & Select Icons ──────────────────────── */}
+        {/* Step: browse */}
         {step.value === "browse" && (
           <>
             {/* Toolbar */}
             <div class="shrink-0 border-b border-rose-100 bg-rose-50/30 px-5 py-2.5">
               <div class="flex items-center gap-2">
-                {/* Variant selector */}
-                {lib?.variants && (
-                  <select
-                    class="shrink-0 rounded-xl border border-rose-100 bg-white px-2.5 py-1.5 text-xs text-rose-700 focus:outline-none"
-                    value={selectedVariant.value}
-                    onChange$={async (e) => {
-                      const v = (e.target as HTMLSelectElement).value;
-                      selectedVariant.value = v;
-                      selected.value = [];
-                      search.value = "";
-                      displayCount.value = 120;
-                      await loadIcons$(selectedLibId.value, v);
-                    }}
-                  >
-                    {lib.variants.map((v) => (
-                      <option key={v.id} value={v.id}>
-                        {v.label}
-                      </option>
-                    ))}
-                  </select>
-                )}
-
-                {/* Search */}
                 <div class="relative flex-1">
                   <span class="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-[13px] text-rose-300">
                     🔍
@@ -346,17 +259,13 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
                     }}
                   />
                 </div>
-
-                {/* Select / deselect all */}
                 <button
                   class="shrink-0 rounded-xl border border-rose-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 active:scale-95"
                   onClick$={() => {
                     if (showDeselect) {
                       if (atCap) {
-                        // At cap: clear everything
                         selected.value = [];
                       } else {
-                        // All filtered selected: deselect only filtered icons
                         const filteredSet = new Set(
                           filteredIcons.map((ic) => ic.name),
                         );
@@ -365,12 +274,10 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
                         );
                       }
                     } else {
-                      const filteredNames = filteredIcons.map((ic) => ic.name);
+                      const names = filteredIcons.map((ic) => ic.name);
                       const merged = [
                         ...selected.value,
-                        ...filteredNames.filter(
-                          (n) => !selected.value.includes(n),
-                        ),
+                        ...names.filter((n) => !selected.value.includes(n)),
                       ];
                       selected.value = merged.slice(0, 500);
                     }
@@ -381,11 +288,9 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
                     : `全选 (${Math.min(filteredIcons.length, 500)})`}
                 </button>
               </div>
-
-              {/* Contextual warnings */}
               {selected.value.length > 200 && selected.value.length < 500 && (
                 <p class="mt-1.5 text-[11px] text-amber-600">
-                  ⚠️ 已选 {selected.value.length} 个，大批量导入约需{" "}
+                  ⚠️ 已选 {selected.value.length} 个，导入约需{" "}
                   {Math.ceil(selected.value.length / 10)} 秒
                 </p>
               )}
@@ -455,15 +360,14 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
                       );
                     })}
                   </div>
-
                   {filteredIcons.length > displayCount.value && (
                     <div class="mt-4 text-center">
                       <button
                         class="rounded-2xl border border-rose-100 px-4 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50"
                         onClick$={() => (displayCount.value += 120)}
                       >
-                        加载更多（还有{" "}
-                        {filteredIcons.length - displayCount.value} 个）
+                        加载更多（还有 {filteredIcons.length - displayCount.value}{" "}
+                        个）
                       </button>
                     </div>
                   )}
@@ -471,7 +375,7 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
               )}
             </div>
 
-            {/* Footer: project name + import button */}
+            {/* Footer */}
             <div class="shrink-0 border-t border-rose-100 bg-white px-5 py-3.5">
               <div class="flex items-center gap-2.5">
                 <input
@@ -496,10 +400,7 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
                     loadingIcons.value
                   }
                   onClick$={async () => {
-                    if (
-                      !projectName.value.trim() ||
-                      selected.value.length === 0
-                    )
+                    if (!projectName.value.trim() || selected.value.length === 0)
                       return;
 
                     step.value = "importing";
@@ -509,20 +410,11 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
                       const res = await fetch("/api/github-import", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(
-                          isCustom.value
-                            ? {
-                                url: customGithubUrl.value,
-                                icons: selected.value,
-                                projectName: projectName.value.trim(),
-                              }
-                            : {
-                                registry: selectedLibId.value,
-                                variant: selectedVariant.value || undefined,
-                                icons: selected.value,
-                                projectName: projectName.value.trim(),
-                              },
-                        ),
+                        body: JSON.stringify({
+                          url: githubUrl.value,
+                          icons: selected.value,
+                          projectName: projectName.value.trim(),
+                        }),
                       });
                       const data = (await res.json()) as {
                         projectId?: number;
@@ -543,10 +435,7 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
                     }
                   }}
                 >
-                  导入
-                  {selected.value.length > 0
-                    ? ` ${selected.value.length} 个`
-                    : ""}
+                  导入{selected.value.length > 0 ? ` ${selected.value.length} 个` : ""}
                 </button>
               </div>
               {importError.value && (
@@ -556,7 +445,7 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
           </>
         )}
 
-        {/* ── Step: Importing (progress spinner) ──────────────── */}
+        {/* Step: importing */}
         {step.value === "importing" && (
           <div class="flex flex-1 flex-col items-center justify-center gap-6 p-10">
             <div class="relative flex h-20 w-20 items-center justify-center">
@@ -577,7 +466,7 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
           </div>
         )}
 
-        {/* ── Step: Done ───────────────────────────────────────── */}
+        {/* Step: done */}
         {step.value === "done" && (
           <div class="flex flex-1 flex-col items-center justify-center gap-6 p-10">
             <div class="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-4xl">
@@ -589,15 +478,13 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
               </p>
               <p class="mt-2 text-sm text-rose-500">
                 成功导入{" "}
-                <strong class="text-rose-700">{importedCount.value}</strong>{" "}
-                个图标
+                <strong class="text-rose-700">{importedCount.value}</strong> 个图标
                 {importedFailed.value > 0 && (
                   <>，{importedFailed.value} 个下载失败</>
                 )}
               </p>
             </div>
             <div class="flex items-center gap-3">
-              {/* Native <a> navigation — no callback QRL needed */}
               <a
                 href={`/project/${importedId.value}`}
                 class="rounded-2xl bg-rose-500 px-6 py-2.5 text-sm font-bold text-white hover:bg-rose-600"
@@ -606,16 +493,7 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
               </a>
               <button
                 class="rounded-2xl border border-rose-100 px-4 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-50"
-                onClick$={() => {
-                  step.value = "library";
-                  selectedLibId.value = "";
-                  selectedVariant.value = "";
-                  iconList.value = [];
-                  selected.value = [];
-                  search.value = "";
-                  projectName.value = "";
-                  importedId.value = 0;
-                }}
+                onClick$={resetToInput}
               >
                 再导入一个
               </button>
