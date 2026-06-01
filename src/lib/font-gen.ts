@@ -547,6 +547,32 @@ export function generateCSS(
 ${rules}`;
 }
 
+export async function hasColorIcons(icons: Icon[]): Promise<boolean> {
+  if (icons.some((ic) => ic.color_layers)) return true;
+
+  try {
+    const { extractSVGColorLayers } = await import("~/lib/svg-color-extractor");
+    return icons.some(
+      (ic) => ic.content && extractSVGColorLayers(ic.content).isMultiColor,
+    );
+  } catch {
+    return false;
+  }
+}
+
+export async function generateFontCSS(
+  fontFamily: string,
+  prefix: string,
+  icons: Icon[],
+): Promise<string> {
+  if (await hasColorIcons(icons)) {
+    const { generateCOLRFontCSS } = await import("~/lib/colr-font-gen");
+    return generateCOLRFontCSS(fontFamily, prefix, icons);
+  }
+
+  return generateCSS(fontFamily, prefix, icons);
+}
+
 /** Extract inner SVG content reliably using DOMParser */
 function extractInnerSVG(content: string): string {
   const parser = new DOMParser();
@@ -581,26 +607,8 @@ export async function generateDemoHTML(
   prefix: string,
   icons: Icon[],
 ): Promise<string> {
-  let hasColor = icons.some((ic) => ic.color_layers);
-  if (!hasColor) {
-    try {
-      const { extractSVGColorLayers } = await import(
-        "~/lib/svg-color-extractor"
-      );
-      hasColor = icons.some(
-        (ic) => ic.content && extractSVGColorLayers(ic.content).isMultiColor,
-      );
-    } catch {
-      hasColor = false;
-    }
-  }
-  let css: string;
-  if (hasColor) {
-    const { generateCOLRFontCSS } = await import("~/lib/colr-font-gen");
-    css = generateCOLRFontCSS(fontFamily, prefix, icons);
-  } else {
-    css = generateCSS(fontFamily, prefix, icons);
-  }
+  const hasColor = await hasColorIcons(icons);
+  const css = await generateFontCSS(fontFamily, prefix, icons);
   let fontBase64 = "";
   try {
     const ttf = await generateFont(fontFamily, icons, prefix);

@@ -7,7 +7,7 @@ import {
 } from "@builder.io/qwik";
 import { routeLoader$, useLocation } from "@builder.io/qwik-city";
 import type { Project, Icon } from "~/lib/types";
-import { generateTTFFont, generateCSS } from "~/lib/font-gen";
+import { generateFont, generateFontCSS } from "~/lib/font-gen";
 import {
   AddToProjectDrawer,
   type AddToProjectIcon,
@@ -197,12 +197,12 @@ export default component$(() => {
     if (filteredIcons.list.length === 0) return;
     downloadLoading.value = true;
     try {
-      const ttf = await generateTTFFont(
+      const ttf = await generateFont(
         project.font_family,
         filteredIcons.list,
         project.prefix,
       );
-      const css = generateCSS(
+      const css = await generateFontCSS(
         project.font_family,
         project.prefix,
         filteredIcons.list,
@@ -677,13 +677,17 @@ const PublishButton = component$<{
     publishing.value = true;
     err.value = null;
     try {
-      const { generateTTFFont, generateCSS } = await import("~/lib/font-gen");
-      const ttf = await generateTTFFont(
+      const { generateFont, generateFontCSS } = await import("~/lib/font-gen");
+      const ttf = await generateFont(
         props.fontFamily,
         props.icons,
         props.prefix,
       );
-      const css = generateCSS(props.fontFamily, props.prefix, props.icons);
+      const css = await generateFontCSS(
+        props.fontFamily,
+        props.prefix,
+        props.icons,
+      );
       if (!ttf) {
         err.value = "字体生成失败";
         return;

@@ -345,6 +345,20 @@ export function extractSVGColorLayers(svgContent: string): SVGColorData {
   return { layers, palette, viewBox, isMultiColor: colorCount > 1 };
 }
 
+/** Remove degenerate empty subpaths (M/m x y followed by M/m/L/etc with no drawing commands).
+ *  Common in IconFont SVGs where M sets a reference point and m offsets from it. */
+function removeDegenerateSubpaths(d: string): string {
+  // Split into subpath segments: each starts with M or m
+  const segments = d.match(/[Mm][^Mm]*(?:[zZ])?/g);
+  if (!segments) return d;
+  const valid = segments.filter((seg) => {
+    // After the initial M/m + coordinates, check for drawing commands
+    const afterMoveTo = seg.replace(/^[Mm][\d.\s,-]+/, "");
+    return /[LlHhVvCcSsQqTtAaZz]/.test(afterMoveTo);
+  });
+  return valid.join("");
+}
+
 /**
  * Merge all paths of a colour layer into a single `d` string with
  * matrix transforms applied via svgpath.
@@ -362,14 +376,15 @@ export async function mergeLayerPaths(
     for (let i = 0; i < layer.paths.length; i++) {
       const m = layer.matrices[i];
       const [a, b, c, d, e, f] = m;
-      const transformed = svgpathFn(layer.paths[i])
+      const raw = svgpathFn(layer.paths[i])
         .unarc()
         .unshort()
         .abs()
         .transform(`matrix(${a},${b},${c},${d},${e},${f})`)
         .round(2)
         .toString();
-      parts.push(transformed);
+      const cleaned = removeDegenerateSubpaths(raw);
+      if (cleaned) parts.push(cleaned);
     }
     return parts.join(" ");
   } catch {

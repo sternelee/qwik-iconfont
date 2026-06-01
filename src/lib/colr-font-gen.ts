@@ -59,7 +59,7 @@ function parseHex(hex: string): { r: number; g: number; b: number; a: number } {
 
 /** Remove degenerate empty subpaths (M/m x y followed by M/m/L/etc with no drawing commands). */
 function removeDegenerateSubpaths(d: string): string {
-  const segments = d.match(/[Mm][^MmzZ]*(?:[zZ]|$)/g);
+  const segments = d.match(/[Mm][^Mm]*(?:[zZ])?/g);
   if (!segments) return d;
   const valid = segments.filter((seg) => {
     const afterMoveTo = seg.replace(/^[Mm][\d.\s,-]+/, "");

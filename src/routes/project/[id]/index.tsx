@@ -18,6 +18,7 @@ import type { Project, Icon } from "~/lib/types";
 import {
   generateFont,
   generateCSS,
+  generateFontCSS,
   generateSymbolSVG,
   generateDemoHTML,
 } from "~/lib/font-gen";
@@ -468,11 +469,12 @@ export default component$(() => {
       if (!res.ok || data.error) throw new Error(data.error || "生成失败");
       aiPreviewSvg.value = data.svg!;
       if (!aiIconName.value) {
-        aiIconName.value = aiPrompt.value
-          .toLowerCase()
-          .replace(/\s+/g, "-")
-          .replace(/[^a-z0-9-]/g, "")
-          .slice(0, 30) || "ai-icon";
+        aiIconName.value =
+          aiPrompt.value
+            .toLowerCase()
+            .replace(/\s+/g, "-")
+            .replace(/[^a-z0-9-]/g, "")
+            .slice(0, 30) || "ai-icon";
       }
     } catch (e: any) {
       showToast(e.message || "AI 生成失败", "error");
@@ -508,9 +510,9 @@ export default component$(() => {
           const result = (await res.json()) as { icon: Icon };
           icon = result.icon;
         } else {
-          const errData = await res
+          const errData = (await res
             .json()
-            .catch(() => ({ error: "上传失败" })) as { error?: string };
+            .catch(() => ({ error: "上传失败" }))) as { error?: string };
           throw new Error(errData.error || `上传失败 (${res.status})`);
         }
       }
@@ -940,10 +942,12 @@ export default component$(() => {
     try {
       const JSZip = (await import("jszip")).default;
       const zip = new JSZip();
-      zip.file(
-        `${project.font_family}.css`,
-        generateCSS(project.font_family, project.prefix, selected),
+      const cssContent = await generateFontCSS(
+        project.font_family,
+        project.prefix,
+        selected,
       );
+      zip.file(`${project.font_family}.css`, cssContent);
       zip.file(
         `${project.font_family}-symbol.svg`,
         generateSymbolSVG(selected, project.prefix),
@@ -3169,14 +3173,27 @@ ${classes}`;
                 <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
                   ⚙️ AI 设置
                 </h3>
-                <p class="mt-0.5 text-xs text-rose-400">使用自己的 API Key（BYOA）</p>
+                <p class="mt-0.5 text-xs text-rose-400">
+                  使用自己的 API Key（BYOA）
+                </p>
               </div>
               <button
                 class="flex h-8 w-8 items-center justify-center rounded-xl text-rose-400 transition-all hover:bg-rose-50 hover:text-rose-600"
                 onClick$={() => (showAISettings.value = false)}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="18" x2="6" y1="6" y2="18" /><line x1="6" x2="18" y1="6" y2="18" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <line x1="18" x2="6" y1="6" y2="18" />
+                  <line x1="6" x2="18" y1="6" y2="18" />
                 </svg>
               </button>
             </div>
@@ -3187,7 +3204,7 @@ ${classes}`;
                 </label>
                 <input
                   type="password"
-                  class="input-clay w-full px-3 py-2.5 text-sm font-mono"
+                  class="input-clay w-full px-3 py-2.5 font-mono text-sm"
                   placeholder="sk-..."
                   value={aiApiKey.value}
                   onInput$={(e: any) => (aiApiKey.value = e.target.value)}
@@ -3206,7 +3223,8 @@ ${classes}`;
                   onInput$={(e: any) => (aiBaseUrl.value = e.target.value)}
                 />
                 <p class="mt-1 text-xs text-rose-400">
-                  兼容 OpenAI API 的服务均可使用，例如 DeepSeek、Groq、Mistral 等
+                  兼容 OpenAI API 的服务均可使用，例如 DeepSeek、Groq、Mistral
+                  等
                 </p>
               </div>
               <div>
@@ -3216,14 +3234,15 @@ ${classes}`;
                 </label>
                 <input
                   type="text"
-                  class="input-clay w-full px-3 py-2.5 text-sm font-mono"
+                  class="input-clay w-full px-3 py-2.5 font-mono text-sm"
                   placeholder="gpt-4o-mini"
                   value={aiModel.value}
                   onInput$={(e: any) => (aiModel.value = e.target.value)}
                 />
               </div>
               <p class="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-700">
-                🔒 设置保存在浏览器本地，仅在调用 AI 时经由服务端转发，不会被记录或持久化。
+                🔒 设置保存在浏览器本地，仅在调用 AI
+                时经由服务端转发，不会被记录或持久化。
               </p>
               <div class="flex gap-2 pt-1">
                 <button
@@ -3242,7 +3261,10 @@ ${classes}`;
               </div>
             </div>
           </div>
-          <div class="modal-backdrop" onClick$={() => (showAISettings.value = false)} />
+          <div
+            class="modal-backdrop"
+            onClick$={() => (showAISettings.value = false)}
+          />
         </div>
       )}
 
