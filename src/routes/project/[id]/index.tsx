@@ -1820,6 +1820,7 @@ ${classes}`;
                     previewIcon.unicode = icon.unicode;
                     previewIcon.view_box = icon.view_box;
                     previewIcon.tags = icon.tags;
+                    previewIcon.color_layers = icon.color_layers;
                     previewIcon.project_id = icon.project_id;
                     previewIcon.svg_path = icon.svg_path;
                     showIconDetail.value = true;
@@ -2917,6 +2918,7 @@ ${classes}`;
             selectedIconForEdit.view_box = icon.view_box;
             selectedIconForEdit.content = icon.content;
             selectedIconForEdit.tags = icon.tags;
+            selectedIconForEdit.color_layers = icon.color_layers;
             showIconDetail.value = false;
             showSvgEditor.value = true;
           }}

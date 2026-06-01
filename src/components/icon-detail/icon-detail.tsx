@@ -12,12 +12,43 @@ interface IconDetailPanelProps {
   fontFamily?: string;
 }
 
+function hasNativeColors(icon: Partial<Icon>): boolean {
+  if (icon.color_layers) return true;
+
+  const content = icon.content;
+  if (!content) return false;
+
+  const colors = new Set<string>();
+  const attrRe = /\b(?:fill|stroke)=["']([^"']+)["']/gi;
+  const styleRe = /(?:^|;)\s*(?:fill|stroke)\s*:\s*([^;"]+)/gi;
+  let match: RegExpExecArray | null;
+
+  const addColor = (raw: string) => {
+    const value = raw.trim().toLowerCase();
+    if (
+      !value ||
+      value === "none" ||
+      value === "currentcolor" ||
+      value.startsWith("url(")
+    ) {
+      return;
+    }
+    colors.add(value);
+  };
+
+  while ((match = attrRe.exec(content))) addColor(match[1]);
+  while ((match = styleRe.exec(content))) addColor(match[1]);
+
+  return colors.size > 1;
+}
+
 export const IconDetailPanel = component$((props: IconDetailPanelProps) => {
   const { icon, onEdit$, onDelete$, onClose$, onAIModify$ } = props;
 
   const previewSize = useSignal(96);
   const fillColor = useSignal("#E11D48");
   const showRawContent = useSignal(false);
+  const isColorIcon = hasNativeColors(icon);
 
   return (
     <div
@@ -115,41 +146,43 @@ export const IconDetailPanel = component$((props: IconDetailPanelProps) => {
             >
               <SvgPreview
                 content={icon.content ?? null}
-                color={fillColor.value}
+                color={isColorIcon ? undefined : fillColor.value}
                 class="h-full w-full object-contain"
               />
             </div>
           </div>
 
           {/* Color picker */}
-          <div class="flex items-center gap-2">
-            <span class="text-xs font-medium text-rose-400/70">颜色:</span>
-            <input
-              type="color"
-              class="h-7 w-7 cursor-pointer overflow-hidden rounded-full border-0 p-0"
-              value={fillColor.value}
-              onInput$={(e: any) => (fillColor.value = e.target.value)}
-            />
-            <div class="flex flex-wrap gap-1">
-              {[
-                "#E11D48",
-                "#2563EB",
-                "#22C55E",
-                "#F59E0B",
-                "#A855F7",
-                "#EC4899",
-                "#333333",
-                "#000000",
-              ].map((c) => (
-                <button
-                  key={c}
-                  class={`h-6 w-6 rounded-full border-2 transition-transform hover:scale-110 ${fillColor.value === c ? "scale-110 border-rose-400" : "border-transparent"}`}
-                  style={{ backgroundColor: c }}
-                  onClick$={() => (fillColor.value = c)}
-                />
-              ))}
+          {!isColorIcon && (
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-medium text-rose-400/70">颜色:</span>
+              <input
+                type="color"
+                class="h-7 w-7 cursor-pointer overflow-hidden rounded-full border-0 p-0"
+                value={fillColor.value}
+                onInput$={(e: any) => (fillColor.value = e.target.value)}
+              />
+              <div class="flex flex-wrap gap-1">
+                {[
+                  "#E11D48",
+                  "#2563EB",
+                  "#22C55E",
+                  "#F59E0B",
+                  "#A855F7",
+                  "#EC4899",
+                  "#333333",
+                  "#000000",
+                ].map((c) => (
+                  <button
+                    key={c}
+                    class={`h-6 w-6 rounded-full border-2 transition-transform hover:scale-110 ${fillColor.value === c ? "scale-110 border-rose-400" : "border-transparent"}`}
+                    style={{ backgroundColor: c }}
+                    onClick$={() => (fillColor.value = c)}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Metadata */}
