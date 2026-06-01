@@ -445,12 +445,9 @@ export async function generateFont(
   icons: Icon[],
   prefix: string,
 ): Promise<ArrayBuffer | null> {
-  const hasColor = icons.some((ic) => ic.color_layers);
-  if (hasColor) {
-    const { generateCOLRFont } = await import("~/lib/colr-font-gen");
-    const withLayers = icons.map((ic) => ({
-      ...ic,
-      parsedColorLayers: ic.color_layers
+  const withLayers = await Promise.all(
+    icons.map(async (ic) => {
+      let parsedColorLayers = ic.color_layers
         ? (() => {
             try {
               return JSON.parse(ic.color_layers!);
@@ -458,8 +455,39 @@ export async function generateFont(
               return undefined;
             }
           })()
-        : undefined,
-    }));
+        : undefined;
+
+      if (ic.content) {
+        try {
+          const { extractSVGColorLayers, mergeLayerPaths } = await import(
+            "~/lib/svg-color-extractor"
+          );
+          const { layers, isMultiColor } = extractSVGColorLayers(ic.content);
+          if (isMultiColor && layers.length >= 2) {
+            const freshLayers = [];
+            for (const layer of layers) {
+              const d = await mergeLayerPaths(layer);
+              if (d) freshLayers.push({ color: layer.color, d });
+            }
+            if (freshLayers.length >= 2) {
+              parsedColorLayers = freshLayers;
+            }
+          }
+        } catch {
+          // Fall back to DB-stored color_layers when browser SVG parsing is unavailable.
+        }
+      }
+
+      return {
+        ...ic,
+        parsedColorLayers,
+      };
+    }),
+  );
+
+  const hasColor = withLayers.some((ic) => ic.parsedColorLayers);
+  if (hasColor) {
+    const { generateCOLRFont } = await import("~/lib/colr-font-gen");
     return generateCOLRFont(fontFamily, withLayers, prefix);
   }
   return generateTTFFont(fontFamily, icons, prefix);
@@ -472,7 +500,7 @@ export async function generateFont(
 /** 将任意格式的 unicode 值转为 CSS escape 格式（\e001）
  *  支持: &#xe001; / &#57345; / \e001 / U+E001 / e001
  */
-function toCSSEscape(
+export function toCSSEscape(
   unicode: string | null | undefined,
   fallback: number,
 ): string {
@@ -553,11 +581,29 @@ export async function generateDemoHTML(
   prefix: string,
   icons: Icon[],
 ): Promise<string> {
-  const css = generateCSS(fontFamily, prefix, icons);
+  let hasColor = icons.some((ic) => ic.color_layers);
+  if (!hasColor) {
+    try {
+      const { extractSVGColorLayers } = await import(
+        "~/lib/svg-color-extractor"
+      );
+      hasColor = icons.some(
+        (ic) => ic.content && extractSVGColorLayers(ic.content).isMultiColor,
+      );
+    } catch {
+      hasColor = false;
+    }
+  }
+  let css: string;
+  if (hasColor) {
+    const { generateCOLRFontCSS } = await import("~/lib/colr-font-gen");
+    css = generateCOLRFontCSS(fontFamily, prefix, icons);
+  } else {
+    css = generateCSS(fontFamily, prefix, icons);
+  }
   let fontBase64 = "";
   try {
-    const { generateTTFFont } = await import("~/lib/font-gen");
-    const ttf = await generateTTFFont(fontFamily, icons, prefix);
+    const ttf = await generateFont(fontFamily, icons, prefix);
     if (ttf) {
       const bytes = new Uint8Array(ttf);
       let binary = "";
@@ -573,7 +619,13 @@ export async function generateDemoHTML(
   const inlineFontFace = fontBase64
     ? `@font-face {
   font-family: "${fontFamily}";
-  src: url("data:font/truetype;charset=utf-8;base64,${fontBase64}") format("truetype");
+  src:${
+    hasColor
+      ? `
+    url("data:font/truetype;charset=utf-8;base64,${fontBase64}") format("truetype") tech(color-COLRv0),
+    url("data:font/truetype;charset=utf-8;base64,${fontBase64}") format("truetype");`
+      : ` url("data:font/truetype;charset=utf-8;base64,${fontBase64}") format("truetype");`
+  }
   font-weight: normal;
   font-style: normal;
 }`
@@ -581,10 +633,10 @@ export async function generateDemoHTML(
 
   const items = icons
     .map((icon, i) => {
-      // 用于 .code 展示的文字：把 & 转义为 &amp; 防止浏览器将 &#xe001; 渲染为字符
+      // 用于 .code 展示的文字：把 & 转义为 &amp; 防止浏览器将实体渲染为字符
       const cssEscape = toCSSEscape(icon.unicode, 0xe000 + i);
-      const hex = cssEscape.replace(/^\\/, "");           // e001
-      const displayCode = `&amp;#x${hex};`;               // &amp;#xe001;
+      const hex = cssEscape.replace(/^\\/, "");
+      const displayCode = `&amp;#x${hex};`;
       return `    <li class="icon-item">\n      <i class="${prefix} ${prefix}${icon.name}"></i>\n      <div class="name">${icon.name}</div>\n      <div class="code">${displayCode}</div>\n    </li>`;
     })
     .join("\n");

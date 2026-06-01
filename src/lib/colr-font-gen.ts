@@ -1,8 +1,9 @@
 /**
  * COLRv0 font generation.
  *
- * Generates a TrueType font with COLRv0 + CPAL tables that allow multi-colour
- * glyph rendering in all browsers from IE9 / iOS 11 onward.
+ * Generates a TrueType font with COLRv0 + CPAL tables. Modern browsers can
+ * render these glyphs directly through normal text/CSS font rendering when the
+ * font is loaded via @font-face.
  *
  * Pipeline:
  *   1. For each icon with colour layers, assign a PUA codepoint per layer glyph.
@@ -21,6 +22,7 @@ import svg2ttf from "svg2ttf";
 import svgpathFn from "svgpath";
 import type { Icon } from "./types";
 import type { StoredColorLayer } from "./svg-color-extractor";
+import { toCSSEscape } from "./font-gen";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -55,21 +57,32 @@ function parseHex(hex: string): { r: number; g: number; b: number; a: number } {
 
 // ── TTF path transformation ───────────────────────────────────────────────────
 
+/** Remove degenerate empty subpaths (M/m x y followed by M/m/L/etc with no drawing commands). */
+function removeDegenerateSubpaths(d: string): string {
+  const segments = d.match(/[Mm][^MmzZ]*(?:[zZ]|$)/g);
+  if (!segments) return d;
+  const valid = segments.filter((seg) => {
+    const afterMoveTo = seg.replace(/^[Mm][\d.\s,-]+/, "");
+    return /[LlHhVvCcSsQqTtAaZz]/.test(afterMoveTo);
+  });
+  return valid.join("");
+}
+
 function transformToFontCoords(
   d: string,
   viewBox: { minX: number; minY: number; width: number; height: number },
 ): string {
   const scale = UPM / Math.max(viewBox.width, viewBox.height);
   try {
-    return svgpathFn(d)
+    const raw = svgpathFn(d)
       .unarc()
       .unshort()
       .abs()
       .scale(scale, -scale)
       .translate(-viewBox.minX * scale, ASCENT + viewBox.minY * scale)
       .round(0)
-      .rel()
       .toString();
+    return removeDegenerateSubpaths(raw);
   } catch {
     return "";
   }
@@ -407,7 +420,7 @@ export async function generateCOLRFont(
   // GID 1..N = icon base glyphs  (in array order)
   // GID N+1.. = layer glyphs
 
-  let baseCharCode = 0xe001;
+  let baseCharCode = 0xe000;
   let layerPua = LAYER_PUA_START; // U+E800
 
   // Track layer glyph specs separately (appended after all base glyphs)
@@ -418,7 +431,10 @@ export async function generateCOLRFont(
     { layerGID: number; paletteIndex: number }[]
   >();
 
-  // Base glyph GID = 1-based index in svgFontGlyphs array + 1 (for .notdef)
+  // Base glyph GID = 1-based index in svgFontGlyphs array + 1 (for .notdef).
+  // Layer glyphs are appended after every base glyph, so their GIDs must be
+  // calculated from the final base glyph count, not the current loop position.
+  const baseGlyphCount = icons.length;
   for (let i = 0; i < icons.length; i++) {
     const icon = icons[i];
     const unicode = icon.unicode
@@ -462,7 +478,7 @@ export async function generateCOLRFont(
         const transformedD = sanitize(transformToFontCoords(layer.d, vb));
         if (!transformedD) continue;
 
-        const layerGID = svgFontGlyphs.length + layerGlyphs.length + 1; // +1 for .notdef
+        const layerGID = baseGlyphCount + layerGlyphs.length + 1; // +1 for .notdef
         const colorKey =
           layer.color === "currentColor" ? "#000000" : layer.color;
         const pIdx = getPaletteIndex(colorKey);
@@ -523,14 +539,16 @@ export function generateCOLRFontCSS(
 ): string {
   const rules = icons
     .map((icon, i) => {
-      const unicode = icon.unicode || `\\${(0xe001 + i).toString(16)}`;
+      const unicode = toCSSEscape(icon.unicode, 0xe000 + i);
       return `.${prefix}${icon.name}::before { content: "${unicode}"; }`;
     })
     .join("\n  ");
 
   return `@font-face {
   font-family: "${fontFamily}";
-  src: url("./${fontFamily}.ttf") format("truetype");
+  src:
+    url("./${fontFamily}.ttf") format("truetype") tech(color-COLRv0),
+    url("./${fontFamily}.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }
