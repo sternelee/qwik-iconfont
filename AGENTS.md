@@ -26,6 +26,15 @@ Upload/import/generate SVG
 - `pnpm serve` runs Wrangler dev on port `8788`; use this for D1/R2, better-auth, OAuth, API tokens, and full Workers runtime behavior.
 - Production builds target Cloudflare Workers via `adapters/cloudflare-workers/vite.config.ts` and `src/entry.cloudflare-pages.tsx`.
 
+### Repo-specific Gotchas
+
+- **`src/routes/demo/**` is Qwik scaffold, not part of the product.** Don't touch it unless the task explicitly targets starter/demo code. Repo-wide lint/build still covers it.
+- **`figma-plugin/` is a separate plugin and is excluded from ESLint** (`eslint.config.js`). Don't refactor it from a normal dev task.
+- **`.github/` only contains `copilot-instructions.md`** — there is no CI workflow. Don't look for one; verify with `pnpm lint` + `pnpm build.types` + `pnpm build` + manual `pnpm dev`/`pnpm serve` instead.
+- **`pnpm build.server` runs `scripts/fix-worker-import.mjs`** as a post-build step. It patches `dist/_worker.js` so `import "server/entry.cloudflare-pages"` becomes a relative import that wrangler can resolve. If a build step fails or `dist/_worker.js` looks wrong post-build, this script is the suspect.
+- **`pnpm-workspace.yaml` is NOT a monorepo manifest.** It only declares `allowBuilds` for native modules. Don't add a `packages` entry expecting workspaces.
+- **`tsconfig.json` is typecheck-only:** `noEmit: true` + `outDir: "tmp"`. `pnpm build.types` never writes production JS — it's pure `tsc --incremental --noEmit`.
+
 ### Key Patterns
 
 - Qwik City file-based routing with `routeLoader$` and `routeAction$` for page data and mutations.
@@ -65,10 +74,11 @@ Upload/import/generate SVG
 
 | File                             | Purpose                                                               |
 | -------------------------------- | --------------------------------------------------------------------- |
-| `src/lib/schema.ts`              | Drizzle schema for auth, projects, icons, favorites, tokens, members  |
+| `src/lib/schema.ts`              | Drizzle schema. better-auth tables: `user`, `session`, `account`, `verification`. App tables: `projects`, `icons`, `favorites`, `api_tokens`, `project_members`, `webhooks`. |
 | `src/lib/db.ts`                  | D1 adapter, D1 Date binding wrapper, mock SQLite proxy, init fallback |
 | `src/lib/storage.ts`             | R2 bucket abstraction and in-memory `MockBucket`                      |
 | `src/lib/auth.ts`                | better-auth configuration and OAuth providers                         |
+| `src/lib/auth-client.ts`         | Thin fetch wrapper around better-auth for sign-up/in/out, get-session |
 | `src/lib/session.ts`             | Server-side session lookup for loaders/actions/routes                 |
 | `src/lib/api-auth.ts`            | Bearer token extraction and SHA-256 token user resolution             |
 | `src/lib/quota.ts`               | Free/Pro quota rules                                                  |
@@ -78,9 +88,10 @@ Upload/import/generate SVG
 | `src/lib/ai.ts`                  | AI SVG generation/modify provider helpers                             |
 | `src/lib/ai-settings.ts`         | Client-side AI provider/API-key settings                              |
 | `src/lib/local-storage.ts`       | Anonymous local project/icon persistence                              |
+| `src/lib/local-migration.ts`     | One-way import of anonymous localStorage projects into a user account |
 | `src/lib/github-registry.ts`     | GitHub tree fetch/cache/import helpers                                |
 | `src/lib/webhook.ts`             | Webhook dispatch helpers                                              |
-| `src/lib/types.ts`               | App interfaces and SVG/tag helpers                                    |
+| `src/lib/types.ts`               | App interfaces, `parseTags`/`formatTags`, and SVG helpers              |
 
 ### Pages
 
@@ -180,7 +191,9 @@ export const useMutation = routeAction$(async (data, { platform, request }) => {
 
 - Store uploaded SVGs with `uploadSVG(platform, projectId, iconName, content)` so keys and metadata stay consistent.
 - Read SVG content from R2 via `getSVG` when `Icon.content` is unavailable.
-- Sanitize user-visible icon names the same way nearby code does: strip `.svg` and replace non `[a-zA-Z0-9_-]` characters.
+- Sanitize user-visible icon names the same way nearby code does: `name.replace(/\.svg$/i, "").replace(/[^a-zA-Z0-9_-]/g, "-")`. The sanitized name is what gets persisted and used in R2 object keys (`projects/{projectId}/{iconName}.svg`).
+- Tags are stored as a comma-separated string in `icons.tags` (not a JSON array). Reuse `parseTags()` / `formatTags()` from `src/lib/types.ts` for any tag I/O.
+- COLRv0 color layer data is stored as JSON in `icons.color_layers` (column is `text` in SQLite). Coordinate through `src/lib/svg-color-extractor.ts` and `src/lib/colr-font-gen.ts`.
 - Keep font generation browser-compatible. `font-gen.ts` and `colr-font-gen.ts` are client-side critical paths.
 
 ### Styling and UI
