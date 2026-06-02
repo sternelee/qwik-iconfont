@@ -1,17 +1,20 @@
-/* ── Google Fonts ─────────────────────────────────────────────────── */
+/* ── Fonts ──────────────────────────────────────────────────────────── */
 
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Nunito:ital,wght@0,700;0,800;0,900;1,700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter+Tight:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap");
 
 /**
  * Global styles for Iconfont app.
- * Tailwind CSS v4 + daisyUI — High-contrast rose theme
- * Design direction: lower shadow / blur, higher contrast borders & text
+ * Tailwind CSS v4 + daisyUI — Editorial near-monochrome theme
+ * Reference: docs/design-system.md (open-design.ai editorial style)
+ *
+ * rose #E11D48 is accent-only (<5% visual area).
+ * Inter Tight (body/headings) + IBM Plex Mono (code/metadata).
  */
 
 @import "tailwindcss";
 @plugin "daisyui";
 
-/* ── Theme ─────────────────────────────────────────────────────────── */
+/* ── Theme (Light) ──────────────────────────────────────────────────── */
 
 @plugin "daisyui/theme" {
   name: "iconfont";
@@ -19,63 +22,65 @@
   prefersdark: false;
   color-scheme: light;
   --color-base-100: #ffffff;
-  --color-base-200: #ffeaec;
-  --color-base-300: #ffc5cb;
-  --color-base-content: #3d0114;
+  --color-base-200: #f5f5f5;
+  --color-base-300: #e0e0e0;
+  --color-base-content: #0a0a0a;
   --color-primary: #e11d48;
   --color-primary-content: #ffffff;
-  --color-secondary: #fb7185;
+  --color-secondary: #57534e;
   --color-secondary-content: #ffffff;
-  --color-accent: #2563eb;
+  --color-accent: #e11d48;
   --color-accent-content: #ffffff;
-  --color-neutral: #1e1b4b;
-  --color-neutral-content: #f8fafc;
-  --color-info: #3b82f6;
+  --color-neutral: #0a0a0a;
+  --color-neutral-content: #f5f5f5;
+  --color-info: #0a0a0a;
   --color-info-content: #ffffff;
-  --color-success: #22c55e;
+  --color-success: #16a34a;
   --color-success-content: #ffffff;
-  --color-warning: #f59e0b;
+  --color-warning: #d97706;
   --color-warning-content: #ffffff;
   --color-error: #dc2626;
   --color-error-content: #ffffff;
-  --radius-selector: 1rem;
-  --radius-field: 0.875rem;
-  --radius-box: 1.25rem;
+  --radius-selector: 0.375rem;
+  --radius-field: 0.375rem;
+  --radius-box: 0.5rem;
   --border: 1px;
-  --depth: 1;
+  --depth: 0;
   --noise: 0;
 }
+
+/* ── Theme (Dark) ──────────────────────────────────────────────────── */
 
 @plugin "daisyui/theme" {
   name: "iconfont-dark";
   default: false;
   prefersdark: true;
   color-scheme: dark;
-  --color-base-100: #160b10;
-  --color-base-200: #1f1018;
-  --color-base-300: #2c1520;
-  --color-base-content: #fce7ef;
+  --color-base-100: #0a0a0a;
+  --color-base-200: #141414;
+  --color-base-300: #202020;
+  --color-base-content: #f5f5f5;
   --color-primary: #f43f5e;
   --color-primary-content: #ffffff;
-  --color-secondary: #fb7185;
+  --color-secondary: #78716c;
   --color-secondary-content: #ffffff;
-  --color-accent: #60a5fa;
+  --color-accent: #f43f5e;
   --color-accent-content: #ffffff;
-  --color-neutral: #2c1520;
-  --color-neutral-content: #fce7ef;
-  --color-info: #60a5fa;
-  --color-info-content: #ffffff;
+  --color-neutral: #202020;
+  --color-neutral-content: #f5f5f5;
+  --color-info: #f5f5f5;
+  --color-info-content: #0a0a0a;
   --color-success: #4ade80;
-  --color-success-content: #052e16;
+  --color-success-content: #0a0a0a;
   --color-warning: #fbbf24;
-  --color-warning-content: #1c1008;
+  --color-warning-content: #0a0a0a;
   --color-error: #f87171;
   --color-error-content: #ffffff;
-  --radius-selector: 1rem;
-  --radius-field: 0.875rem;
-  --radius-box: 1.25rem;
+  --radius-selector: 0.375rem;
+  --radius-field: 0.375rem;
+  --radius-box: 0.5rem;
   --border: 1px;
-  --depth: 1;
+  --depth: 0;
   --noise: 0;
 }
 
@@ -95,7 +100,7 @@ body {
   margin: 0;
   line-height: inherit;
   font-family:
-    "DM Sans",
+    "Inter Tight",
     -apple-system,
     BlinkMacSystemFont,
     "Segoe UI",
@@ -111,156 +116,136 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: "Nunito", sans-serif;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+  font-family: "Inter Tight", sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+h1 {
+  font-weight: 700;
 }
 
 /* ── Card / Button Utilities ──────────────────────────────────────── */
 /*
- * 设计原则（修订版）：
- *   - 阴影：单层、小扩散（max 12px blur），alpha ≤ 0.12
- *   - 去掉白色内阴影（-x -y rgba(white)）——这会压低感知对比度
- *   - 边框：接近不透明（opacity ≥ 0.8），让分割线清晰可见
- *   - 背景：纯白卡片，无渐变——色差对比边界更锐利
+ * 设计原则：
+ *   - 无阴影，仅 hairline 1px 边框
+ *   - hover: 微弱阴影（blur ≤ 6px, alpha ≤ 0.06）
+ *   - 无 transform 弹跳，无 spring easing
+ *   - 圆角 ≤ 8px
  */
 
+/* ── Card ── */
+
+.brand-card,
 .clay-card {
-  border-radius: 24px;
-  background: #ffffff;
-  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.1);
-  border: 1px solid rgba(225, 29, 72, 0.15);
-  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border-radius: 6px;
+  background: var(--color-base-100);
+  border: 1px solid var(--color-base-300);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
+.brand-card:hover,
 .clay-card:hover {
-  transform: translateY(-3px) scale(1.005);
-  box-shadow: 0 6px 16px rgba(225, 29, 72, 0.14);
-  border-color: rgba(225, 29, 72, 0.25);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  border-color: var(--color-base-content);
 }
 
-.clay-card:active {
-  transform: translateY(0) scale(0.99);
-  box-shadow: 0 1px 4px rgba(225, 29, 72, 0.08);
-}
+/* ── Button ── */
 
+.brand-button,
 .clay-button {
-  border-radius: 14px;
-  font-family: "Nunito", sans-serif;
-  font-weight: 700;
+  border-radius: 4px;
+  font-weight: 600;
   letter-spacing: 0.01em;
-  /* 底部实色边 + 极小扩散光 */
-  box-shadow:
-    0 3px 0 #be123c,
-    0 4px 8px rgba(225, 29, 72, 0.15);
+  border: 1px solid transparent;
   transition: all 0.15s ease;
 }
 
+.brand-button:hover,
 .clay-button:hover {
-  transform: translateY(-1px);
-  box-shadow:
-    0 4px 0 #be123c,
-    0 6px 12px rgba(225, 29, 72, 0.2);
+  opacity: 0.92;
 }
 
+.brand-button:active,
 .clay-button:active {
-  transform: translateY(2px);
-  box-shadow:
-    0 1px 0 #be123c,
-    0 1px 4px rgba(225, 29, 72, 0.12);
+  border-radius: 0;
 }
 
+/* ── Secondary Button ── */
+
+.brand-button-secondary,
 .clay-button-secondary {
-  box-shadow:
-    0 3px 0 #1d4ed8,
-    0 4px 8px rgba(37, 99, 235, 0.15);
+  border-radius: 4px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: all 0.15s ease;
 }
 
+.brand-button-secondary:hover,
 .clay-button-secondary:hover {
-  box-shadow:
-    0 4px 0 #1d4ed8,
-    0 6px 12px rgba(37, 99, 235, 0.2);
+  opacity: 0.92;
 }
 
+.brand-button-secondary:active,
 .clay-button-secondary:active {
-  box-shadow:
-    0 1px 0 #1d4ed8,
-    0 1px 4px rgba(37, 99, 235, 0.12);
+  border-radius: 0;
 }
 
+/* ── Icon Card ── */
+
+.brand-icon-card,
 .clay-icon-card {
-  border-radius: 20px;
-  background: #ffffff;
-  box-shadow: 0 1px 4px rgba(225, 29, 72, 0.08);
-  border: 1px solid rgba(225, 29, 72, 0.12);
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border-radius: 6px;
+  background: var(--color-base-100);
+  border: 1px solid var(--color-base-300);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
+.brand-icon-card:hover,
 .clay-icon-card:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.12);
-  border-color: rgba(225, 29, 72, 0.22);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  border-color: var(--color-base-content);
 }
 
+/* ── Inset (stats / metadata) ── */
+
+.brand-inset,
 .clay-inset {
-  border-radius: 16px;
-  background: #ffeaec;
-  box-shadow: inset 0 1px 3px rgba(225, 29, 72, 0.08);
-  border: 1px solid rgba(225, 29, 72, 0.14);
+  border-radius: 4px;
+  background: var(--color-base-200);
+  border: 1px solid var(--color-base-300);
 }
 
+/* ── Navbar ── */
+
+.brand-navbar,
 .clay-navbar {
-  background: rgba(255, 255, 255, 0.92);
-  /* 减少模糊：20px → 8px，饱和度收敛到 110% */
-  backdrop-filter: blur(8px) saturate(110%);
-  -webkit-backdrop-filter: blur(8px) saturate(110%);
-  border-bottom: 1px solid rgba(225, 29, 72, 0.12);
-  box-shadow: 0 1px 6px rgba(225, 29, 72, 0.06);
+  background: var(--color-base-100);
+  border-bottom: 1px solid var(--color-base-300);
 }
 
-/* ── Hero Gradient Backgrounds ────────────────────────────────────── */
+/* ── Featured Badge ── */
 
-.hero-gradient {
-  background:
-    radial-gradient(
-      ellipse 80% 50% at 50% -10%,
-      rgba(251, 113, 133, 0.12),
-      transparent
-    ),
-    radial-gradient(
-      ellipse 50% 40% at 80% 50%,
-      rgba(37, 99, 235, 0.06),
-      transparent
-    ),
-    #ffffff;
-}
-
-.warm-gradient {
-  background: linear-gradient(135deg, #ffeaec 0%, #fff7ed 50%, #eff6ff 100%);
-}
-
-/* ── Featured Icon Set Badge ──────────────────────────────────────── */
-
+.brand-badge,
 .featured-badge {
-  background: linear-gradient(135deg, #e11d48 0%, #fb7185 100%);
-  color: white;
-  font-family: "Nunito", sans-serif;
-  font-weight: 800;
-  font-size: 0.65rem;
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+  font-family: "Inter Tight", sans-serif;
+  font-weight: 600;
+  font-size: 0.625rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 3px 10px;
-  border-radius: 100px;
-  box-shadow: 0 1px 4px rgba(225, 29, 72, 0.25);
+  padding: 2px 8px;
+  border-radius: 4px;
 }
 
-/* ── Animations ───────────────────────────────────────────────────── */
+/* ── Animations ──────────────────────────────────────────────────── */
 
 @keyframes fade-in-up {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -271,7 +256,7 @@ h6 {
 @keyframes fade-in-scale {
   from {
     opacity: 0;
-    transform: scale(0.92);
+    transform: scale(0.96);
   }
   to {
     opacity: 1;
@@ -282,11 +267,11 @@ h6 {
 @keyframes slide-up {
   from {
     opacity: 0;
-    transform: scale(0.97) translateY(8px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: translateY(0);
   }
 }
 
@@ -304,7 +289,7 @@ h6 {
 @keyframes modal-in {
   from {
     opacity: 0;
-    transform: scale(0.95) translateY(10px);
+    transform: scale(0.97) translateY(6px);
   }
   to {
     opacity: 1;
@@ -343,34 +328,10 @@ h6 {
   }
 }
 
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-6px);
-  }
-}
-
-@keyframes pop {
-  0% {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-  60% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
 @keyframes pulse-ring {
   0%,
   100% {
-    box-shadow: 0 0 0 0 oklch(var(--p) / 0.15);
+    box-shadow: 0 0 0 0 oklch(var(--p) / 0.12);
   }
   50% {
     box-shadow: 0 0 0 6px oklch(var(--p) / 0);
@@ -392,35 +353,34 @@ h6 {
     transform: rotate(0deg);
   }
   25% {
-    transform: rotate(-3deg);
+    transform: rotate(-2deg);
   }
   75% {
-    transform: rotate(3deg);
+    transform: rotate(2deg);
   }
 }
 
-@keyframes blob {
-  0%,
-  100% {
-    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+@keyframes toast-progress-shrink {
+  from {
+    width: 100%;
   }
-  50% {
-    border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+  to {
+    width: 0%;
   }
 }
 
 /* ── Animation Utility Classes ────────────────────────────────────── */
 
 .animate-fade-in-up {
-  animation: fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fade-in-up 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-fade-in-scale {
-  animation: fade-in-scale 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fade-in-scale 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-slide-up {
-  animation: slide-up 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: slide-up 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-slide-down {
@@ -436,23 +396,11 @@ h6 {
 }
 
 .animate-toast-in {
-  animation: toast-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: toast-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-toast-out {
-  animation: toast-out 0.15s ease-in forwards;
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-.animate-pop {
-  animation: pop 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-pulse-ring {
-  animation: pulse-ring 2s ease-in-out infinite;
+  animation: toast-out 0.12s ease-in forwards;
 }
 
 .animate-shimmer {
@@ -467,14 +415,16 @@ h6 {
 }
 
 .animate-wiggle {
-  animation: wiggle 0.3s ease-in-out;
+  animation: wiggle 0.25s ease-in-out;
 }
 
-.animate-blob {
-  animation: blob 8s ease-in-out infinite;
+/* Drop zone pulse */
+.animate-drop-pulse {
+  animation: pulse-ring 1.5s ease-in-out infinite;
 }
 
-/* Stagger delays for grid items */
+/* ── Stagger ──────────────────────────────────────────────────────── */
+
 .stagger-1 {
   animation-delay: 0.04s;
 }
@@ -504,12 +454,11 @@ h6 {
 
 .card-hover {
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 .card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.08);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
 .btn-press:active {
@@ -526,20 +475,6 @@ h6 {
   animation: toast-progress-shrink 3s linear forwards;
 }
 
-@keyframes toast-progress-shrink {
-  from {
-    width: 100%;
-  }
-  to {
-    width: 0%;
-  }
-}
-
-/* Drop zone */
-.animate-drop-pulse {
-  animation: pulse-ring 1.5s ease-in-out infinite;
-}
-
 /* Modal backdrop */
 .modal-backdrop {
   transition: opacity 0.15s ease;
@@ -550,7 +485,7 @@ h6 {
   transition: all 0.15s ease;
 }
 .selection-ring.ring-2 {
-  box-shadow: 0 0 0 3px oklch(var(--p) / 0.12);
+  box-shadow: 0 0 0 2px oklch(var(--p) / 0.15);
 }
 
 /* ── Scrollbar ─────────────────────────────────────────────────────── */
@@ -573,240 +508,154 @@ h6 {
   background: oklch(0.55 0 0);
 }
 
-/* ── Decorative Blobs ─────────────────────────────────────────────── */
-/* blur 减半：视觉更清晰，不再模糊整个背景区域 */
-
-.blob-1 {
-  position: absolute;
-  width: 360px;
-  height: 360px;
-  background: linear-gradient(
-    135deg,
-    rgba(251, 113, 133, 0.16),
-    rgba(225, 29, 72, 0.08)
-  );
-  filter: blur(28px); /* 原 60px → 28px */
-  border-radius: 50%;
-  animation: blob 8s ease-in-out infinite;
-  pointer-events: none;
-}
-
-.blob-2 {
-  position: absolute;
-  width: 280px;
-  height: 280px;
-  background: linear-gradient(
-    135deg,
-    rgba(37, 99, 235, 0.1),
-    rgba(59, 130, 246, 0.05)
-  );
-  filter: blur(24px); /* 原 50px → 24px */
-  border-radius: 50%;
-  animation: blob 10s ease-in-out infinite reverse;
-  pointer-events: none;
-}
-
 /* ── Icon Preview Canvas ──────────────────────────────────────────── */
 
 .icon-preview-canvas {
-  background:
-    radial-gradient(
-      circle at 30% 30%,
-      rgba(251, 113, 133, 0.06) 0%,
-      transparent 50%
-    ),
-    radial-gradient(
-      circle at 70% 70%,
-      rgba(37, 99, 235, 0.04) 0%,
-      transparent 50%
-    ),
-    #fafafa;
-  border-radius: 16px;
+  background: var(--color-base-200);
+  border-radius: 6px;
 }
 
-/* ── Input Clay Style ─────────────────────────────────────────────── */
+/* ── Input ────────────────────────────────────────────────────────── */
 
+.brand-input,
 .input-clay {
-  border-radius: 12px;
-  background: #ffffff;
-  box-shadow: inset 0 1px 3px rgba(225, 29, 72, 0.06);
-  border: 1px solid rgba(225, 29, 72, 0.18);
-  transition: all 0.15s ease;
+  border-radius: 4px;
+  background: var(--color-base-100);
+  border: 1px solid var(--color-base-300);
+  transition: border-color 0.15s ease;
 }
 
+.brand-input:focus,
 .input-clay:focus {
   outline: none;
-  box-shadow:
-    inset 0 1px 3px rgba(225, 29, 72, 0.06),
-    0 0 0 2px rgba(225, 29, 72, 0.12);
-  border-color: rgba(225, 29, 72, 0.4);
+  border-color: var(--color-base-content);
 }
 
 /* ── Dark Mode Overrides ──────────────────────────────────────────── */
-/*
- * 覆盖自定义 clay 类和页面中硬编码的浅色 Tailwind 工具类。
- * daisyUI 语义色（bg-base-100、text-primary 等）已自动适配。
- */
 
 [data-theme="iconfont-dark"] {
-  /* 滚动条 */
   color-scheme: dark;
 }
 
-/* ── Clay 组件暗色版 ── */
+/* ── Cards ── */
 
-[data-theme="iconfont-dark"] .clay-card {
-  background: #1f1018;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-  border-color: rgba(244, 63, 94, 0.2);
+[data-theme="iconfont-dark"] .clay-card,
+[data-theme="iconfont-dark"] .brand-card {
+  border-color: var(--color-base-300);
 }
-[data-theme="iconfont-dark"] .clay-card:hover {
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
-  border-color: rgba(244, 63, 94, 0.35);
-}
-[data-theme="iconfont-dark"] .clay-card:active {
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+[data-theme="iconfont-dark"] .clay-card:hover,
+[data-theme="iconfont-dark"] .brand-card:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  border-color: var(--color-base-content);
 }
 
-[data-theme="iconfont-dark"] .clay-icon-card {
-  background: #1f1018;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-  border-color: rgba(244, 63, 94, 0.18);
+[data-theme="iconfont-dark"] .clay-icon-card,
+[data-theme="iconfont-dark"] .brand-icon-card {
+  border-color: var(--color-base-300);
 }
-[data-theme="iconfont-dark"] .clay-icon-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-  border-color: rgba(244, 63, 94, 0.32);
-}
-
-[data-theme="iconfont-dark"] .clay-inset {
-  background: #160b10;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
-  border-color: rgba(244, 63, 94, 0.2);
+[data-theme="iconfont-dark"] .clay-icon-card:hover,
+[data-theme="iconfont-dark"] .brand-icon-card:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  border-color: var(--color-base-content);
 }
 
-[data-theme="iconfont-dark"] .clay-navbar {
-  background: rgba(22, 11, 16, 0.92);
-  border-bottom-color: rgba(244, 63, 94, 0.18);
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+[data-theme="iconfont-dark"] .clay-inset,
+[data-theme="iconfont-dark"] .brand-inset {
+  background: var(--color-base-100);
+  border-color: var(--color-base-300);
 }
 
-[data-theme="iconfont-dark"] .clay-button {
-  box-shadow: 0 3px 0 #9f1239, 0 4px 8px rgba(0, 0, 0, 0.4);
-}
-[data-theme="iconfont-dark"] .clay-button:hover {
-  box-shadow: 0 4px 0 #9f1239, 0 6px 12px rgba(0, 0, 0, 0.5);
-}
-[data-theme="iconfont-dark"] .clay-button:active {
-  box-shadow: 0 1px 0 #9f1239, 0 1px 4px rgba(0, 0, 0, 0.3);
+[data-theme="iconfont-dark"] .clay-navbar,
+[data-theme="iconfont-dark"] .brand-navbar {
+  border-bottom-color: var(--color-base-300);
 }
 
-[data-theme="iconfont-dark"] .clay-button-secondary {
-  box-shadow: 0 3px 0 #1e40af, 0 4px 8px rgba(0, 0, 0, 0.4);
+[data-theme="iconfont-dark"] .clay-button,
+[data-theme="iconfont-dark"] .brand-button {
+  border-color: transparent;
 }
-[data-theme="iconfont-dark"] .clay-button-secondary:hover {
-  box-shadow: 0 4px 0 #1e40af, 0 6px 12px rgba(0, 0, 0, 0.5);
+[data-theme="iconfont-dark"] .clay-button:hover,
+[data-theme="iconfont-dark"] .brand-button:hover {
+  opacity: 0.9;
 }
 
-[data-theme="iconfont-dark"] .input-clay {
-  background: #1f1018;
-  border-color: rgba(244, 63, 94, 0.25);
-  color: #fce7ef;
+[data-theme="iconfont-dark"] .input-clay,
+[data-theme="iconfont-dark"] .brand-input {
+  border-color: var(--color-base-300);
+  color: var(--color-base-content);
 }
-[data-theme="iconfont-dark"] .input-clay:focus {
-  border-color: rgba(244, 63, 94, 0.5);
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.3), 0 0 0 2px rgba(244, 63, 94, 0.18);
+[data-theme="iconfont-dark"] .input-clay:focus,
+[data-theme="iconfont-dark"] .brand-input:focus {
+  border-color: var(--color-base-content);
 }
 
 [data-theme="iconfont-dark"] .icon-preview-canvas {
-  background:
-    radial-gradient(circle at 30% 30%, rgba(244, 63, 94, 0.06) 0%, transparent 50%),
-    radial-gradient(circle at 70% 70%, rgba(96, 165, 250, 0.04) 0%, transparent 50%),
-    #160b10;
+  background: var(--color-base-200);
 }
 
-[data-theme="iconfont-dark"] .featured-badge {
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+[data-theme="iconfont-dark"] .featured-badge,
+[data-theme="iconfont-dark"] .brand-badge {
+  box-shadow: none;
 }
 
-/* ── Hero 背景暗色版 ── */
-[data-theme="iconfont-dark"] .hero-gradient {
-  background:
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(244, 63, 94, 0.1), transparent),
-    radial-gradient(ellipse 50% 40% at 80% 50%, rgba(96, 165, 250, 0.06), transparent),
-    #160b10;
-}
-[data-theme="iconfont-dark"] .warm-gradient {
-  background: linear-gradient(135deg, #1f1018 0%, #1a1208 50%, #0f1524 100%);
-}
+/* ── Default bg-white override ── */
 
-/* ── Blob 暗色版（降低亮度） ── */
-[data-theme="iconfont-dark"] .blob-1 {
-  background: linear-gradient(135deg, rgba(244, 63, 94, 0.12), rgba(159, 18, 57, 0.06));
-}
-[data-theme="iconfont-dark"] .blob-2 {
-  background: linear-gradient(135deg, rgba(96, 165, 250, 0.08), rgba(37, 99, 235, 0.04));
-}
-
-/* ── 页面内联 nav/header 适配（非 clay-navbar 的简单 nav） ── */
-[data-theme="iconfont-dark"] nav.sticky,
-[data-theme="iconfont-dark"] nav.sticky.top-0 {
-  background: rgba(22, 11, 16, 0.92) !important;
-  border-bottom-color: rgba(244, 63, 94, 0.18) !important;
-}
-
-/* ── 硬编码浅色背景适配 ── */
 [data-theme="iconfont-dark"] .bg-white {
-  background-color: #1f1018 !important;
+  background-color: var(--color-base-200) !important;
 }
+
+/* ── Rose color overrides for dark mode ──────────────────────────── */
+
+[data-theme="iconfont-dark"] {
+  --color-rose-50: rgba(244, 63, 94, 0.08);
+  --color-rose-100: rgba(244, 63, 94, 0.14);
+  --color-rose-200: rgba(244, 63, 94, 0.2);
+  --color-rose-600: #fda4af;
+  --color-rose-700: #fecdd3;
+  --color-rose-800: #fecdd3;
+  --color-rose-900: #fce7ef;
+  --color-rose-950: #fce7ef;
+}
+
 [data-theme="iconfont-dark"] .bg-rose-50 {
   background-color: rgba(244, 63, 94, 0.08) !important;
 }
 [data-theme="iconfont-dark"] .bg-rose-100 {
   background-color: rgba(244, 63, 94, 0.14) !important;
 }
+[data-theme="iconfont-dark"] .bg-rose-900 {
+  background-color: #141414 !important;
+}
+[data-theme="iconfont-dark"] .bg-rose-950 {
+  background-color: #141414 !important;
+}
+
 [data-theme="iconfont-dark"] .border-rose-100 {
-  border-color: rgba(244, 63, 94, 0.18) !important;
+  border-color: rgba(244, 63, 94, 0.14) !important;
 }
 [data-theme="iconfont-dark"] .border-rose-200 {
-  border-color: rgba(244, 63, 94, 0.25) !important;
+  border-color: rgba(244, 63, 94, 0.2) !important;
 }
 
-/* ── 代码块 / 预格式化文本 ── */
+/* ── Code / Pre ── */
+
 [data-theme="iconfont-dark"] pre,
 [data-theme="iconfont-dark"] code {
-  background-color: #2c1520;
-  color: #fce7ef;
+  background-color: var(--color-base-200);
+  color: var(--color-base-content);
 }
 
-/* ── 分割线 ── */
+/* ── Dividers ── */
+
 [data-theme="iconfont-dark"] .divider::before,
 [data-theme="iconfont-dark"] .divider::after {
-  background-color: rgba(244, 63, 94, 0.15);
+  background-color: var(--color-base-300);
 }
 
-/* ── 暗色模式：深色 rose 文字色翻转 ────────────────────────────────
- * Tailwind v4 的颜色工具类全部引用 CSS 自定义属性，包括不透明度变体
- * (color-mix 也引用同一变量)，故此处覆盖变量即可覆盖所有变体。
- *
- * 对比度目标：WCAG AA（4.5:1）on base-100 #160b10
- *   rose-50  #fce7ef → ~13:1 ✓  (headings)
- *   rose-200 #fecdd3 → ~10:1 ✓  (labels, body)
- *   rose-300 #fda4af → ~7:1  ✓  (muted)
- *   rose-400 #fb7185 → ~4.7:1 ✓ (stays as-is, acceptable)
- * ───────────────────────────────────────────────────────────────── */
-[data-theme="iconfont-dark"] {
-  /* 深色文字 → 翻转为浅色，所有 text-rose-* / border-rose-* 等自动跟随 */
-  --color-rose-950: #fce7ef;  /* → rose-50 近白 */
-  --color-rose-900: #fecdd3;  /* → rose-200 */
-  --color-rose-800: #fecdd3;  /* → rose-200 */
-  --color-rose-700: #fda4af;  /* → rose-300 */
-  --color-rose-600: #fb7185;  /* → rose-400（仍可辨）*/
-}
+/* ── Inline nav/header in dark mode ── */
 
-/* 特例：bg-rose-950 用于代码块背景，需保持暗色而非跟随上方变量翻转 */
-[data-theme="iconfont-dark"] .bg-rose-950 {
-  background-color: #2c1520 !important;
-}
-[data-theme="iconfont-dark"] .bg-rose-900 {
-  background-color: #23101a !important;
+[data-theme="iconfont-dark"] nav.sticky,
+[data-theme="iconfont-dark"] nav.sticky.top-0 {
+  background: var(--color-base-100) !important;
+  border-bottom-color: var(--color-base-300) !important;
 }

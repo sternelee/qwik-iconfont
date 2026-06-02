@@ -237,7 +237,7 @@ export default component$(() => {
                 <rect x="3" y="14" width="7" height="7" />
               </svg>
             </div>
-            <span class="font-['Nunito'] text-sm font-bold text-rose-900">
+            <span class="text-sm font-bold text-rose-900">
               Iconfont
             </span>
           </a>
@@ -271,7 +271,7 @@ export default component$(() => {
           <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
             {/* Title */}
             <div class="flex-shrink-0">
-              <h1 class="font-['Nunito'] text-xl font-extrabold text-rose-950">
+              <h1 class="text-xl font-extrabold text-rose-950">
                 探索图标集
               </h1>
             </div>
@@ -376,7 +376,7 @@ export default component$(() => {
                   {/* Header */}
                   <div class="flex items-start justify-between gap-2">
                     <div class="min-w-0 flex-1">
-                      <h3 class="truncate font-['Nunito'] text-base font-bold text-rose-950">
+                      <h3 class="truncate text-base font-bold text-rose-950">
                         {project.name}
                       </h3>
                       {project.description && (

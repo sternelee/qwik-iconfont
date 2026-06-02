@@ -399,7 +399,7 @@ export default component$(() => {
   );
 
   return (
-    <div class="hero-gradient min-h-screen">
+    <div class="min-h-screen">
       <ToastContainer toasts={toasts.items} />
 
       {/* ── Navbar ────────────────────────────────────────────── */}
@@ -425,7 +425,7 @@ export default component$(() => {
               </svg>
             </div>
             <div class="flex flex-col">
-              <span class="font-['Nunito'] text-lg font-extrabold tracking-tight text-rose-600">
+              <span class="text-lg font-extrabold tracking-tight text-rose-600">
                 Iconfont
               </span>
               <span class="-mt-0.5 text-[10px] font-medium tracking-wider text-rose-400/70">
@@ -485,10 +485,6 @@ export default component$(() => {
 
       {/* ── Hero Section ──────────────────────────────────────── */}
       <section class="relative mx-auto max-w-7xl px-4 pt-12 pb-16 sm:px-6 sm:pt-16 sm:pb-20">
-        {/* Decorative blobs */}
-        <div class="blob-1 -top-20 -left-20 opacity-60" />
-        <div class="blob-2 top-40 -right-20 opacity-50" />
-
         <div class="relative z-10 flex flex-col items-center text-center">
           <div class="animate-fade-in-up mb-6 inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 shadow-sm backdrop-blur-sm">
             <span class="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
@@ -498,7 +494,7 @@ export default component$(() => {
           </div>
 
           <h1
-            class="animate-fade-in-up font-['Nunito'] text-4xl font-black tracking-tight text-rose-950 sm:text-5xl lg:text-6xl"
+            class="animate-fade-in-up text-4xl font-black tracking-tight text-rose-950 sm:text-5xl lg:text-6xl"
             style="animation-delay: 0.08s"
           >
             创建你的专属
@@ -625,7 +621,7 @@ export default component$(() => {
       >
         <div class="mb-8 flex items-end justify-between">
           <div>
-            <h2 class="font-['Nunito'] text-2xl font-extrabold text-rose-950 sm:text-3xl">
+            <h2 class="text-2xl font-extrabold text-rose-950 sm:text-3xl">
               推荐图标集
             </h2>
             <p class="mt-1 text-sm text-rose-700/60">
@@ -650,7 +646,7 @@ export default component$(() => {
                       {project.name.charAt(0).toUpperCase()}
                     </div>
                     <div class="min-w-0 flex-1">
-                      <h3 class="truncate font-['Nunito'] text-base font-bold text-rose-950">
+                      <h3 class="truncate text-base font-bold text-rose-950">
                         {project.name}
                       </h3>
                       <div class="mt-0.5 flex items-center gap-2">
@@ -751,7 +747,7 @@ export default component$(() => {
 
                   <div class="flex items-center justify-between">
                     <div>
-                      <h3 class="font-['Nunito'] text-base font-bold text-rose-950">
+                      <h3 class="text-base font-bold text-rose-950">
                         {set.name}
                       </h3>
                       <p class="text-xs text-rose-600/60">{set.count} 个图标</p>
@@ -788,7 +784,7 @@ export default component$(() => {
         {/* Section header */}
         <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 class="font-['Nunito'] text-2xl font-extrabold text-rose-950">
+            <h2 class="text-2xl font-extrabold text-rose-950">
               我的项目
             </h2>
             <p class="mt-1 text-sm text-rose-700/60">
@@ -870,7 +866,7 @@ export default component$(() => {
                 <polyline points="21 15 16 10 5 21" />
               </svg>
             </div>
-            <h2 class="mb-2 font-['Nunito'] text-lg font-bold text-rose-950">
+            <h2 class="mb-2 text-lg font-bold text-rose-950">
               {debouncedQuery.value ? "未找到匹配的项目" : "还没有项目"}
             </h2>
             <p class="mb-6 max-w-sm text-center text-sm text-rose-700/60">
@@ -919,12 +915,12 @@ export default component$(() => {
                   <div class="mb-4 flex items-start justify-between">
                     <div class="flex items-center gap-3">
                       <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-400 to-rose-500 text-white shadow-lg shadow-rose-500/20">
-                        <span class="font-['Nunito'] text-lg font-bold">
+                        <span class="text-lg font-bold">
                           {project.name.charAt(0).toUpperCase()}
                         </span>
                       </div>
                       <div class="flex flex-col">
-                        <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
+                        <h3 class="text-lg font-bold text-rose-950">
                           <HighlightText
                             text={project.name}
                             query={debouncedQuery.value}
@@ -1072,7 +1068,7 @@ export default component$(() => {
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-lg">
             <div class="border-b border-rose-100 px-6 py-4">
-              <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
+              <h3 class="text-lg font-bold text-rose-950">
                 新建项目
               </h3>
               <p class="mt-1 text-sm text-rose-700/60">
@@ -1220,7 +1216,7 @@ export default component$(() => {
                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                 </svg>
               </div>
-              <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
+              <h3 class="text-lg font-bold text-rose-950">
                 确认删除
               </h3>
               <p class="mt-2 text-sm text-rose-700/60">
@@ -1261,7 +1257,7 @@ export default component$(() => {
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-xs">
             <div class="p-5">
-              <h3 class="mb-4 font-['Nunito'] text-base font-bold text-rose-950">
+              <h3 class="mb-4 text-base font-bold text-rose-950">
                 键盘快捷键
               </h3>
               <div class="space-y-2 text-sm">

@@ -144,7 +144,7 @@ export default component$(() => {
                 <rect x="3" y="14" width="7" height="7" />
               </svg>
             </div>
-            <span class="font-['Nunito'] text-sm font-bold text-rose-900">
+            <span class="text-sm font-bold text-rose-900">
               Iconfont
             </span>
           </a>
@@ -186,7 +186,7 @@ export default component$(() => {
             <span>/</span>
             <span class="font-medium text-rose-700">个人资料</span>
           </nav>
-          <h1 class="font-['Nunito'] text-2xl font-extrabold text-rose-950">
+          <h1 class="text-2xl font-extrabold text-rose-950">
             账户设置
           </h1>
           <p class="mt-1 text-sm text-rose-500">管理你的个人信息与安全选项</p>
@@ -328,7 +328,7 @@ export default component$(() => {
         {/* API Token tab */}
         {tab.value === "tokens" && (
           <div class="rounded-3xl border border-rose-100 bg-white p-6">
-            <h2 class="mb-4 font-['Nunito'] text-lg font-extrabold text-rose-950">
+            <h2 class="mb-4 text-lg font-extrabold text-rose-950">
               API Token
             </h2>
             <p class="mb-4 text-sm text-rose-500">
@@ -430,7 +430,7 @@ export default component$(() => {
         {/* Password tab */}
         {tab.value === "password" && (
           <div class="rounded-3xl border border-rose-100 bg-white p-6">
-            <h2 class="mb-5 font-['Nunito'] text-lg font-extrabold text-rose-950">
+            <h2 class="mb-5 text-lg font-extrabold text-rose-950">
               修改密码
             </h2>
 

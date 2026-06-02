@@ -187,7 +187,7 @@ export const AddToProjectDrawer = component$<AddToProjectDrawerProps>(
         <div class="flex h-full w-full max-w-xs flex-col border-l border-rose-100 bg-white shadow-2xl sm:max-w-sm">
           {/* Header */}
           <div class="flex shrink-0 items-center justify-between border-b border-rose-100 px-5 py-4">
-            <h2 class="font-['Nunito'] text-base font-extrabold text-rose-950">
+            <h2 class="text-base font-extrabold text-rose-950">
               添加到项目
             </h2>
             <button
@@ -205,7 +205,7 @@ export const AddToProjectDrawer = component$<AddToProjectDrawerProps>(
                 ✓
               </div>
               <div>
-                <p class="font-['Nunito'] text-lg font-extrabold text-rose-950">
+                <p class="text-lg font-extrabold text-rose-950">
                   已添加！
                 </p>
                 <p class="mt-1 text-sm text-rose-500">

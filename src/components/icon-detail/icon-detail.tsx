@@ -65,7 +65,7 @@ export const IconDetailPanel = component$((props: IconDetailPanelProps) => {
       >
         {/* Header */}
         <div class="flex items-center justify-between border-b border-rose-100 px-5 py-4">
-          <h3 class="flex items-center gap-2 font-['Nunito'] text-base font-bold text-rose-950">
+          <h3 class="flex items-center gap-2 text-base font-bold text-rose-950">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"

@@ -1037,7 +1037,7 @@ ${classes}`;
   const hasUnicodeCount = icons.list.filter((i) => i.unicode).length;
 
   return (
-    <div class="hero-gradient min-h-screen">
+    <div class="min-h-screen">
       <ToastContainer toasts={toasts.items} />
 
       {/* ── Navbar ────────────────────────────────────────────── */}
@@ -1066,12 +1066,12 @@ ${classes}`;
             <div class="h-6 w-px bg-rose-200" />
             <div class="flex items-center gap-2.5">
               <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-rose-400 to-rose-500 text-white shadow-md shadow-rose-500/20">
-                <span class="font-['Nunito'] text-sm font-bold">
+                <span class="text-sm font-bold">
                   {project.name ? project.name.charAt(0).toUpperCase() : "P"}
                 </span>
               </div>
               <div class="hidden min-w-0 sm:block">
-                <h1 class="max-w-[200px] truncate font-['Nunito'] text-base font-bold text-rose-950">
+                <h1 class="max-w-[200px] truncate text-base font-bold text-rose-950">
                   {project.name}
                 </h1>
                 <p class="text-[11px] text-rose-400/70">
@@ -1276,7 +1276,7 @@ ${classes}`;
                 {project.name ? project.name.charAt(0).toUpperCase() : "P"}
               </div>
               <div>
-                <h2 class="font-['Nunito'] text-xl font-extrabold text-rose-950">
+                <h2 class="text-xl font-extrabold text-rose-950">
                   {project.name}
                 </h2>
                 {project.description && (
@@ -1349,7 +1349,7 @@ ${classes}`;
                     <path d={stat.icon} />
                   </svg>
                   <div>
-                    <p class="font-['Nunito'] text-lg leading-none font-extrabold text-rose-950">
+                    <p class="text-lg leading-none font-extrabold text-rose-950">
                       {stat.value}
                     </p>
                     <p class="text-[10px] font-medium text-rose-400/70">
@@ -1663,7 +1663,7 @@ ${classes}`;
                 <line x1="12" x2="12" y1="3" y2="15" />
               </svg>
             </div>
-            <p class="font-['Nunito'] font-bold text-rose-800">
+            <p class="font-bold text-rose-800">
               {dragOver.value
                 ? "松开鼠标上传 SVG 文件"
                 : "拖拽 SVG 文件到此处上传"}
@@ -1720,7 +1720,7 @@ ${classes}`;
                 <polyline points="21 15 16 10 5 21" />
               </svg>
             </div>
-            <p class="font-['Nunito'] text-base font-bold text-rose-800">
+            <p class="text-base font-bold text-rose-800">
               {searchQuery.value
                 ? "未找到匹配的图标"
                 : "暂无图标，请上传 SVG 文件"}
@@ -1958,7 +1958,7 @@ ${classes}`;
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-lg">
             <div class="border-b border-rose-100 px-6 py-4">
-              <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
+              <h3 class="text-lg font-bold text-rose-950">
                 项目设置
               </h3>
             </div>
@@ -2107,7 +2107,7 @@ ${classes}`;
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-sm text-center">
             <div class="p-6">
-              <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
+              <h3 class="text-lg font-bold text-rose-950">
                 {previewIcon.name}
               </h3>
               <div class="icon-preview-canvas mx-auto mt-4 flex h-32 w-32 items-center justify-center">
@@ -2171,7 +2171,7 @@ ${classes}`;
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-lg">
             <div class="border-b border-rose-100 px-6 py-4">
-              <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
+              <h3 class="text-lg font-bold text-rose-950">
                 编辑图标
               </h3>
             </div>
@@ -2359,7 +2359,7 @@ ${classes}`;
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-3xl">
             <div class="border-b border-rose-100 px-6 py-4">
-              <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
+              <h3 class="text-lg font-bold text-rose-950">
                 生成代码
               </h3>
             </div>
@@ -2538,7 +2538,7 @@ ${classes}`;
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-lg">
             <div class="border-b border-rose-100 px-6 py-4">
-              <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
+              <h3 class="text-lg font-bold text-rose-950">
                 批量重命名 ({selectedIds.ids.size} 个图标)
               </h3>
             </div>
@@ -2733,7 +2733,7 @@ ${classes}`;
                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                 </svg>
               </div>
-              <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
+              <h3 class="text-lg font-bold text-rose-950">
                 确认删除
               </h3>
               <p class="mt-2 text-sm text-rose-700/60">
@@ -2790,7 +2790,7 @@ ${classes}`;
                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                 </svg>
               </div>
-              <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
+              <h3 class="text-lg font-bold text-rose-950">
                 确认批量删除
               </h3>
               <p class="mt-2 text-sm text-rose-700/60">
@@ -2831,7 +2831,7 @@ ${classes}`;
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-xs">
             <div class="p-5">
-              <h3 class="mb-4 font-['Nunito'] text-base font-bold text-rose-950">
+              <h3 class="mb-4 text-base font-bold text-rose-950">
                 键盘快捷键
               </h3>
               <div class="space-y-2 text-sm">
@@ -2949,7 +2949,7 @@ ${classes}`;
           <div class="clay-card animate-modal mx-4 w-full max-w-lg">
             <div class="flex items-center justify-between border-b border-rose-100 px-6 py-4">
               <div>
-                <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
+                <h3 class="text-lg font-bold text-rose-950">
                   ✨ AI 生成图标
                 </h3>
                 {aiApiKey.value && (
@@ -3058,7 +3058,7 @@ ${classes}`;
           <div class="clay-card animate-modal mx-4 w-full max-w-lg">
             <div class="flex items-center justify-between border-b border-rose-100 px-6 py-4">
               <div>
-                <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
+                <h3 class="text-lg font-bold text-rose-950">
                   ✨ AI 修改 · {aiModifyIcon.name}
                 </h3>
                 {aiApiKey.value && (
@@ -3172,7 +3172,7 @@ ${classes}`;
           <div class="clay-card animate-modal mx-4 w-full max-w-md">
             <div class="flex items-center justify-between border-b border-rose-100 px-6 py-4">
               <div>
-                <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
+                <h3 class="text-lg font-bold text-rose-950">
                   ⚙️ AI 设置
                 </h3>
                 <p class="mt-0.5 text-xs text-rose-400">
@@ -3275,7 +3275,7 @@ ${classes}`;
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-lg">
             <div class="border-b border-rose-100 px-6 py-4">
-              <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
+              <h3 class="text-lg font-bold text-rose-950">
                 批量标签管理 ({selectedIds.ids.size} 个图标)
               </h3>
             </div>
@@ -3400,7 +3400,7 @@ ${classes}`;
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-lg">
             <div class="border-b border-rose-100 px-6 py-4">
-              <h3 class="font-['Nunito'] text-lg font-bold text-rose-950">
+              <h3 class="text-lg font-bold text-rose-950">
                 项目成员
               </h3>
             </div>

@@ -114,7 +114,7 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
               </button>
             )}
             <div>
-              <h2 class="font-['Nunito'] text-base leading-tight font-extrabold text-rose-950">
+              <h2 class="text-base leading-tight font-extrabold text-rose-950">
                 {step.value === "input" && "从 GitHub 导入图标"}
                 {step.value === "browse" && (repoLabel.value || "浏览图标")}
                 {step.value === "importing" && "正在导入..."}
@@ -148,7 +148,7 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
                 </div>
               </div>
 
-              <h3 class="mb-1.5 text-center font-['Nunito'] text-lg font-extrabold text-rose-950">
+              <h3 class="mb-1.5 text-center text-lg font-extrabold text-rose-950">
                 粘贴 GitHub 目录 URL
               </h3>
               <p class="mb-6 text-center text-sm text-rose-400">
@@ -447,7 +447,7 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
               <span class="text-2xl">🌐</span>
             </div>
             <div class="text-center">
-              <p class="font-['Nunito'] text-xl font-extrabold text-rose-950">
+              <p class="text-xl font-extrabold text-rose-950">
                 正在导入图标...
               </p>
               <p class="mt-2 text-sm text-rose-500">
@@ -467,7 +467,7 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
               ✓
             </div>
             <div class="text-center">
-              <p class="font-['Nunito'] text-2xl font-extrabold text-rose-950">
+              <p class="text-2xl font-extrabold text-rose-950">
                 导入成功！
               </p>
               <p class="mt-2 text-sm text-rose-500">

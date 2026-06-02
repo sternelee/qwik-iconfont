@@ -95,7 +95,7 @@ export default component$(() => {
                 <rect x="3" y="14" width="7" height="7" />
               </svg>
             </div>
-            <span class="font-['Nunito'] text-sm font-bold text-rose-900">
+            <span class="text-sm font-bold text-rose-900">
               Iconfont
             </span>
           </a>
@@ -137,7 +137,7 @@ export default component$(() => {
             <span>/</span>
             <span class="font-medium text-rose-700">我的收藏</span>
           </nav>
-          <h1 class="font-['Nunito'] text-2xl font-extrabold text-rose-950">
+          <h1 class="text-2xl font-extrabold text-rose-950">
             我的收藏
           </h1>
           <p class="mt-1 text-sm text-rose-500">
@@ -206,7 +206,7 @@ export default component$(() => {
                   class="flex-1 cursor-pointer"
                   onClick$={() => nav(`/project/${project.id}/view`)}
                 >
-                  <h3 class="truncate pr-6 font-['Nunito'] text-base font-bold text-rose-950">
+                  <h3 class="truncate pr-6 text-base font-bold text-rose-950">
                     {project.name}
                   </h3>
                   {project.description && (

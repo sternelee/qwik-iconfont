@@ -282,7 +282,7 @@ export default component$(() => {
                 <rect x="3" y="14" width="7" height="7" />
               </svg>
             </div>
-            <span class="font-['Nunito'] text-sm font-bold text-rose-900">
+            <span class="text-sm font-bold text-rose-900">
               Iconfont
             </span>
           </a>
@@ -348,7 +348,7 @@ export default component$(() => {
                   {project.name}
                 </span>
               </div>
-              <h1 class="font-['Nunito'] text-2xl font-extrabold text-rose-950 sm:text-3xl">
+              <h1 class="text-2xl font-extrabold text-rose-950 sm:text-3xl">
                 {project.name}
               </h1>
               {project.description && (
@@ -637,7 +637,7 @@ export default component$(() => {
       <section class="mx-auto max-w-7xl px-4 pb-12 sm:px-6">
         <div class="rounded-3xl border border-rose-100 bg-white/60 p-6">
           <div class="mb-4 flex items-center justify-between">
-            <h2 class="font-['Nunito'] text-lg font-extrabold text-rose-950">
+            <h2 class="text-lg font-extrabold text-rose-950">
               使用方法
             </h2>
             {isOwner && (
