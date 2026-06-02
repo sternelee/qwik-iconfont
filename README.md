@@ -35,7 +35,7 @@
 
 - 粘贴任意 GitHub 目录 URL，从仓库一键批量导入 SVG
 - 支持格式：`https://github.com/owner/repo/tree/branch/path`
-- 支持搜索、全选（上限 500）、自定义项目名
+- 支持搜索、全选、自定义项目名（无导入上限）
 - 10 分钟内存缓存 GitHub Trees API 响应
 
 ### SaaS 功能
@@ -376,7 +376,7 @@ DELETE /api/webhooks/:id     删除
    ```
    https://github.com/lucide-icons/lucide/tree/main/icons
    ```
-3. 搜索 / 勾选需要的图标（最多 500 个）
+3. 搜索 / 勾选需要的图标（支持一键全选全部图标）
 4. 填写项目名称，点击「导入」
 
 ### 公开图标集

@@ -74,11 +74,10 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
     ? iconList.value.filter((ic) => ic.name.toLowerCase().includes(q))
     : iconList.value;
   const visibleIcons = filteredIcons.slice(0, displayCount.value);
-  const atCap = selected.value.length >= 500;
   const allSelected =
     filteredIcons.length > 0 &&
     filteredIcons.every((ic) => selected.value.includes(ic.name));
-  const showDeselect = allSelected || atCap;
+  const showDeselect = allSelected;
 
   const resetToInput = $(() => {
     step.value = "input";
@@ -262,40 +261,30 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
                   class="shrink-0 rounded-xl border border-rose-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 active:scale-95"
                   onClick$={() => {
                     if (showDeselect) {
-                      if (atCap) {
-                        selected.value = [];
-                      } else {
-                        const filteredSet = new Set(
-                          filteredIcons.map((ic) => ic.name),
-                        );
-                        selected.value = selected.value.filter(
-                          (n) => !filteredSet.has(n),
-                        );
-                      }
+                      const filteredSet = new Set(
+                        filteredIcons.map((ic) => ic.name),
+                      );
+                      selected.value = selected.value.filter(
+                        (n) => !filteredSet.has(n),
+                      );
                     } else {
                       const names = filteredIcons.map((ic) => ic.name);
-                      const merged = [
+                      selected.value = [
                         ...selected.value,
                         ...names.filter((n) => !selected.value.includes(n)),
                       ];
-                      selected.value = merged.slice(0, 500);
                     }
                   }}
                 >
                   {showDeselect
                     ? "取消全选"
-                    : `全选 (${Math.min(filteredIcons.length, 500)})`}
+                    : `全选 (${filteredIcons.length.toLocaleString()})`}
                 </button>
               </div>
-              {selected.value.length > 200 && selected.value.length < 500 && (
+              {selected.value.length > 200 && (
                 <p class="mt-1.5 text-[11px] text-amber-600">
-                  ⚠️ 已选 {selected.value.length} 个，导入约需{" "}
+                  ⚠️ 已选 {selected.value.length.toLocaleString()} 个，导入约需{" "}
                   {Math.ceil(selected.value.length / 10)} 秒
-                </p>
-              )}
-              {selected.value.length >= 500 && (
-                <p class="mt-1.5 text-[11px] text-red-600">
-                  已达单次导入上限 500 个
                 </p>
               )}
               {loadError.value && (
@@ -334,7 +323,7 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
                               selected.value = selected.value.filter(
                                 (n) => n !== icon.name,
                               );
-                            } else if (selected.value.length < 500) {
+                            } else {
                               selected.value = [...selected.value, icon.name];
                             }
                           }}

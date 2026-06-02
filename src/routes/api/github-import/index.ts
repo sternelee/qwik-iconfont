@@ -138,10 +138,6 @@ export const onPost: RequestHandler = async ({ json, request, platform }) => {
     json(400, { error: "请输入图标集名称" });
     return;
   }
-  if (iconNames.length > 500) {
-    json(400, { error: "单次最多导入 500 个图标" });
-    return;
-  }
 
   const parsed = parseGitHubUrl(githubUrl);
   if (!parsed) {
