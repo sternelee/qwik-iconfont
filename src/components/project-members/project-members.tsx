@@ -86,8 +86,6 @@ export const ProjectMembers = component$(
       }).then(() => fetchMembers());
     });
 
-    // eslint-disable-next-line qwik/no-use-visible-task
-    // eslint-disable-next-line qwik/no-use-visible-task
     useVisibleTask$(() => {
       fetchMembers();
     });
@@ -104,6 +102,8 @@ export const ProjectMembers = component$(
           <img
             src={src}
             alt={name || ""}
+            width="36"
+            height="36"
             class="h-full w-full rounded-full object-cover"
           />
         ) : (

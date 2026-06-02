@@ -54,7 +54,6 @@ export const onGet: RequestHandler = async ({
       "Content-Type": contentType,
       "Cache-Control": "public, max-age=86400",
       // Web fonts require CORS wildcard — browsers block cross-origin font loads otherwise
-      // eslint-disable-next-line no-restricted-syntax
       "Access-Control-Allow-Origin": "*",
     },
   });

@@ -383,6 +383,7 @@ export default component$(() => {
   const aiModel = useSignal("");
 
   // Hydrate AI settings from localStorage on client
+  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(() => {
     const s = getAIUserSettings();
     aiApiKey.value = s.apiKey;
@@ -672,6 +673,7 @@ export default component$(() => {
       }
 
       if ((ev.ctrlKey || ev.metaKey) && ev.key === "a") {
+        // eslint-disable-next-line qwik/no-async-prevent-default
         ev.preventDefault();
         selectAll();
         return;
@@ -688,6 +690,7 @@ export default component$(() => {
       }
 
       if (ev.key === "/") {
+        // eslint-disable-next-line qwik/no-async-prevent-default
         ev.preventDefault();
         const searchInput = document.querySelector(
           'input[placeholder="搜索图标..."]',

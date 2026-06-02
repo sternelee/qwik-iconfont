@@ -284,6 +284,7 @@ export default component$(() => {
         return;
       }
       if (ev.key === "/") {
+        // eslint-disable-next-line qwik/no-async-prevent-default
         ev.preventDefault();
         (
           document.querySelector(
