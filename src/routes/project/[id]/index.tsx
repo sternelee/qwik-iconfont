@@ -13,6 +13,7 @@ import {
   routeAction$,
   useLocation,
   useNavigate,
+  type DocumentHead,
 } from "@builder.io/qwik-city";
 import type { Project, Icon } from "~/lib/types";
 import {
@@ -51,6 +52,26 @@ import {
 type ProjectLoadResult =
   | { mode: "server"; project: Project; icons: Icon[] }
   | { mode: "local"; project: LocalProject | null; icons: LocalIcon[] };
+
+export const head: DocumentHead = ({ resolveValue }) => {
+  const data = resolveValue(useProject);
+  const title =
+    data.mode === "server" && data.project
+      ? data.project.name + " - Iconfont"
+      : data.mode === "local" && data.project
+        ? data.project.name + " - Iconfont"
+        : "项目 - Iconfont";
+  return {
+    title,
+    meta: [
+      {
+        name: "description",
+        content:
+          "在 Iconfont 管理图标项目，上传 SVG、编辑颜色、生成 TTF / CSS / Symbol 字体。",
+      },
+    ],
+  };
+};
 
 export const useProject = routeLoader$(
   async ({ params, platform, request }): Promise<ProjectLoadResult> => {
@@ -1049,7 +1070,7 @@ ${classes}`;
           {/* Left: Breadcrumb */}
           <div class="flex items-center gap-3">
             <button
-              class="flex h-9 w-9 items-center justify-center rounded-2xl text-rose-500 transition-all hover:bg-rose-50"
+              class="flex h-9 w-9 items-center justify-center rounded-md text-rose-500 transition-all hover:bg-[var(--color-base-200)]"
               onClick$={() => nav("/")}
             >
               <svg
@@ -1068,16 +1089,16 @@ ${classes}`;
             </button>
             <div class="h-6 w-px bg-rose-200" />
             <div class="flex items-center gap-2.5">
-              <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-rose-400 to-rose-500 text-white shadow-md shadow-rose-500/20">
+              <div class="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-br from-rose-400 to-rose-500 text-white">
                 <span class="text-sm font-bold">
                   {project.name ? project.name.charAt(0).toUpperCase() : "P"}
                 </span>
               </div>
               <div class="hidden min-w-0 sm:block">
-                <h1 class="max-w-[200px] truncate text-base font-bold text-rose-950">
+                <h1 class="max-w-[200px] truncate text-base font-bold text-[var(--color-neutral)]">
                   {project.name}
                 </h1>
-                <p class="text-[11px] text-rose-400/70">
+                <p class="text-[11px] text-[var(--color-base-400)]">
                   {icons.list.length} 个图标 · {project.font_family}
                 </p>
               </div>
@@ -1090,19 +1111,19 @@ ${classes}`;
             {/* Desktop actions */}
             <div class="hidden flex-wrap items-center gap-2 md:flex">
               <button
-                class="rounded-2xl px-4 py-2 text-sm font-semibold text-rose-700 transition-all hover:bg-rose-50"
+                class="rounded-md px-4 py-2 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
                 onClick$={() => (showSettings.value = true)}
               >
                 项目设置
               </button>
               <button
-                class="rounded-2xl px-4 py-2 text-sm font-semibold text-rose-700 transition-all hover:bg-rose-50"
+                class="rounded-md px-4 py-2 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
                 onClick$={() => (showMembers.value = true)}
               >
                 成员
               </button>
               <button
-                class="clay-button flex items-center gap-1.5 rounded-2xl bg-rose-500 px-4 py-2 text-sm font-bold text-white"
+                class="clay-button flex items-center gap-1.5 bg-rose-500 px-4 py-2 text-sm font-bold text-white"
                 onClick$={handleDownloadFont}
                 disabled={
                   selectedIds.ids.size === 0 || downloadLoading.value === "font"
@@ -1130,7 +1151,7 @@ ${classes}`;
                 下载字体
               </button>
               <button
-                class="clay-button flex items-center gap-1.5 rounded-2xl bg-rose-500 px-4 py-2 text-sm font-bold text-white"
+                class="clay-button flex items-center gap-1.5 bg-rose-500 px-4 py-2 text-sm font-bold text-white"
                 onClick$={async () => {
                   showCode.value = true;
                   generatedCode.value = await buildCode();
@@ -1154,7 +1175,7 @@ ${classes}`;
                 生成代码
               </button>
               <button
-                class="clay-button-secondary flex items-center gap-1.5 rounded-2xl bg-blue-500 px-4 py-2 text-sm font-bold text-white"
+                class="clay-button-secondary flex items-center gap-1.5 bg-blue-500 px-4 py-2 text-sm font-bold text-white"
                 onClick$={handleDownloadPackage}
                 disabled={
                   selectedIds.ids.size === 0 ||
@@ -1187,7 +1208,7 @@ ${classes}`;
             <div class="dropdown dropdown-end md:hidden">
               <button
                 tabIndex={0}
-                class="flex h-9 w-9 items-center justify-center rounded-2xl text-rose-600 transition-all hover:bg-rose-50"
+                class="flex h-9 w-9 items-center justify-center rounded-md text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -1211,7 +1232,7 @@ ${classes}`;
               >
                 <li>
                   <button
-                    class="w-full rounded-xl px-3 py-2 text-left text-sm text-rose-800 transition-all hover:bg-rose-50"
+                    class="w-full rounded-md px-3 py-2 text-left text-sm text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
                     onClick$={() => (showSettings.value = true)}
                   >
                     项目设置
@@ -1219,7 +1240,7 @@ ${classes}`;
                 </li>
                 <li>
                   <button
-                    class="w-full rounded-xl px-3 py-2 text-left text-sm text-rose-800 transition-all hover:bg-rose-50"
+                    class="w-full rounded-md px-3 py-2 text-left text-sm text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
                     onClick$={() => (showMembers.value = true)}
                   >
                     成员
@@ -1227,7 +1248,7 @@ ${classes}`;
                 </li>
                 <li>
                   <button
-                    class="w-full rounded-xl px-3 py-2 text-left text-sm text-rose-800 transition-all hover:bg-rose-50"
+                    class="w-full rounded-md px-3 py-2 text-left text-sm text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
                     onClick$={handleDownloadFont}
                     disabled={
                       selectedIds.ids.size === 0 ||
@@ -1239,7 +1260,7 @@ ${classes}`;
                 </li>
                 <li>
                   <button
-                    class="w-full rounded-xl px-3 py-2 text-left text-sm text-rose-800 transition-all hover:bg-rose-50"
+                    class="w-full rounded-md px-3 py-2 text-left text-sm text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
                     onClick$={async () => {
                       showCode.value = true;
                       generatedCode.value = await buildCode();
@@ -1251,7 +1272,7 @@ ${classes}`;
                 </li>
                 <li>
                   <button
-                    class="w-full rounded-xl px-3 py-2 text-left text-sm text-rose-800 transition-all hover:bg-rose-50"
+                    class="w-full rounded-md px-3 py-2 text-left text-sm text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
                     onClick$={handleDownloadPackage}
                     disabled={
                       selectedIds.ids.size === 0 ||
@@ -1275,30 +1296,30 @@ ${classes}`;
           <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             {/* Project info */}
             <div class="flex items-center gap-4">
-              <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-400 to-rose-500 text-2xl font-extrabold text-white shadow-lg shadow-rose-500/20">
+              <div class="flex h-14 w-14 items-center justify-center rounded-md bg-gradient-to-br from-rose-400 to-rose-500 text-2xl font-extrabold text-white">
                 {project.name ? project.name.charAt(0).toUpperCase() : "P"}
               </div>
               <div>
-                <h2 class="text-xl font-extrabold text-rose-950">
+                <h2 class="text-xl font-extrabold text-[var(--color-neutral)]">
                   {project.name}
                 </h2>
                 {project.description && (
-                  <p class="mt-0.5 max-w-md text-sm text-rose-700/60">
+                  <p class="mt-0.5 max-w-md text-sm text-[var(--color-base-400)]">
                     {project.description}
                   </p>
                 )}
                 <div class="mt-1 flex items-center gap-2">
                   {project.author_name && (
-                    <span class="text-xs text-rose-400/60">
+                    <span class="text-xs text-[var(--color-base-400)]">
                       作者: {project.author_name}
                     </span>
                   )}
                   {project.visibility === "public" ? (
-                    <span class="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
+                    <span class="rounded-full bg-[var(--color-base-200)] px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
                       公开
                     </span>
                   ) : (
-                    <span class="rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-500">
+                    <span class="rounded-full bg-[var(--color-base-200)] px-2 py-0.5 text-[10px] font-semibold text-rose-500">
                       私有
                     </span>
                   )}
@@ -1347,15 +1368,15 @@ ${classes}`;
                     fill="none"
                     stroke="currentColor"
                     stroke-width="2"
-                    class="text-rose-400"
+                    class="text-[var(--color-base-400)]"
                   >
                     <path d={stat.icon} />
                   </svg>
                   <div>
-                    <p class="text-lg leading-none font-extrabold text-rose-950">
+                    <p class="text-lg leading-none font-extrabold text-[var(--color-neutral)]">
                       {stat.value}
                     </p>
-                    <p class="text-[10px] font-medium text-rose-400/70">
+                    <p class="text-[10px] font-medium text-[var(--color-base-400)]">
                       {stat.label}
                     </p>
                   </div>
@@ -1373,21 +1394,21 @@ ${classes}`;
             <label class="label cursor-pointer gap-2">
               <input
                 type="checkbox"
-                class="checkbox checkbox-sm rounded-lg border-rose-200 [--chkbg:theme(colors.rose.500)]"
+                class="checkbox checkbox-sm rounded-md border-[var(--color-base-300)] [--chkbg:theme(colors.rose.500)]"
                 checked={
                   displayList.length > 0 &&
                   displayList.every((i) => selectedIds.ids.has(i.id))
                 }
                 onChange$={selectAll}
               />
-              <span class="label-text text-sm font-medium text-rose-800">
+              <span class="label-text text-sm font-medium text-[var(--color-neutral)]">
                 全选 ({selectedIds.ids.size}/{icons.list.length})
               </span>
             </label>
             {selectedIds.ids.size > 0 && (
               <>
                 <button
-                  class="flex items-center gap-1.5 rounded-xl bg-rose-50 px-3 py-1.5 text-sm font-semibold text-rose-600 transition-all hover:bg-rose-100"
+                  class="flex items-center gap-1.5 rounded-md bg-[var(--color-base-200)] px-3 py-1.5 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-300)]"
                   onClick$={() => {
                     confirmBatchDelete.count = selectedIds.ids.size;
                     confirmBatchDelete.show = true;
@@ -1408,7 +1429,7 @@ ${classes}`;
                   删除选中
                 </button>
                 <button
-                  class="flex items-center gap-1.5 rounded-xl bg-rose-50 px-3 py-1.5 text-sm font-semibold text-rose-600 transition-all hover:bg-rose-100"
+                  class="flex items-center gap-1.5 rounded-md bg-[var(--color-base-200)] px-3 py-1.5 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-300)]"
                   onClick$={() => (showBatchRename.value = true)}
                 >
                   <svg
@@ -1426,7 +1447,7 @@ ${classes}`;
                   批量重命名
                 </button>
                 <button
-                  class="flex items-center gap-1.5 rounded-xl bg-rose-50 px-3 py-1.5 text-sm font-semibold text-rose-600 transition-all hover:bg-rose-100"
+                  class="flex items-center gap-1.5 rounded-md bg-[var(--color-base-200)] px-3 py-1.5 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-300)]"
                   onClick$={() => (showBatchTag.value = true)}
                 >
                   <svg
@@ -1455,7 +1476,7 @@ ${classes}`;
                 class="absolute inset-0 z-10 cursor-pointer opacity-0"
                 onChange$={(ev: any) => handleFileUpload(ev.target.files)}
               />
-              <button class="clay-button flex items-center gap-2 rounded-2xl bg-rose-500 px-5 py-2.5 text-sm font-bold text-white">
+              <button class="clay-button flex items-center gap-2 bg-rose-500 px-5 py-2.5 text-sm font-bold text-white">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
@@ -1475,13 +1496,13 @@ ${classes}`;
               </button>
             </div>
             <button
-              class="clay-button flex items-center gap-2 rounded-2xl bg-violet-500 px-5 py-2.5 text-sm font-bold text-white"
+              class="clay-button flex items-center gap-2 bg-violet-500 px-5 py-2.5 text-sm font-bold text-white"
               onClick$={() => (showAIGenerate.value = true)}
             >
               ✨ AI 生成
             </button>
             <button
-              class="clay-button flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 transition-all hover:bg-violet-200"
+              class="clay-button flex h-10 w-10 items-center justify-center bg-violet-100 text-violet-600 transition-all hover:bg-violet-200"
               title="AI 设置"
               onClick$={() => (showAISettings.value = true)}
             >
@@ -1515,7 +1536,7 @@ ${classes}`;
                 onInput$={(ev: any) => (searchQuery.value = ev.target.value)}
               />
               <svg
-                class="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-rose-400"
+                class="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-[var(--color-base-400)]"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 fill="none"
@@ -1529,7 +1550,7 @@ ${classes}`;
               </svg>
               {searchQuery.value && (
                 <button
-                  class="absolute top-1/2 right-3 -translate-y-1/2 text-rose-300 transition-all hover:text-rose-500"
+                  class="absolute top-1/2 right-3 -translate-y-1/2 text-[var(--color-base-400)] transition-all hover:text-rose-500"
                   onClick$={() => (searchQuery.value = "")}
                   title="清除搜索"
                 >
@@ -1562,15 +1583,15 @@ ${classes}`;
             <option value="name">按名称排序</option>
             <option value="unicode">按Unicode排序</option>
           </select>
-          <span class="text-xs font-medium text-rose-400/60">
+          <span class="text-xs font-medium text-[var(--color-base-400)]">
             {displayList.length} / {icons.list.length}
           </span>
           {/* Grid size */}
-          <div class="flex items-center gap-1 rounded-2xl bg-white/60 p-1 backdrop-blur-sm">
+          <div class="flex items-center gap-1 rounded-md bg-[var(--color-base-200)] p-1">
             {(["small", "medium", "large"] as const).map((size) => (
               <button
                 key={size}
-                class={`flex h-8 w-8 items-center justify-center rounded-xl text-sm transition-all ${gridSize.value === size ? "bg-rose-500 text-white shadow-md shadow-rose-500/20" : "text-rose-400 hover:bg-rose-50"}`}
+                class={`flex h-8 w-8 items-center justify-center rounded-md text-sm transition-all ${gridSize.value === size ? "bg-rose-500 text-white shadow-sm" : "text-[var(--color-base-400)] hover:bg-[var(--color-base-200)]"}`}
                 onClick$={() => (gridSize.value = size)}
                 title={
                   size === "small"
@@ -1606,9 +1627,11 @@ ${classes}`;
         {/* Tag filter */}
         {allTags.value.length > 0 && (
           <div class="mb-4 flex flex-wrap items-center gap-2">
-            <span class="text-xs font-semibold text-rose-400/70">标签:</span>
+            <span class="text-xs font-semibold text-[var(--color-base-400)]">
+              标签:
+            </span>
             <button
-              class={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${activeTag.value === null ? "bg-rose-500 text-white shadow-md shadow-rose-500/20" : "bg-white/60 text-rose-600 hover:bg-rose-50"}`}
+              class={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${activeTag.value === null ? "bg-rose-500 text-white shadow-sm" : "bg-[var(--color-base-100)] text-[var(--color-neutral)] hover:bg-[var(--color-base-200)]"}`}
               onClick$={() => (activeTag.value = null)}
             >
               全部
@@ -1616,14 +1639,14 @@ ${classes}`;
             {allTags.value.map((tag) => (
               <button
                 key={tag}
-                class={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${activeTag.value === tag ? "bg-rose-500 text-white shadow-md shadow-rose-500/20" : "bg-white/60 text-rose-600 hover:bg-rose-50"}`}
+                class={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${activeTag.value === tag ? "bg-rose-500 text-white shadow-sm" : "bg-[var(--color-base-100)] text-[var(--color-neutral)] hover:bg-[var(--color-base-200)]"}`}
                 onClick$={() =>
                   (activeTag.value = activeTag.value === tag ? null : tag)
                 }
               >
                 {tag}
                 <span
-                  class={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] ${activeTag.value === tag ? "bg-white/20" : "bg-rose-100"}`}
+                  class={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] ${activeTag.value === tag ? "bg-[var(--color-base-300)]" : "bg-[var(--color-base-200)]"}`}
                 >
                   {tagCounts.value[tag] || 0}
                 </span>
@@ -1634,7 +1657,7 @@ ${classes}`;
 
         {/* Drop zone */}
         <div
-          class={`relative rounded-3xl border-2 border-dashed p-8 text-center transition-all duration-300 ${dragOver.value ? "animate-drop-pulse scale-[1.01] border-rose-400 bg-rose-50/50 text-rose-600" : "border-rose-200/60 text-rose-400/60 hover:border-rose-300 hover:bg-white/40"}`}
+          class={`relative rounded-md border-2 border-dashed p-8 text-center transition-all duration-300 ${dragOver.value ? "animate-drop-pulse scale-[1.01] border-rose-500 bg-[var(--color-base-200)] text-rose-500" : "border-[var(--color-base-300)] text-[var(--color-base-400)] hover:border-[var(--color-base-300)] hover:bg-[var(--color-base-100)]"}`}
           onDragOver$={(ev: any) => {
             ev.preventDefault();
             dragOver.value = true;
@@ -1648,7 +1671,7 @@ ${classes}`;
           <div
             class={`transition-transform duration-300 ${dragOver.value ? "scale-110" : ""}`}
           >
-            <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-100 to-pink-100">
+            <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-md bg-[var(--color-base-200)]">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -1659,19 +1682,19 @@ ${classes}`;
                 stroke-width="1.5"
                 stroke-linecap="round"
                 stroke-linejoin="round"
-                class="text-rose-400"
+                class="text-[var(--color-base-400)]"
               >
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                 <polyline points="17 8 12 3 7 8" />
                 <line x1="12" x2="12" y1="3" y2="15" />
               </svg>
             </div>
-            <p class="font-bold text-rose-800">
+            <p class="font-bold text-[var(--color-neutral)]">
               {dragOver.value
                 ? "松开鼠标上传 SVG 文件"
                 : "拖拽 SVG 文件到此处上传"}
             </p>
-            <p class="mt-1 text-xs text-rose-400/60">
+            <p class="mt-1 text-xs text-[var(--color-base-400)]">
               或点击上方「上传图标」按钮
             </p>
           </div>
@@ -1683,20 +1706,24 @@ ${classes}`;
         {/* Stats strip */}
         {icons.list.length > 0 && (
           <div class="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
-            <span class="text-rose-400/60">共 {icons.list.length} 个图标</span>
+            <span class="text-[var(--color-base-400)]">
+              共 {icons.list.length} 个图标
+            </span>
             {selectedIds.ids.size > 0 && (
               <span class="font-semibold text-rose-500">
                 {selectedIds.ids.size} 个已选中
               </span>
             )}
-            <span class="text-rose-400/60">{hasUnicodeCount} 个含 Unicode</span>
+            <span class="text-[var(--color-base-400)]">
+              {hasUnicodeCount} 个含 Unicode
+            </span>
             {allTags.value.length > 0 && (
-              <span class="text-rose-400/60">
+              <span class="text-[var(--color-base-400)]">
                 {allTags.value.length} 个标签
               </span>
             )}
             {activeTag.value && (
-              <span class="text-rose-400/60">
+              <span class="text-[var(--color-base-400)]">
                 · 当前筛选:{" "}
                 <strong class="text-rose-600">{activeTag.value}</strong> (
                 {displayList.length} 个)
@@ -1707,9 +1734,9 @@ ${classes}`;
 
         {displayList.length === 0 ? (
           <div class="animate-fade-in-up clay-card flex flex-col items-center py-16">
-            <div class="mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-rose-100 to-pink-100">
+            <div class="mb-4 flex h-20 w-20 items-center justify-center rounded-md bg-[var(--color-base-200)]">
               <svg
-                class="h-10 w-10 text-rose-300"
+                class="h-10 w-10 text-[var(--color-base-400)]"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 fill="none"
@@ -1723,12 +1750,12 @@ ${classes}`;
                 <polyline points="21 15 16 10 5 21" />
               </svg>
             </div>
-            <p class="text-base font-bold text-rose-800">
+            <p class="text-base font-bold text-[var(--color-neutral)]">
               {searchQuery.value
                 ? "未找到匹配的图标"
                 : "暂无图标，请上传 SVG 文件"}
             </p>
-            <p class="mt-1 text-sm text-rose-400/60">
+            <p class="mt-1 text-sm text-[var(--color-base-400)]">
               {searchQuery.value
                 ? "尝试其他关键词"
                 : "拖拽文件到上方区域或点击上传按钮"}
@@ -1755,7 +1782,7 @@ ${classes}`;
               <div
                 key={icon.id}
                 draggable={sortBy.value === "custom"}
-                class={`animate-fade-in-up clay-icon-card group relative p-3 stagger-${(idx % 8) + 1} ${selectedIds.ids.has(icon.id) ? "bg-rose-50/50 ring-2 ring-rose-400" : ""} ${dragOverId.value === icon.id && sortBy.value === "custom" ? "ring-dashed scale-[1.02] ring-2 ring-rose-300" : ""}`}
+                class={`animate-fade-in-up clay-icon-card group relative p-3 stagger-${(idx % 8) + 1} ${selectedIds.ids.has(icon.id) ? "bg-[var(--color-base-200)] ring-2 ring-rose-400" : ""} ${dragOverId.value === icon.id && sortBy.value === "custom" ? "ring-dashed scale-[1.02] ring-2 ring-rose-300" : ""}`}
                 onDragStart$={() => {
                   draggedId.value = icon.id;
                 }}
@@ -1794,7 +1821,7 @@ ${classes}`;
               >
                 {/* Selection checkbox */}
                 <button
-                  class={`absolute top-2.5 left-2.5 z-10 flex h-5 w-5 items-center justify-center rounded-md border transition-all ${selectedIds.ids.has(icon.id) ? "border-rose-500 bg-rose-500" : "border-rose-200 bg-white/80 hover:border-rose-400"}`}
+                  class={`absolute top-2.5 left-2.5 z-10 flex h-5 w-5 items-center justify-center rounded-md border transition-all ${selectedIds.ids.has(icon.id) ? "border-rose-500 bg-rose-500" : "border-[var(--color-base-300)] bg-[var(--color-base-100)] hover:border-rose-500"}`}
                   onClick$={() => toggleSelect(icon.id)}
                 >
                   {selectedIds.ids.has(icon.id) && (
@@ -1832,13 +1859,15 @@ ${classes}`;
                   {icon.content ? (
                     <SvgPreview content={icon.content} class="h-full w-full" />
                   ) : (
-                    <span class="text-xs text-rose-300">无预览</span>
+                    <span class="text-xs text-[var(--color-base-400)]">
+                      无预览
+                    </span>
                   )}
                 </button>
 
                 {/* Name */}
                 <button
-                  class="mt-2 w-full truncate text-center text-xs font-semibold text-rose-800 transition-colors hover:text-rose-500"
+                  class="mt-2 w-full truncate text-center text-xs font-semibold text-[var(--color-neutral)] transition-colors hover:text-rose-500"
                   title={`点击复制类名: ${project.prefix}${icon.name}`}
                   onClick$={async (ev: any) => {
                     ev.stopPropagation();
@@ -1857,7 +1886,7 @@ ${classes}`;
                 {/* Unicode */}
                 {icon.unicode && (
                   <button
-                    class="mt-0.5 font-mono text-[10px] text-rose-400/60 transition-colors hover:text-rose-500"
+                    class="mt-0.5 font-mono text-[10px] text-[var(--color-base-400)] transition-colors hover:text-rose-500"
                     onClick$={async () => {
                       await navigator.clipboard.writeText(icon.unicode || "");
                       showToast(`已复制 ${icon.unicode}`, "success");
@@ -1870,7 +1899,7 @@ ${classes}`;
                 {/* Actions */}
                 <div class="mt-2 flex justify-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                   <button
-                    class="flex h-7 w-7 items-center justify-center rounded-lg text-rose-400 transition-all hover:bg-rose-50 hover:text-rose-600"
+                    class="flex h-7 w-7 items-center justify-center rounded-md text-[var(--color-base-400)] transition-all hover:bg-[var(--color-base-200)] hover:text-[var(--color-neutral)]"
                     title="编辑"
                     onClick$={() => {
                       selectedIconForEdit.id = icon.id;
@@ -1898,7 +1927,7 @@ ${classes}`;
                     </svg>
                   </button>
                   <button
-                    class="flex h-7 w-7 items-center justify-center rounded-lg text-rose-400 transition-all hover:bg-rose-50 hover:text-rose-600"
+                    class="flex h-7 w-7 items-center justify-center rounded-md text-[var(--color-base-400)] transition-all hover:bg-[var(--color-base-200)] hover:text-[var(--color-neutral)]"
                     title="下载 SVG"
                     onClick$={() => {
                       const blob = new Blob([icon.content || ""], {
@@ -1930,7 +1959,7 @@ ${classes}`;
                     </svg>
                   </button>
                   <button
-                    class="flex h-7 w-7 items-center justify-center rounded-lg text-rose-400 transition-all hover:bg-rose-50 hover:text-rose-600"
+                    class="flex h-7 w-7 items-center justify-center rounded-md text-[var(--color-base-400)] transition-all hover:bg-[var(--color-base-200)] hover:text-[var(--color-neutral)]"
                     title="删除"
                     onClick$={() => handleDelete(icon.id, icon.name)}
                   >
@@ -1960,8 +1989,8 @@ ${classes}`;
       {showSettings.value && (
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-lg">
-            <div class="border-b border-rose-100 px-6 py-4">
-              <h3 class="text-lg font-bold text-rose-950">
+            <div class="border-b border-[var(--color-base-300)] px-6 py-4">
+              <h3 class="text-lg font-bold text-[var(--color-neutral)]">
                 项目设置
               </h3>
             </div>
@@ -1989,7 +2018,7 @@ ${classes}`;
               <div class="space-y-4 px-6 py-5">
                 <div class="form-control">
                   <label class="label">
-                    <span class="label-text text-sm font-semibold text-rose-800">
+                    <span class="label-text text-sm font-semibold text-[var(--color-neutral)]">
                       项目名称
                     </span>
                   </label>
@@ -2003,7 +2032,7 @@ ${classes}`;
                 </div>
                 <div class="form-control">
                   <label class="label">
-                    <span class="label-text text-sm font-semibold text-rose-800">
+                    <span class="label-text text-sm font-semibold text-[var(--color-neutral)]">
                       描述
                     </span>
                   </label>
@@ -2016,12 +2045,12 @@ ${classes}`;
                 </div>
                 <div class="form-control">
                   <label class="label">
-                    <span class="label-text text-sm font-semibold text-rose-800">
+                    <span class="label-text text-sm font-semibold text-[var(--color-neutral)]">
                       可见性
                     </span>
                   </label>
                   <div class="flex gap-2">
-                    <label class="flex flex-1 cursor-pointer items-center gap-2 rounded-2xl border border-rose-200 bg-white/60 px-4 py-2.5 transition-all has-[:checked]:border-rose-400 has-[:checked]:bg-rose-50">
+                    <label class="flex flex-1 cursor-pointer items-center gap-2 rounded-md border border-[var(--color-base-300)] bg-[var(--color-base-100)] px-4 py-2.5 transition-all has-[:checked]:border-rose-500 has-[:checked]:bg-[var(--color-base-200)]">
                       <input
                         type="radio"
                         name="visibility"
@@ -2029,9 +2058,11 @@ ${classes}`;
                         class="radio radio-sm"
                         checked={project.visibility !== "public"}
                       />
-                      <span class="text-sm text-rose-800">私有</span>
+                      <span class="text-sm text-[var(--color-neutral)]">
+                        私有
+                      </span>
                     </label>
-                    <label class="flex flex-1 cursor-pointer items-center gap-2 rounded-2xl border border-rose-200 bg-white/60 px-4 py-2.5 transition-all has-[:checked]:border-emerald-400 has-[:checked]:bg-emerald-50">
+                    <label class="flex flex-1 cursor-pointer items-center gap-2 rounded-md border border-[var(--color-base-300)] bg-[var(--color-base-100)] px-4 py-2.5 transition-all has-[:checked]:border-emerald-500 has-[:checked]:bg-[var(--color-base-200)]">
                       <input
                         type="radio"
                         name="visibility"
@@ -2039,18 +2070,20 @@ ${classes}`;
                         class="radio radio-sm"
                         checked={project.visibility === "public"}
                       />
-                      <span class="text-sm text-rose-800">公开</span>
+                      <span class="text-sm text-[var(--color-neutral)]">
+                        公开
+                      </span>
                     </label>
                   </div>
                   <label class="label">
-                    <span class="label-text-alt text-xs text-rose-400/60">
+                    <span class="label-text-alt text-xs text-[var(--color-base-400)]">
                       公开项目将展示在首页推荐中
                     </span>
                   </label>
                 </div>
                 <div class="form-control">
                   <label class="label">
-                    <span class="label-text text-sm font-semibold text-rose-800">
+                    <span class="label-text text-sm font-semibold text-[var(--color-neutral)]">
                       Font Family
                     </span>
                   </label>
@@ -2063,7 +2096,7 @@ ${classes}`;
                 </div>
                 <div class="form-control">
                   <label class="label">
-                    <span class="label-text text-sm font-semibold text-rose-800">
+                    <span class="label-text text-sm font-semibold text-[var(--color-neutral)]">
                       Class 前缀
                     </span>
                   </label>
@@ -2074,24 +2107,24 @@ ${classes}`;
                     value={project.prefix}
                   />
                   <label class="label">
-                    <span class="label-text-alt font-mono text-rose-400/60">
+                    <span class="label-text-alt font-mono text-[var(--color-base-400)]">
                       示例: <span class="text-rose-500">{project.prefix}</span>
                       example
                     </span>
                   </label>
                 </div>
               </div>
-              <div class="flex justify-end gap-3 border-t border-rose-100 px-6 py-4">
+              <div class="flex justify-end gap-3 border-t border-[var(--color-base-300)] px-6 py-4">
                 <button
                   type="button"
-                  class="rounded-2xl px-5 py-2.5 text-sm font-semibold text-rose-700 transition-all hover:bg-rose-50"
+                  class="rounded-md px-5 py-2.5 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
                   onClick$={() => (showSettings.value = false)}
                 >
                   取消
                 </button>
                 <button
                   type="submit"
-                  class="clay-button rounded-2xl bg-rose-500 px-6 py-2.5 text-sm font-bold text-white"
+                  class="clay-button bg-rose-500 px-6 py-2.5 text-sm font-bold text-white"
                 >
                   保存
                 </button>
@@ -2110,7 +2143,7 @@ ${classes}`;
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-sm text-center">
             <div class="p-6">
-              <h3 class="text-lg font-bold text-rose-950">
+              <h3 class="text-lg font-bold text-[var(--color-neutral)]">
                 {previewIcon.name}
               </h3>
               <div class="icon-preview-canvas mx-auto mt-4 flex h-32 w-32 items-center justify-center">
@@ -2148,13 +2181,13 @@ ${classes}`;
                 />
               </div>
               {previewIcon.unicode && (
-                <p class="mt-3 font-mono text-sm text-rose-400/60">
+                <p class="mt-3 font-mono text-sm text-[var(--color-base-400)]">
                   {previewIcon.unicode}
                 </p>
               )}
               <div class="mt-5 flex justify-center">
                 <button
-                  class="rounded-2xl bg-rose-50 px-6 py-2.5 text-sm font-semibold text-rose-700 transition-all hover:bg-rose-100"
+                  class="rounded-md bg-[var(--color-base-200)] px-6 py-2.5 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-300)]"
                   onClick$={() => (showPreview.value = false)}
                 >
                   关闭
@@ -2173,8 +2206,8 @@ ${classes}`;
       {showEdit.value && (
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-lg">
-            <div class="border-b border-rose-100 px-6 py-4">
-              <h3 class="text-lg font-bold text-rose-950">
+            <div class="border-b border-[var(--color-base-300)] px-6 py-4">
+              <h3 class="text-lg font-bold text-[var(--color-neutral)]">
                 编辑图标
               </h3>
             </div>
@@ -2257,7 +2290,7 @@ ${classes}`;
                 >
                   <div class="form-control mb-3">
                     <label class="label">
-                      <span class="label-text text-sm font-semibold text-rose-800">
+                      <span class="label-text text-sm font-semibold text-[var(--color-neutral)]">
                         图标名称
                       </span>
                     </label>
@@ -2271,7 +2304,7 @@ ${classes}`;
                   </div>
                   <div class="form-control mb-3">
                     <label class="label">
-                      <span class="label-text text-sm font-semibold text-rose-800">
+                      <span class="label-text text-sm font-semibold text-[var(--color-neutral)]">
                         Unicode
                       </span>
                     </label>
@@ -2285,7 +2318,7 @@ ${classes}`;
                       />
                       <button
                         type="button"
-                        class="rounded-2xl bg-rose-50 px-4 text-sm font-semibold text-rose-600 transition-all hover:bg-rose-100"
+                        class="rounded-md bg-[var(--color-base-200)] px-4 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-300)]"
                         onClick$={autoUnicode}
                       >
                         自动生成
@@ -2294,7 +2327,7 @@ ${classes}`;
                   </div>
                   <div class="form-control mb-3">
                     <label class="label">
-                      <span class="label-text text-sm font-semibold text-rose-800">
+                      <span class="label-text text-sm font-semibold text-[var(--color-neutral)]">
                         ViewBox
                       </span>
                     </label>
@@ -2312,7 +2345,7 @@ ${classes}`;
                         (showSVGSource.value = !showSVGSource.value)
                       }
                     >
-                      <span class="label-text text-sm font-semibold text-rose-800">
+                      <span class="label-text text-sm font-semibold text-[var(--color-neutral)]">
                         SVG 源码
                       </span>
                       <span class="label-text-alt text-rose-500">
@@ -2331,7 +2364,7 @@ ${classes}`;
                   <div class="flex justify-end gap-3">
                     <button
                       type="button"
-                      class="rounded-2xl px-5 py-2.5 text-sm font-semibold text-rose-700 transition-all hover:bg-rose-50"
+                      class="rounded-md px-5 py-2.5 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
                       onClick$={() => {
                         showEdit.value = false;
                         showSVGSource.value = false;
@@ -2341,7 +2374,7 @@ ${classes}`;
                     </button>
                     <button
                       type="submit"
-                      class="clay-button rounded-2xl bg-rose-500 px-6 py-2.5 text-sm font-bold text-white"
+                      class="clay-button bg-rose-500 px-6 py-2.5 text-sm font-bold text-white"
                     >
                       保存
                     </button>
@@ -2361,8 +2394,8 @@ ${classes}`;
       {showCode.value && (
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-3xl">
-            <div class="border-b border-rose-100 px-6 py-4">
-              <h3 class="text-lg font-bold text-rose-950">
+            <div class="border-b border-[var(--color-base-300)] px-6 py-4">
+              <h3 class="text-lg font-bold text-[var(--color-neutral)]">
                 生成代码
               </h3>
             </div>
@@ -2371,7 +2404,7 @@ ${classes}`;
                 {(["fontclass", "symbol", "unicode"] as const).map((mode) => (
                   <button
                     key={mode}
-                    class={`rounded-xl px-4 py-2 text-sm font-semibold transition-all ${codeMode.value === mode ? "bg-rose-500 text-white shadow-md shadow-rose-500/20" : "bg-rose-50 text-rose-600 hover:bg-rose-100"}`}
+                    class={`rounded-md px-4 py-2 text-sm font-semibold transition-all ${codeMode.value === mode ? "bg-rose-500 text-white shadow-sm" : "bg-[var(--color-base-200)] text-[var(--color-neutral)] hover:bg-[var(--color-base-300)]"}`}
                     onClick$={() => (codeMode.value = mode)}
                   >
                     {mode === "fontclass"
@@ -2384,8 +2417,8 @@ ${classes}`;
               </div>
 
               {codeMode.value === "fontclass" && selectedIds.ids.size > 0 && (
-                <div class="mb-4 rounded-2xl bg-gradient-to-br from-rose-50 to-pink-50 p-4">
-                  <p class="mb-2 text-xs font-semibold text-rose-400/70">
+                <div class="mb-4 rounded-md bg-[var(--color-base-200)] p-4">
+                  <p class="mb-2 text-xs font-semibold text-[var(--color-base-400)]">
                     字体预览
                   </p>
                   {fontPreviewCSS.value && (
@@ -2404,7 +2437,7 @@ ${classes}`;
                             class={`${project.prefix} ${project.prefix}${icon.name}`}
                             style="font-size: 24px;"
                           />
-                          <span class="text-[10px] text-rose-400/60">
+                          <span class="text-[10px] text-[var(--color-base-400)]">
                             {icon.name}
                           </span>
                         </div>
@@ -2414,7 +2447,7 @@ ${classes}`;
               )}
 
               {codeMode.value === "symbol" && selectedIds.ids.size > 0 && (
-                <div class="mb-4 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
+                <div class="mb-4 rounded-md bg-[var(--color-base-200)] p-4">
                   <p class="mb-2 text-xs font-semibold text-blue-400/70">
                     Symbol 引用示例
                   </p>
@@ -2440,7 +2473,7 @@ ${classes}`;
               )}
 
               {codeMode.value === "unicode" && selectedIds.ids.size > 0 && (
-                <div class="mb-4 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 p-4">
+                <div class="mb-4 rounded-md bg-[var(--color-base-200)] p-4">
                   <p class="mb-2 text-xs font-semibold text-emerald-400/70">
                     Unicode 预览
                   </p>
@@ -2475,12 +2508,12 @@ ${classes}`;
                 </div>
               )}
 
-              <div class="group relative rounded-2xl bg-rose-950 p-4">
-                <pre class="max-h-80 overflow-auto text-sm whitespace-pre-wrap text-rose-100">
+              <div class="group relative rounded-md bg-neutral-900 p-4">
+                <pre class="max-h-80 overflow-auto text-sm whitespace-pre-wrap text-neutral-100">
                   <code>{generatedCode.value}</code>
                 </pre>
                 <button
-                  class={`absolute top-3 right-3 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${copied.value ? "bg-emerald-500 text-white" : "bg-white/10 text-rose-200 opacity-0 group-hover:opacity-100 hover:bg-white/20"}`}
+                  class={`absolute top-3 right-3 rounded-md px-3 py-1.5 text-xs font-bold transition-all ${copied.value ? "bg-emerald-500 text-white" : "bg-white/10 text-neutral-200 opacity-0 group-hover:opacity-100 hover:bg-white/20"}`}
                   onClick$={copyToClipboard}
                 >
                   {copied.value ? "已复制!" : "复制"}
@@ -2488,7 +2521,7 @@ ${classes}`;
               </div>
               <div class="mt-4 flex justify-end gap-3">
                 <button
-                  class="clay-button rounded-2xl bg-rose-500 px-5 py-2.5 text-sm font-bold text-white"
+                  class="clay-button bg-rose-500 px-5 py-2.5 text-sm font-bold text-white"
                   onClick$={() => {
                     const code = generatedCode.value;
                     if (!code) return;
@@ -2521,7 +2554,7 @@ ${classes}`;
                   下载代码
                 </button>
                 <button
-                  class="rounded-2xl px-5 py-2.5 text-sm font-semibold text-rose-700 transition-all hover:bg-rose-50"
+                  class="rounded-md px-5 py-2.5 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
                   onClick$={() => (showCode.value = false)}
                 >
                   关闭
@@ -2540,8 +2573,8 @@ ${classes}`;
       {showBatchRename.value && (
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-lg">
-            <div class="border-b border-rose-100 px-6 py-4">
-              <h3 class="text-lg font-bold text-rose-950">
+            <div class="border-b border-[var(--color-base-300)] px-6 py-4">
+              <h3 class="text-lg font-bold text-[var(--color-neutral)]">
                 批量重命名 ({selectedIds.ids.size} 个图标)
               </h3>
             </div>
@@ -2581,7 +2614,7 @@ ${classes}`;
                 <div class="grid grid-cols-2 gap-3">
                   <div class="form-control">
                     <label class="label">
-                      <span class="label-text text-sm font-semibold text-rose-800">
+                      <span class="label-text text-sm font-semibold text-[var(--color-neutral)]">
                         前缀
                       </span>
                     </label>
@@ -2597,7 +2630,7 @@ ${classes}`;
                   </div>
                   <div class="form-control">
                     <label class="label">
-                      <span class="label-text text-sm font-semibold text-rose-800">
+                      <span class="label-text text-sm font-semibold text-[var(--color-neutral)]">
                         后缀
                       </span>
                     </label>
@@ -2615,7 +2648,7 @@ ${classes}`;
                 <div class="grid grid-cols-2 gap-3">
                   <div class="form-control">
                     <label class="label">
-                      <span class="label-text text-sm font-semibold text-rose-800">
+                      <span class="label-text text-sm font-semibold text-[var(--color-neutral)]">
                         查找
                       </span>
                     </label>
@@ -2631,7 +2664,7 @@ ${classes}`;
                   </div>
                   <div class="form-control">
                     <label class="label">
-                      <span class="label-text text-sm font-semibold text-rose-800">
+                      <span class="label-text text-sm font-semibold text-[var(--color-neutral)]">
                         替换为
                       </span>
                     </label>
@@ -2647,12 +2680,12 @@ ${classes}`;
                   </div>
                 </div>
                 {renamePreview.value.items.length > 0 && (
-                  <div class="rounded-2xl bg-gradient-to-br from-rose-50 to-pink-50 p-3">
-                    <p class="mb-2 text-xs font-semibold text-rose-400/70">
+                  <div class="rounded-md bg-[var(--color-base-200)] p-3">
+                    <p class="mb-2 text-xs font-semibold text-[var(--color-base-400)]">
                       预览{" "}
                       {renamePreview.value.total >
                         renamePreview.value.items.length && (
-                        <span class="text-rose-300">
+                        <span class="text-[var(--color-base-400)]">
                           （前 {renamePreview.value.items.length} 个，共{" "}
                           {renamePreview.value.total} 个）
                         </span>
@@ -2661,7 +2694,7 @@ ${classes}`;
                     <div class="space-y-1 text-sm">
                       {renamePreview.value.items.map((p, idx) => (
                         <div key={idx} class="flex items-center gap-2">
-                          <span class="flex-1 truncate text-rose-300 line-through">
+                          <span class="flex-1 truncate text-[var(--color-base-400)] line-through">
                             {p.oldName}
                           </span>
                           <svg
@@ -2672,11 +2705,11 @@ ${classes}`;
                             fill="none"
                             stroke="currentColor"
                             stroke-width="2"
-                            class="flex-shrink-0 text-rose-300"
+                            class="flex-shrink-0 text-[var(--color-base-400)]"
                           >
                             <path d="m9 18 6-6-6-6" />
                           </svg>
-                          <span class="flex-1 truncate font-semibold text-rose-600">
+                          <span class="flex-1 truncate font-semibold text-[var(--color-neutral)]">
                             {p.newName}
                           </span>
                         </div>
@@ -2685,10 +2718,10 @@ ${classes}`;
                   </div>
                 )}
               </div>
-              <div class="flex justify-end gap-3 border-t border-rose-100 px-6 py-4">
+              <div class="flex justify-end gap-3 border-t border-[var(--color-base-300)] px-6 py-4">
                 <button
                   type="button"
-                  class="rounded-2xl px-5 py-2.5 text-sm font-semibold text-rose-700 transition-all hover:bg-rose-50"
+                  class="rounded-md px-5 py-2.5 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
                   onClick$={() => {
                     renameForm.prefix = "";
                     renameForm.suffix = "";
@@ -2701,7 +2734,7 @@ ${classes}`;
                 </button>
                 <button
                   type="submit"
-                  class="clay-button rounded-2xl bg-rose-500 px-6 py-2.5 text-sm font-bold text-white"
+                  class="clay-button bg-rose-500 px-6 py-2.5 text-sm font-bold text-white"
                 >
                   应用
                 </button>
@@ -2720,7 +2753,7 @@ ${classes}`;
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-sm text-center">
             <div class="p-6">
-              <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-100">
+              <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-md bg-[var(--color-base-200)]">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="28"
@@ -2736,16 +2769,16 @@ ${classes}`;
                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                 </svg>
               </div>
-              <h3 class="text-lg font-bold text-rose-950">
+              <h3 class="text-lg font-bold text-[var(--color-neutral)]">
                 确认删除
               </h3>
-              <p class="mt-2 text-sm text-rose-700/60">
+              <p class="mt-2 text-sm text-[var(--color-base-400)]">
                 确定要删除图标 "{confirmDeleteIcon.iconName}"
                 吗？此操作不可恢复。
               </p>
               <div class="mt-5 flex justify-center gap-3">
                 <button
-                  class="rounded-2xl px-5 py-2.5 text-sm font-semibold text-rose-700 transition-all hover:bg-rose-50"
+                  class="rounded-md px-5 py-2.5 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
                   onClick$={() => {
                     confirmDeleteIcon.show = false;
                     confirmDeleteIcon.iconId = 0;
@@ -2754,7 +2787,7 @@ ${classes}`;
                   取消
                 </button>
                 <button
-                  class="clay-button rounded-2xl bg-rose-500 px-6 py-2.5 text-sm font-bold text-white"
+                  class="clay-button bg-rose-500 px-6 py-2.5 text-sm font-bold text-white"
                   onClick$={doDeleteIcon}
                 >
                   删除
@@ -2777,7 +2810,7 @@ ${classes}`;
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-sm text-center">
             <div class="p-6">
-              <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-100">
+              <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-md bg-[var(--color-base-200)]">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="28"
@@ -2793,16 +2826,16 @@ ${classes}`;
                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                 </svg>
               </div>
-              <h3 class="text-lg font-bold text-rose-950">
+              <h3 class="text-lg font-bold text-[var(--color-neutral)]">
                 确认批量删除
               </h3>
-              <p class="mt-2 text-sm text-rose-700/60">
+              <p class="mt-2 text-sm text-[var(--color-base-400)]">
                 确定要删除选中的 {confirmBatchDelete.count}{" "}
                 个图标吗？此操作不可恢复。
               </p>
               <div class="mt-5 flex justify-center gap-3">
                 <button
-                  class="rounded-2xl px-5 py-2.5 text-sm font-semibold text-rose-700 transition-all hover:bg-rose-50"
+                  class="rounded-md px-5 py-2.5 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
                   onClick$={() => {
                     confirmBatchDelete.show = false;
                     confirmBatchDelete.count = 0;
@@ -2811,7 +2844,7 @@ ${classes}`;
                   取消
                 </button>
                 <button
-                  class="clay-button rounded-2xl bg-rose-500 px-6 py-2.5 text-sm font-bold text-white"
+                  class="clay-button bg-rose-500 px-6 py-2.5 text-sm font-bold text-white"
                   onClick$={doBatchDelete}
                 >
                   删除
@@ -2834,7 +2867,7 @@ ${classes}`;
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-xs">
             <div class="p-5">
-              <h3 class="mb-4 text-base font-bold text-rose-950">
+              <h3 class="mb-4 text-base font-bold text-[var(--color-neutral)]">
                 键盘快捷键
               </h3>
               <div class="space-y-2 text-sm">
@@ -2849,8 +2882,8 @@ ${classes}`;
                     class="flex items-center justify-between py-1"
                     key={label}
                   >
-                    <span class="text-rose-700/60">{label}</span>
-                    <kbd class="rounded-lg bg-rose-50 px-2 py-1 text-xs font-semibold text-rose-600">
+                    <span class="text-[var(--color-base-400)]">{label}</span>
+                    <kbd class="rounded-md bg-[var(--color-base-200)] px-2 py-1 text-xs font-semibold text-[var(--color-neutral)]">
                       {key}
                     </kbd>
                   </div>
@@ -2858,7 +2891,7 @@ ${classes}`;
               </div>
               <div class="mt-4 flex justify-end">
                 <button
-                  class="rounded-2xl px-4 py-2 text-sm font-semibold text-rose-700 transition-all hover:bg-rose-50"
+                  class="rounded-md px-4 py-2 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
                   onClick$={() => (showShortcuts.value = false)}
                 >
                   关闭
@@ -2950,9 +2983,9 @@ ${classes}`;
       {showAIGenerate.value && (
         <div class="modal modal-open z-50">
           <div class="clay-card animate-modal mx-4 w-full max-w-lg">
-            <div class="flex items-center justify-between border-b border-rose-100 px-6 py-4">
+            <div class="flex items-center justify-between border-b border-[var(--color-base-300)] px-6 py-4">
               <div>
-                <h3 class="text-lg font-bold text-rose-950">
+                <h3 class="text-lg font-bold text-[var(--color-neutral)]">
                   ✨ AI 生成图标
                 </h3>
                 {aiApiKey.value && (
@@ -2962,7 +2995,7 @@ ${classes}`;
                 )}
               </div>
               <button
-                class="flex h-8 w-8 items-center justify-center rounded-xl text-rose-400 transition-all hover:bg-rose-50 hover:text-rose-600"
+                class="flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-base-400)] transition-all hover:bg-[var(--color-base-200)] hover:text-[var(--color-neutral)]"
                 onClick$={() => {
                   showAIGenerate.value = false;
                   aiPreviewSvg.value = "";
@@ -2986,7 +3019,7 @@ ${classes}`;
             </div>
             <div class="space-y-4 p-6">
               <div>
-                <label class="mb-1 block text-sm font-semibold text-rose-700">
+                <label class="mb-1 block text-sm font-semibold text-[var(--color-neutral)]">
                   图标描述
                 </label>
                 <textarea
@@ -2998,14 +3031,14 @@ ${classes}`;
                 />
               </div>
               <div>
-                <label class="mb-1 block text-sm font-semibold text-rose-700">
+                <label class="mb-1 block text-sm font-semibold text-[var(--color-neutral)]">
                   风格
                 </label>
                 <div class="flex gap-2">
                   {(["outline", "filled"] as const).map((s) => (
                     <button
                       key={s}
-                      class={`flex-1 rounded-2xl py-2 text-sm font-semibold transition-all ${aiStyle.value === s ? "bg-rose-500 text-white shadow-md shadow-rose-500/20" : "bg-rose-50 text-rose-600 hover:bg-rose-100"}`}
+                      class={`flex-1 rounded-md py-2 text-sm font-semibold transition-all ${aiStyle.value === s ? "bg-rose-500 text-white shadow-sm" : "bg-[var(--color-base-200)] text-[var(--color-neutral)] hover:bg-[var(--color-base-300)]"}`}
                       onClick$={() => (aiStyle.value = s)}
                     >
                       {s === "outline" ? "线条" : "填充"}
@@ -3014,15 +3047,15 @@ ${classes}`;
                 </div>
               </div>
               <button
-                class="clay-button w-full rounded-2xl bg-violet-500 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                class="clay-button w-full bg-violet-500 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
                 onClick$={generateAIIcon}
                 disabled={!aiPrompt.value.trim() || aiGenerating.value}
               >
                 {aiGenerating.value ? "AI 生成中..." : "✨ 生成图标"}
               </button>
               {aiPreviewSvg.value && (
-                <div class="space-y-3 rounded-2xl bg-violet-50 p-4">
-                  <div class="flex items-center justify-center rounded-xl bg-white p-6">
+                <div class="space-y-3 rounded-md bg-[var(--color-base-200)] p-4">
+                  <div class="flex items-center justify-center rounded-md bg-[var(--color-base-100)] p-6">
                     <SvgPreview
                       content={aiPreviewSvg.value}
                       class="h-20 w-20"
@@ -3036,7 +3069,7 @@ ${classes}`;
                     onInput$={(e: any) => (aiIconName.value = e.target.value)}
                   />
                   <button
-                    class="clay-button w-full rounded-2xl bg-emerald-500 py-2.5 text-sm font-bold text-white"
+                    class="clay-button w-full bg-emerald-500 py-2.5 text-sm font-bold text-white"
                     onClick$={addAIGeneratedIcon}
                   >
                     ＋ 添加到项目
@@ -3059,9 +3092,9 @@ ${classes}`;
       {showAIModify.value && (
         <div class="modal modal-open z-50">
           <div class="clay-card animate-modal mx-4 w-full max-w-lg">
-            <div class="flex items-center justify-between border-b border-rose-100 px-6 py-4">
+            <div class="flex items-center justify-between border-b border-[var(--color-base-300)] px-6 py-4">
               <div>
-                <h3 class="text-lg font-bold text-rose-950">
+                <h3 class="text-lg font-bold text-[var(--color-neutral)]">
                   ✨ AI 修改 · {aiModifyIcon.name}
                 </h3>
                 {aiApiKey.value && (
@@ -3071,7 +3104,7 @@ ${classes}`;
                 )}
               </div>
               <button
-                class="flex h-8 w-8 items-center justify-center rounded-xl text-rose-400 transition-all hover:bg-rose-50 hover:text-rose-600"
+                class="flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-base-400)] transition-all hover:bg-[var(--color-base-200)] hover:text-[var(--color-neutral)]"
                 onClick$={() => {
                   showAIModify.value = false;
                   aiModifiedSvg.value = "";
@@ -3099,10 +3132,10 @@ ${classes}`;
                 class={`grid gap-4 ${aiModifiedSvg.value ? "grid-cols-2" : "grid-cols-1"}`}
               >
                 <div>
-                  <label class="mb-1 block text-xs font-semibold tracking-wider text-rose-400/60 uppercase">
+                  <label class="mb-1 block text-xs font-semibold tracking-wider text-[var(--color-base-400)] uppercase">
                     原始
                   </label>
-                  <div class="flex items-center justify-center rounded-2xl bg-rose-50 p-6">
+                  <div class="flex items-center justify-center rounded-md bg-[var(--color-base-200)] p-6">
                     <SvgPreview
                       content={aiModifyIcon.content ?? null}
                       class="h-16 w-16"
@@ -3114,7 +3147,7 @@ ${classes}`;
                     <label class="mb-1 block text-xs font-semibold tracking-wider text-emerald-500/80 uppercase">
                       修改后
                     </label>
-                    <div class="flex items-center justify-center rounded-2xl bg-emerald-50 p-6">
+                    <div class="flex items-center justify-center rounded-md bg-[var(--color-base-200)] p-6">
                       <SvgPreview
                         content={aiModifiedSvg.value}
                         class="h-16 w-16"
@@ -3124,7 +3157,7 @@ ${classes}`;
                 )}
               </div>
               <div>
-                <label class="mb-1 block text-sm font-semibold text-rose-700">
+                <label class="mb-1 block text-sm font-semibold text-[var(--color-neutral)]">
                   修改说明
                 </label>
                 <textarea
@@ -3139,7 +3172,7 @@ ${classes}`;
               </div>
               <div class="flex gap-2">
                 <button
-                  class="clay-button flex-1 rounded-2xl bg-violet-500 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  class="clay-button flex-1 bg-violet-500 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
                   onClick$={performAIModify}
                   disabled={
                     !aiModifyInstruction.value.trim() || aiModifying.value
@@ -3149,7 +3182,7 @@ ${classes}`;
                 </button>
                 {aiModifiedSvg.value && (
                   <button
-                    class="clay-button flex-1 rounded-2xl bg-emerald-500 py-2.5 text-sm font-bold text-white"
+                    class="clay-button flex-1 bg-emerald-500 py-2.5 text-sm font-bold text-white"
                     onClick$={applyAIModify}
                   >
                     ✓ 应用修改
@@ -3173,17 +3206,17 @@ ${classes}`;
       {showAISettings.value && (
         <div class="modal modal-open z-50">
           <div class="clay-card animate-modal mx-4 w-full max-w-md">
-            <div class="flex items-center justify-between border-b border-rose-100 px-6 py-4">
+            <div class="flex items-center justify-between border-b border-[var(--color-base-300)] px-6 py-4">
               <div>
-                <h3 class="text-lg font-bold text-rose-950">
+                <h3 class="text-lg font-bold text-[var(--color-neutral)]">
                   ⚙️ AI 设置
                 </h3>
-                <p class="mt-0.5 text-xs text-rose-400">
+                <p class="mt-0.5 text-xs text-[var(--color-base-400)]">
                   使用自己的 API Key（BYOA）
                 </p>
               </div>
               <button
-                class="flex h-8 w-8 items-center justify-center rounded-xl text-rose-400 transition-all hover:bg-rose-50 hover:text-rose-600"
+                class="flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-base-400)] transition-all hover:bg-[var(--color-base-200)] hover:text-[var(--color-neutral)]"
                 onClick$={() => (showAISettings.value = false)}
               >
                 <svg
@@ -3204,8 +3237,8 @@ ${classes}`;
             </div>
             <div class="space-y-4 p-6">
               <div>
-                <label class="mb-1 block text-sm font-semibold text-rose-700">
-                  API Key <span class="text-rose-400">*</span>
+                <label class="mb-1 block text-sm font-semibold text-[var(--color-neutral)]">
+                  API Key <span class="text-[var(--color-base-400)]">*</span>
                 </label>
                 <input
                   type="password"
@@ -3216,9 +3249,11 @@ ${classes}`;
                 />
               </div>
               <div>
-                <label class="mb-1 block text-sm font-semibold text-rose-700">
+                <label class="mb-1 block text-sm font-semibold text-[var(--color-neutral)]">
                   Base URL
-                  <span class="ml-1 font-normal text-rose-400">（可选）</span>
+                  <span class="ml-1 font-normal text-[var(--color-base-400)]">
+                    （可选）
+                  </span>
                 </label>
                 <input
                   type="url"
@@ -3227,15 +3262,17 @@ ${classes}`;
                   value={aiBaseUrl.value}
                   onInput$={(e: any) => (aiBaseUrl.value = e.target.value)}
                 />
-                <p class="mt-1 text-xs text-rose-400">
+                <p class="mt-1 text-xs text-[var(--color-base-400)]">
                   兼容 OpenAI API 的服务均可使用，例如 DeepSeek、Groq、Mistral
                   等
                 </p>
               </div>
               <div>
-                <label class="mb-1 block text-sm font-semibold text-rose-700">
+                <label class="mb-1 block text-sm font-semibold text-[var(--color-neutral)]">
                   模型
-                  <span class="ml-1 font-normal text-rose-400">（可选）</span>
+                  <span class="ml-1 font-normal text-[var(--color-base-400)]">
+                    （可选）
+                  </span>
                 </label>
                 <input
                   type="text"
@@ -3245,19 +3282,19 @@ ${classes}`;
                   onInput$={(e: any) => (aiModel.value = e.target.value)}
                 />
               </div>
-              <p class="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-700">
+              <p class="rounded-md bg-[var(--color-base-200)] px-3 py-2 text-xs text-[var(--color-neutral)]">
                 🔒 设置保存在浏览器本地，仅在调用 AI
                 时经由服务端转发，不会被记录或持久化。
               </p>
               <div class="flex gap-2 pt-1">
                 <button
-                  class="clay-button rounded-2xl bg-rose-100 px-4 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-200"
+                  class="clay-button bg-[var(--color-base-200)] px-4 py-2.5 text-sm font-semibold text-[var(--color-neutral)] hover:bg-[var(--color-base-300)]"
                   onClick$={clearAISettings}
                 >
                   清除设置
                 </button>
                 <button
-                  class="clay-button flex-1 rounded-2xl bg-violet-500 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  class="clay-button flex-1 bg-violet-500 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
                   onClick$={saveAISettings}
                   disabled={!aiApiKey.value.trim()}
                 >
@@ -3277,8 +3314,8 @@ ${classes}`;
       {showBatchTag.value && (
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-lg">
-            <div class="border-b border-rose-100 px-6 py-4">
-              <h3 class="text-lg font-bold text-rose-950">
+            <div class="border-b border-[var(--color-base-300)] px-6 py-4">
+              <h3 class="text-lg font-bold text-[var(--color-neutral)]">
                 批量标签管理 ({selectedIds.ids.size} 个图标)
               </h3>
             </div>
@@ -3287,7 +3324,7 @@ ${classes}`;
                 {(["add", "remove", "set"] as const).map((action) => (
                   <button
                     key={action}
-                    class={`rounded-xl px-4 py-2 text-sm font-semibold transition-all ${batchTagForm.action === action ? "bg-rose-500 text-white shadow-md shadow-rose-500/20" : "bg-rose-50 text-rose-600 hover:bg-rose-100"}`}
+                    class={`rounded-md px-4 py-2 text-sm font-semibold transition-all ${batchTagForm.action === action ? "bg-rose-500 text-white shadow-sm" : "bg-[var(--color-base-200)] text-[var(--color-neutral)] hover:bg-[var(--color-base-300)]"}`}
                     onClick$={() => (batchTagForm.action = action)}
                   >
                     {action === "add"
@@ -3300,7 +3337,7 @@ ${classes}`;
               </div>
               <div class="form-control mb-4">
                 <label class="label">
-                  <span class="label-text text-sm font-semibold text-rose-800">
+                  <span class="label-text text-sm font-semibold text-[var(--color-neutral)]">
                     {batchTagForm.action === "add"
                       ? "添加标签（逗号分隔）"
                       : batchTagForm.action === "remove"
@@ -3319,7 +3356,7 @@ ${classes}`;
               {allTags.value.length > 0 && (
                 <div class="mb-4">
                   <label class="label">
-                    <span class="label-text text-xs font-semibold text-rose-400/70">
+                    <span class="label-text text-xs font-semibold text-[var(--color-base-400)]">
                       已有标签
                     </span>
                   </label>
@@ -3327,7 +3364,7 @@ ${classes}`;
                     {allTags.value.map((tag) => (
                       <button
                         key={tag}
-                        class="rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-600 transition-all hover:bg-rose-100"
+                        class="rounded-full bg-[var(--color-base-200)] px-3 py-1 text-xs font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-300)]"
                         onClick$={() => {
                           const current = batchTagForm.tags
                             .split(",")
@@ -3345,13 +3382,13 @@ ${classes}`;
               )}
               <div class="flex justify-end gap-3">
                 <button
-                  class="rounded-2xl px-5 py-2.5 text-sm font-semibold text-rose-700 transition-all hover:bg-rose-50"
+                  class="rounded-md px-5 py-2.5 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
                   onClick$={() => (showBatchTag.value = false)}
                 >
                   取消
                 </button>
                 <button
-                  class="clay-button rounded-2xl bg-rose-500 px-6 py-2.5 text-sm font-bold text-white"
+                  class="clay-button bg-rose-500 px-6 py-2.5 text-sm font-bold text-white"
                   onClick$={async () => {
                     const ids = Array.from(selectedIds.ids).join(",");
                     await batchUpdateTags.submit({
@@ -3402,17 +3439,17 @@ ${classes}`;
       {showMembers.value && (
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-lg">
-            <div class="border-b border-rose-100 px-6 py-4">
-              <h3 class="text-lg font-bold text-rose-950">
+            <div class="border-b border-[var(--color-base-300)] px-6 py-4">
+              <h3 class="text-lg font-bold text-[var(--color-neutral)]">
                 项目成员
               </h3>
             </div>
             <div class="px-6 py-5">
               <ProjectMembers projectId={parseInt(loc.params.id, 10)} />
             </div>
-            <div class="flex justify-end border-t border-rose-100 px-6 py-4">
+            <div class="flex justify-end border-t border-[var(--color-base-300)] px-6 py-4">
               <button
-                class="rounded-2xl bg-rose-50 px-5 py-2.5 text-sm font-semibold text-rose-700 transition-all hover:bg-rose-100"
+                class="rounded-md bg-[var(--color-base-200)] px-5 py-2.5 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-300)]"
                 onClick$={() => (showMembers.value = false)}
               >
                 关闭

@@ -97,7 +97,7 @@ export const ProjectMembers = component$(
       src: string | null;
       name: string | null;
     }) => (
-      <div class="flex h-9 w-9 items-center justify-center rounded-full bg-rose-100 text-xs font-bold text-rose-600">
+      <div class="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-base-200)] text-xs font-bold text-[var(--color-neutral)]">
         {src ? (
           <img
             src={src}
@@ -115,7 +115,7 @@ export const ProjectMembers = component$(
     return (
       <div class="space-y-5">
         {error.value && (
-          <div class="rounded-xl bg-rose-50 px-4 py-2.5 text-sm text-rose-600">
+          <div class="rounded-md bg-[var(--color-base-200)] px-4 py-2.5 text-sm text-[var(--color-neutral)]">
             {error.value}
           </div>
         )}
@@ -138,7 +138,7 @@ export const ProjectMembers = component$(
               <option value="viewer">查看者</option>
             </select>
             <button
-              class="clay-button rounded-2xl bg-rose-500 px-4 py-2.5 text-sm font-bold text-white"
+              class="clay-button rounded-md bg-rose-500 px-4 py-2.5 text-sm font-bold text-white"
               onClick$={invite}
             >
               邀请
@@ -149,13 +149,13 @@ export const ProjectMembers = component$(
         <div class="space-y-2">
           {/* Owner */}
           {owner.value && (
-            <div class="flex items-center gap-3 rounded-2xl bg-rose-50/50 px-4 py-3">
+            <div class="flex items-center gap-3 rounded-md bg-[var(--color-base-200)] px-4 py-3">
               <Avatar src={owner.value.image} name={owner.value.name} />
               <div class="min-w-0 flex-1">
-                <p class="truncate text-sm font-semibold text-rose-900">
+                <p class="truncate text-sm font-semibold text-[var(--color-neutral)]">
                   {owner.value.name || "未命名"}
                 </p>
-                <p class="truncate text-xs text-rose-400/70">
+                <p class="truncate text-xs text-[var(--color-base-400)]">
                   {owner.value.email}
                 </p>
               </div>
@@ -169,14 +169,16 @@ export const ProjectMembers = component$(
           {members.value.map((m) => (
             <div
               key={m.id}
-              class="flex items-center gap-3 rounded-2xl bg-white/60 px-4 py-3"
+              class="flex items-center gap-3 rounded-md bg-[var(--color-base-100)] px-4 py-3"
             >
               <Avatar src={m.image} name={m.name} />
               <div class="min-w-0 flex-1">
-                <p class="truncate text-sm font-semibold text-rose-900">
+                <p class="truncate text-sm font-semibold text-[var(--color-neutral)]">
                   {m.name || "未命名"}
                 </p>
-                <p class="truncate text-xs text-rose-400/70">{m.email}</p>
+                <p class="truncate text-xs text-[var(--color-base-400)]">
+                  {m.email}
+                </p>
               </div>
               {isOwner.value ? (
                 <div class="flex items-center gap-2">
@@ -191,7 +193,7 @@ export const ProjectMembers = component$(
                     <option value="viewer">查看者</option>
                   </select>
                   <button
-                    class="flex h-7 w-7 items-center justify-center rounded-lg text-rose-400 transition-all hover:bg-rose-50 hover:text-rose-600"
+                    class="flex h-7 w-7 items-center justify-center rounded-md text-[var(--color-base-400)] transition-all hover:bg-[var(--color-base-200)] hover:text-[var(--color-neutral)]"
                     onClick$={() => removeMember(m.user_id)}
                     title="移除"
                   >
@@ -210,7 +212,7 @@ export const ProjectMembers = component$(
                   </button>
                 </div>
               ) : (
-                <span class="rounded-full bg-rose-100 px-2.5 py-0.5 text-[10px] font-semibold text-rose-600">
+                <span class="rounded-full bg-[var(--color-base-200)] px-2.5 py-0.5 text-[10px] font-semibold text-[var(--color-neutral)]">
                   {m.role === "editor" ? "编辑者" : "查看者"}
                 </span>
               )}
@@ -218,7 +220,7 @@ export const ProjectMembers = component$(
           ))}
 
           {members.value.length === 0 && !loading.value && (
-            <p class="py-4 text-center text-sm text-rose-400/60">
+            <p class="py-4 text-center text-sm text-[var(--color-base-400)]">
               暂无协作成员
             </p>
           )}

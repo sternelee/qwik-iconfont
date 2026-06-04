@@ -1,7 +1,16 @@
 import { component$, useSignal, $, useVisibleTask$ } from "@builder.io/qwik";
-import { useNavigate } from "@builder.io/qwik-city";
+import { useNavigate, type DocumentHead } from "@builder.io/qwik-city";
 import { signIn, getSession, signInSocial } from "~/lib/auth-client";
 import { migrateLocalProjects } from "~/lib/local-migration";
+export const head: DocumentHead = {
+  title: "登录 - Iconfont",
+  meta: [
+    {
+      name: "description",
+      content: "登录 Iconfont，将项目保存到云端。",
+    },
+  ],
+};
 
 export default component$(() => {
   const email = useSignal("");
@@ -41,11 +50,11 @@ export default component$(() => {
   });
 
   return (
-    <div class="bg-base-200 flex min-h-screen items-center justify-center px-4">
+    <div class="flex min-h-screen items-center justify-center bg-[var(--color-base-200)] px-4">
       <div class="w-full max-w-sm">
         {/* Logo */}
         <a href="/" class="mb-6 flex items-center justify-center gap-2">
-          <div class="bg-primary text-primary-content flex h-9 w-9 items-center justify-center rounded-lg">
+          <div class="flex h-9 w-9 items-center justify-center rounded-md bg-rose-500 text-white">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -62,28 +71,33 @@ export default component$(() => {
               <polyline points="21 15 16 10 5 21" />
             </svg>
           </div>
-          <span class="text-lg font-semibold">Iconfont</span>
+          <span class="text-lg font-bold tracking-tight text-[var(--color-neutral)]">
+            Iconfont
+          </span>
         </a>
 
         {/* Card */}
-        <div class="bg-base-100 rounded-xl p-6 shadow-sm">
-          <h1 class="mb-1 text-center text-base font-semibold">登录</h1>
-          <p class="text-base-content/50 mb-5 text-center text-sm">
+        <div class="clay-card p-6">
+          <h1 class="mb-1 text-center text-base font-bold text-[var(--color-neutral)]">
+            登录
+          </h1>
+          <p class="mb-5 text-center text-sm text-[var(--color-base-400)]">
             登录后项目将保存到云端
           </p>
 
           {error.value && (
-            <div class="alert alert-error mb-4 py-2 text-sm">
+            <div class="mb-4 flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                class="h-4 w-4 shrink-0 stroke-current"
+                class="h-4 w-4 shrink-0"
                 fill="none"
                 viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
               >
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
-                  stroke-width="2"
                   d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
@@ -96,25 +110,25 @@ export default component$(() => {
             onSubmit$={handleSubmit}
             class="space-y-3"
           >
-            <div class="form-control">
-              <label class="label py-1">
-                <span class="label-text text-sm">邮箱</span>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-[var(--color-neutral)]">
+                邮箱
               </label>
               <input
                 type="email"
-                class="input input-bordered input-sm w-full"
+                class="input-clay w-full px-4 py-2.5 text-sm"
                 placeholder="your@email.com"
                 value={email.value}
                 onInput$={(ev: any) => (email.value = ev.target.value)}
               />
             </div>
-            <div class="form-control">
-              <label class="label py-1">
-                <span class="label-text text-sm">密码</span>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-[var(--color-neutral)]">
+                密码
               </label>
               <input
                 type="password"
-                class="input input-bordered input-sm w-full"
+                class="input-clay w-full px-4 py-2.5 text-sm"
                 placeholder="••••••••"
                 value={password.value}
                 onInput$={(ev: any) => (password.value = ev.target.value)}
@@ -122,20 +136,27 @@ export default component$(() => {
             </div>
             <button
               type="submit"
-              class={`btn btn-primary btn-sm w-full ${loading.value ? "loading" : ""}`}
+              class={`clay-button w-full bg-rose-500 px-4 py-2.5 text-sm text-white ${loading.value ? "opacity-70" : ""}`}
               disabled={loading.value}
             >
               {loading.value ? "登录中..." : "登录"}
             </button>
           </form>
 
-          <div class="divider my-4 text-xs">或</div>
+          <div class="relative my-5 text-center">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-[var(--color-base-300)]" />
+            </div>
+            <span class="relative bg-[var(--color-base-100)] px-2 text-xs text-[var(--color-base-400)]">
+              或
+            </span>
+          </div>
 
           {/* OAuth */}
-          <div class="mt-3 flex flex-col gap-2">
+          <div class="flex flex-col gap-2">
             <button
               type="button"
-              class="btn btn-outline btn-sm flex w-full items-center gap-2"
+              class="clay-button-secondary flex w-full items-center justify-center gap-2 rounded-md border border-[var(--color-base-300)] bg-[var(--color-base-100)] px-4 py-2.5 text-sm text-[var(--color-neutral)] transition-all hover:border-[var(--color-base-300)] hover:bg-[var(--color-base-200)]"
               onClick$={() => signInSocial("github")}
             >
               <svg
@@ -151,7 +172,7 @@ export default component$(() => {
             </button>
             <button
               type="button"
-              class="btn btn-outline btn-sm flex w-full items-center gap-2"
+              class="clay-button-secondary flex w-full items-center justify-center gap-2 rounded-md border border-[var(--color-base-300)] bg-[var(--color-base-100)] px-4 py-2.5 text-sm text-[var(--color-neutral)] transition-all hover:border-[var(--color-base-300)] hover:bg-[var(--color-base-200)]"
               onClick$={() => signInSocial("google")}
             >
               <svg
@@ -170,17 +191,30 @@ export default component$(() => {
             </button>
           </div>
 
-          <div class="divider my-4 text-xs">或</div>
+          <div class="relative my-5 text-center">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-[var(--color-base-300)]" />
+            </div>
+            <span class="relative bg-[var(--color-base-100)] px-2 text-xs text-[var(--color-base-400)]">
+              或
+            </span>
+          </div>
 
           <div class="space-y-2 text-center text-sm">
-            <p>
+            <p class="text-[var(--color-base-400)]">
               还没有账号？
-              <a href="/register" class="link link-primary">
+              <a
+                href="/register"
+                class="font-medium text-rose-600 transition-colors hover:text-rose-700"
+              >
                 注册
               </a>
             </p>
             <p>
-              <a href="/" class="link text-base-content/40">
+              <a
+                href="/"
+                class="text-sm text-[var(--color-base-400)] transition-colors hover:text-rose-600"
+              >
                 继续匿名使用
               </a>
             </p>

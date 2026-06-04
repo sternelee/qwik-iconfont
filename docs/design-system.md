@@ -22,17 +22,17 @@ Made on Earth · Apache-2.0 spirit · Last updated 2026-06-02
 
 ## § We ship · We don't ship
 
-| Ship | Don't ship |
-|---|---|
-| 单一 accent（玫瑰红），其余近单色 | 多色同时争抢注意力 |
-| 1px hairline borders 做卡片边界 | 多层 box-shadow + inset glow |
-| ≤ 8px 圆角（卡片）/ 4px（input、tag） | > 12px 的 clay 大圆角 |
-| Inter Tight（UI）+ IBM Plex Mono（meta） | Nunito / Quicksand 等圆润 display 字体 |
-| 150ms ease-out / 250ms cb 入场 | 弹性 spring 缓动（`cubic-bezier(0.34, 1.56 …)`） |
-| 每个可交互元素有 hover + active 反馈 | hover 时同时 translate + scale + shadow 的复合动画 |
-| Dark mode 在 `[data-theme]` 下定义完整 token | 用 opacity 翻转 hack dark 模式 |
-| 中性灰影（`rgba(0,0,0,0.x)`），alpha ≤ 0.08 | 玫瑰红色阴影（`rgba(225, 29, 72, 0.x)`） |
-| 一个 token 用一个语义角色 | "v1 vs v2" 迭代表混入设计文档 |
+| Ship                                         | Don't ship                                         |
+| -------------------------------------------- | -------------------------------------------------- |
+| 单一 accent（玫瑰红），其余近单色            | 多色同时争抢注意力                                 |
+| 1px hairline borders 做卡片边界              | 多层 box-shadow + inset glow                       |
+| ≤ 8px 圆角（卡片）/ 4px（input、tag）        | > 12px 的 clay 大圆角                              |
+| Inter Tight（UI）+ IBM Plex Mono（meta）     | Nunito / Quicksand 等圆润 display 字体             |
+| 150ms ease-out / 250ms cb 入场               | 弹性 spring 缓动（`cubic-bezier(0.34, 1.56 …)`）   |
+| 每个可交互元素有 hover + active 反馈         | hover 时同时 translate + scale + shadow 的复合动画 |
+| Dark mode 在 `[data-theme]` 下定义完整 token | 用 opacity 翻转 hack dark 模式                     |
+| 中性灰影（`rgba(0,0,0,0.x)`），alpha ≤ 0.08  | 玫瑰红色阴影（`rgba(225, 29, 72, 0.x)`）           |
+| 一个 token 用一个语义角色                    | "v1 vs v2" 迭代表混入设计文档                      |
 
 ---
 
@@ -40,32 +40,32 @@ Made on Earth · Apache-2.0 spirit · Last updated 2026-06-02
 
 ### 角色
 
-| 角色 | Token | Hex | 用途 | 占比 |
-|---|---|---|---|---|
-| **Surface** | `base-100` | `#FFFFFF` | 页面 / 卡片背景 | ~80% |
-| **Surface Raised** | `base-200` | `#F5F5F5` | float 面板、hover 行 | — |
-| **Ink** | `base-content` | `#0A0A0A` | 主文字 | ~15% |
-| **Muted** | `ink-muted` | `rgba(10, 10, 10, 0.55)` | 描述 / placeholder | — |
-| **Hairline** | `border` | `rgba(10, 10, 10, 0.10)` | 1px 分割线 | — |
-| **Accent** | `primary` | `#E11D48` | CTA、链接、选中态 | **< 5%** |
+| 角色               | Token          | Hex                      | 用途                 | 占比     |
+| ------------------ | -------------- | ------------------------ | -------------------- | -------- |
+| **Surface**        | `base-100`     | `#FFFFFF`                | 页面 / 卡片背景      | ~80%     |
+| **Surface Raised** | `base-200`     | `#F5F5F5`                | float 面板、hover 行 | —        |
+| **Ink**            | `base-content` | `#0A0A0A`                | 主文字               | ~15%     |
+| **Muted**          | `ink-muted`    | `rgba(10, 10, 10, 0.55)` | 描述 / placeholder   | —        |
+| **Hairline**       | `border`       | `rgba(10, 10, 10, 0.10)` | 1px 分割线           | —        |
+| **Accent**         | `primary`      | `#E11D48`                | CTA、链接、选中态    | **< 5%** |
 
-| 语义 | Hex | 用途 |
-|---|---|---|
-| **Success** | `#16A34A` | 完成 / 成功 |
-| **Warning** | `#D97706` | 警告 / 本地模式 |
-| **Error** | `#DC2626` | 删除 / 错误 |
-| **Info** | `#0A0A0A` | 中性提示（用 ink，不加颜色） |
+| 语义        | Hex       | 用途                         |
+| ----------- | --------- | ---------------------------- |
+| **Success** | `#16A34A` | 完成 / 成功                  |
+| **Warning** | `#D97706` | 警告 / 本地模式              |
+| **Error**   | `#DC2626` | 删除 / 错误                  |
+| **Info**    | `#0A0A0A` | 中性提示（用 ink，不加颜色） |
 
 ### 暗色模式
 
-| 角色 | Hex |
-|---|---|
-| **Surface** `base-100` | `#0A0A0A` |
-| **Surface Raised** `base-200` | `#141414` |
-| **Ink** `base-content` | `#F5F5F5` |
-| **Muted** | `rgba(245, 245, 245, 0.55)` |
-| **Hairline** | `rgba(245, 245, 245, 0.10)` |
-| **Accent** | `#FB7185`（亮一档保证对比度） |
+| 角色                          | Hex                           |
+| ----------------------------- | ----------------------------- |
+| **Surface** `base-100`        | `#0A0A0A`                     |
+| **Surface Raised** `base-200` | `#141414`                     |
+| **Ink** `base-content`        | `#F5F5F5`                     |
+| **Muted**                     | `rgba(245, 245, 245, 0.55)`   |
+| **Hairline**                  | `rgba(245, 245, 245, 0.10)`   |
+| **Accent**                    | `#FB7185`（亮一档保证对比度） |
 
 > **WCAG AA 目标**：正文 4.5:1，大字 3:1。Accent `#E11D48` on white = 4.6:1 ✓，`#FB7185` on black = 5.2:1 ✓。
 
@@ -89,16 +89,16 @@ Made on Earth · Apache-2.0 spirit · Last updated 2026-06-02
 
 ### 字号层级
 
-| 层级 | Size / Line | Weight | Tracking | 用途 |
-|---|---|---|---|---|
-| **Display** | 56 / 64 | 700 | `-0.03em` | Hero 主标题 |
-| **H1** | 32 / 40 | 700 | `-0.02em` | 页面标题 |
-| **H2** | 24 / 32 | 600 | `-0.01em` | 区块标题 |
-| **H3** | 18 / 28 | 600 | `0` | 卡片标题 |
-| **Body** | 14 / 22 | 400 | `0` | 正文 |
-| **Caption** | 12 / 18 | 500 | `0` | 标签、辅助 |
-| **Eyebrow** | 11 / 16 | 600 | `+0.08em` | 分区小标签（"ICN-024 · FIG. 01"） |
-| **Mono** | 12 / 20 | 400 | `0` | 代码、Unicode、SHA |
+| 层级        | Size / Line | Weight | Tracking  | 用途                              |
+| ----------- | ----------- | ------ | --------- | --------------------------------- |
+| **Display** | 56 / 64     | 700    | `-0.03em` | Hero 主标题                       |
+| **H1**      | 32 / 40     | 700    | `-0.02em` | 页面标题                          |
+| **H2**      | 24 / 32     | 600    | `-0.01em` | 区块标题                          |
+| **H3**      | 18 / 28     | 600    | `0`       | 卡片标题                          |
+| **Body**    | 14 / 22     | 400    | `0`       | 正文                              |
+| **Caption** | 12 / 18     | 500    | `0`       | 标签、辅助                        |
+| **Eyebrow** | 11 / 16     | 600    | `+0.08em` | 分区小标签（"ICN-024 · FIG. 01"） |
+| **Mono**    | 12 / 20     | 400    | `0`       | 代码、Unicode、SHA                |
 
 ### 排版规则
 
@@ -116,16 +116,16 @@ Made on Earth · Apache-2.0 spirit · Last updated 2026-06-02
 
 Tailwind v4 `--spacing` 变量未改，保持 0.25rem = 4px。
 
-| Token | px | 用途 |
-|---|---|---|
-| `1` | 4 | 元素内最小间距 |
-| `2` | 8 | tag 与值 |
-| `3` | 12 | input padding |
-| `4` | 16 | 卡片内边距（小）、gutter |
-| `6` | 24 | 卡片内边距（大）、组件间距 |
-| `8` | 32 | 区块间距（小） |
-| `12` | 48 | 区块间距（中） |
-| `16` | 64 | 区块间距（大） |
+| Token | px  | 用途                       |
+| ----- | --- | -------------------------- |
+| `1`   | 4   | 元素内最小间距             |
+| `2`   | 8   | tag 与值                   |
+| `3`   | 12  | input padding              |
+| `4`   | 16  | 卡片内边距（小）、gutter   |
+| `6`   | 24  | 卡片内边距（大）、组件间距 |
+| `8`   | 32  | 区块间距（小）             |
+| `12`  | 48  | 区块间距（中）             |
+| `16`  | 64  | 区块间距（大）             |
 
 ### 容器
 
@@ -145,14 +145,14 @@ Tailwind v4 `--spacing` 变量未改，保持 0.25rem = 4px。
 
 半径是视觉性格的重要锚点。open-design.ai 的 card 圆角在 0–8px 范围内，因为圆角越大，对卡片内 content 的裁剪越割裂。
 
-| 元素 | Radius | 理由 |
-|---|---|---|
-| **按钮（active）** | `0` | 最大化内容区，进入选择态时保持刚性 |
-| **按钮（rest）** | `4px` | 微妙暗示，不抢注意力 |
-| **Tag · Badge** | `4px` | 小面积，需要可辨 |
-| **Input · Textarea** | `4px` | — |
-| **Card · Modal** | `6px` | 比旧 12–24px 收窄，保持 content 贴合 |
-| **Nav · Header** | `0` | 全幅容器不要圆角 |
+| 元素                 | Radius | 理由                                 |
+| -------------------- | ------ | ------------------------------------ |
+| **按钮（active）**   | `0`    | 最大化内容区，进入选择态时保持刚性   |
+| **按钮（rest）**     | `4px`  | 微妙暗示，不抢注意力                 |
+| **Tag · Badge**      | `4px`  | 小面积，需要可辨                     |
+| **Input · Textarea** | `4px`  | —                                    |
+| **Card · Modal**     | `6px`  | 比旧 12–24px 收窄，保持 content 贴合 |
+| **Nav · Header**     | `0`    | 全幅容器不要圆角                     |
 
 > 硬规则：**所有容器类元素的 radius 不超过 8px**，图标网格视情况允许 12px（icon card 小面积无碍）。
 
@@ -170,14 +170,14 @@ Tailwind v4 `--spacing` 变量未改，保持 0.25rem = 4px。
 
 ### Token
 
-| 状态 | Box-shadow |
-|---|---|
-| Card rest | 无（用 `border: 1px solid` 替代） |
-| Card hover | `0 2px 6px rgba(0, 0, 0, 0.06)` |
-| Button rest | 无 |
-| Button hover | 无（用 border-color 或 bg-color 变化提示） |
-| Navbar | 无（用 `border-bottom: 1px solid` 替代 blur header） |
-| Popover / Tooltip | `0 4px 12px rgba(0, 0, 0, 0.08)` |
+| 状态              | Box-shadow                                           |
+| ----------------- | ---------------------------------------------------- |
+| Card rest         | 无（用 `border: 1px solid` 替代）                    |
+| Card hover        | `0 2px 6px rgba(0, 0, 0, 0.06)`                      |
+| Button rest       | 无                                                   |
+| Button hover      | 无（用 border-color 或 bg-color 变化提示）           |
+| Navbar            | 无（用 `border-bottom: 1px solid` 替代 blur header） |
+| Popover / Tooltip | `0 4px 12px rgba(0, 0, 0, 0.08)`                     |
 
 ---
 
@@ -192,16 +192,16 @@ Tailwind v4 `--spacing` 变量未改，保持 0.25rem = 4px。
 
 ### 规范
 
-| 行为 | Duration | Easing | 效果 |
-|---|---|---|---|
-| 按钮 hover | 150ms | ease-out | border-color 或 bg 过渡 |
-| 按钮 active | 100ms | ease-out | scale 0.98（仅按压，不位移动画） |
-| 卡片 hover | 200ms | ease-out | border 加深 + 极淡阴影上浮 |
-| 弹窗入场 | 250ms | `cb(0.16, 1, 0.3, 1)` | opacity 0→1 + translateY 4px→0 |
-| 弹窗关闭 | 150ms | ease-in | opacity 1→0 |
-| Toast 入场 | 250ms | `cb(0.16, 1, 0.3, 1)` | translateX(100%→0) |
-| Toast 关闭 | 200ms | ease-in | opacity 1→0 + translateX(0→100%) |
-| Stagger（列表） | 40–80ms | — | 入场间隔，最多 8 级 |
+| 行为            | Duration | Easing                | 效果                             |
+| --------------- | -------- | --------------------- | -------------------------------- |
+| 按钮 hover      | 150ms    | ease-out              | border-color 或 bg 过渡          |
+| 按钮 active     | 100ms    | ease-out              | scale 0.98（仅按压，不位移动画） |
+| 卡片 hover      | 200ms    | ease-out              | border 加深 + 极淡阴影上浮       |
+| 弹窗入场        | 250ms    | `cb(0.16, 1, 0.3, 1)` | opacity 0→1 + translateY 4px→0   |
+| 弹窗关闭        | 150ms    | ease-in               | opacity 1→0                      |
+| Toast 入场      | 250ms    | `cb(0.16, 1, 0.3, 1)` | translateX(100%→0)               |
+| Toast 关闭      | 200ms    | ease-in               | opacity 1→0 + translateX(0→100%) |
+| Stagger（列表） | 40–80ms  | —                     | 入场间隔，最多 8 级              |
 
 ---
 
@@ -231,10 +231,10 @@ Hero 区域从 open-design.ai 借鉴：顶部一条极细 accent 色带 + 全屏
 ```css
 /* rest */
 border-radius: 4px;
-border: 1px solid rgba(10, 10, 10, 0.10);
+border: 1px solid rgba(10, 10, 10, 0.1);
 background: transparent;
 color: var(--ink);
-font-family: 'Inter Tight', sans-serif;
+font-family: "Inter Tight", sans-serif;
 font-weight: 600;
 
 /* hover */
@@ -242,7 +242,7 @@ border-color: var(--primary);
 color: var(--primary);
 
 /* active */
-border-radius: 0;         /* 刚性，提示"选择中" */
+border-radius: 0; /* 刚性，提示"选择中" */
 border-color: var(--primary);
 background: var(--primary);
 color: white;
@@ -258,7 +258,7 @@ active 态与 button 一致，但 rest 态用 `background: var(--primary); color
 
 ```css
 border-radius: 6px;
-border: 1px solid rgba(10, 10, 10, 0.10);
+border: 1px solid rgba(10, 10, 10, 0.1);
 background: var(--base-100);
 ```
 
@@ -278,7 +278,7 @@ focus：`outline: none; border-color: var(--primary);` — 只用 accent border�
 
 ```css
 border-radius: 4px;
-font-family: 'IBM Plex Mono', monospace; /* 元数据用 mono */
+font-family: "IBM Plex Mono", monospace; /* 元数据用 mono */
 font-size: 11px;
 font-weight: 500;
 letter-spacing: 0.04em;
@@ -289,7 +289,7 @@ text-transform: uppercase;
 
 ```css
 background: var(--base-100);
-border-bottom: 1px solid rgba(10, 10, 10, 0.10);
+border-bottom: 1px solid rgba(10, 10, 10, 0.1);
 ```
 
 > 不做 backdrop-filter blur。不做 sticky header shadow。用 1px 底边做界限。
@@ -335,11 +335,11 @@ border-bottom: 1px solid rgba(10, 10, 10, 0.10);
 
 ### 文件位置
 
-| 文件 | 内容 |
-|---|---|
-| `src/global.css` | 全局样式、daisyUI 主题、自定义组件类、animation keyframes |
-| `src/routes/**/*.tsx` | 页面组件 |
-| `src/components/**/*.tsx` | 共享 UI 组件 |
+| 文件                      | 内容                                                      |
+| ------------------------- | --------------------------------------------------------- |
+| `src/global.css`          | 全局样式、daisyUI 主题、自定义组件类、animation keyframes |
+| `src/routes/**/*.tsx`     | 页面组件                                                  |
+| `src/components/**/*.tsx` | 共享 UI 组件                                              |
 
 ### 命名约定
 

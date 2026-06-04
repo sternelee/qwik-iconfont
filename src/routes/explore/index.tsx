@@ -6,9 +6,19 @@ import {
   useVisibleTask$,
   noSerialize,
 } from "@builder.io/qwik";
-import { routeLoader$ } from "@builder.io/qwik-city";
+import { routeLoader$, type DocumentHead } from "@builder.io/qwik-city";
 import type { Project } from "~/lib/types";
 import { ThemeToggle } from "~/components/theme-toggle/theme-toggle";
+export const head: DocumentHead = {
+  title: "探索公开图标集 - Iconfont",
+  meta: [
+    {
+      name: "description",
+      content:
+        "在 Iconfont 探索社区分享的公开图标集，浏览、收藏和 Fork 优质图标库。",
+    },
+  ],
+};
 
 interface ExploreProject extends Project {
   icon_count: number;
@@ -214,64 +224,63 @@ export default component$(() => {
     d ? new Date(d).toLocaleDateString("zh-CN") : "-";
 
   return (
-    <div class="min-h-screen bg-rose-50/30">
+    <div class="min-h-screen">
       {/* Navbar */}
-      <nav class="sticky top-0 z-20 border-b border-rose-100 bg-white/70 backdrop-blur">
-        <div class="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
-          <a href="/" class="flex items-center gap-2">
-            <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-rose-400 to-rose-500 text-white">
+      <header class="clay-navbar sticky top-0 z-30">
+        <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+          <a href="/" class="flex items-center gap-3">
+            <div class="flex h-10 w-10 items-center justify-center rounded-md bg-rose-500">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
+                width="20"
+                height="20"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="currentColor"
+                stroke="white"
                 stroke-width="2.5"
                 stroke-linecap="round"
                 stroke-linejoin="round"
               >
-                <rect x="3" y="3" width="7" height="7" />
-                <rect x="14" y="3" width="7" height="7" />
-                <rect x="14" y="14" width="7" height="7" />
-                <rect x="3" y="14" width="7" height="7" />
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
               </svg>
             </div>
-            <span class="text-sm font-bold text-rose-900">
+            <span class="text-lg font-extrabold tracking-tight text-rose-600">
               Iconfont
             </span>
           </a>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-3">
+            <ThemeToggle />
             <a
               href="/"
-              class="rounded-xl px-3 py-1.5 text-sm font-medium text-rose-600 transition-all hover:bg-rose-50"
+              class="hidden rounded-md px-3 py-2 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)] sm:block"
             >
               首页
             </a>
             <a
               href="/explore"
-              class="rounded-xl bg-rose-50 px-3 py-1.5 text-sm font-semibold text-rose-700"
+              class="hidden rounded-md bg-[var(--color-base-200)] px-3 py-2 text-sm font-semibold text-[var(--color-neutral)] sm:block"
             >
               探索
             </a>
             <a
               href="/favorites"
-              class="rounded-xl px-3 py-1.5 text-sm font-medium text-rose-600 transition-all hover:bg-rose-50"
+              class="hidden rounded-md px-3 py-2 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)] sm:block"
             >
               收藏
             </a>
-            <ThemeToggle />
           </div>
         </div>
-      </nav>
+      </header>
 
       {/* Header */}
-      <section class="sticky top-14 z-10 border-b border-rose-100 bg-white/70 backdrop-blur">
+      <section class="sticky top-14 z-10 border-b border-[var(--color-base-300)]">
         <div class="mx-auto max-w-7xl px-4 py-5 sm:px-6">
           <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
             {/* Title */}
             <div class="flex-shrink-0">
-              <h1 class="text-xl font-extrabold text-rose-950">
+              <h1 class="text-xl font-extrabold text-[var(--color-neutral)]">
                 探索图标集
               </h1>
             </div>
@@ -286,7 +295,7 @@ export default component$(() => {
                 fill="none"
                 stroke="currentColor"
                 stroke-width="2"
-                class="absolute top-1/2 left-3 -translate-y-1/2 text-rose-300"
+                class="absolute top-1/2 left-3 -translate-y-1/2 text-[var(--color-base-400)]"
               >
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" x2="16.65" y1="21" y2="16.65" />
@@ -294,7 +303,7 @@ export default component$(() => {
               <input
                 type="text"
                 placeholder="搜索项目名、作者..."
-                class="w-full rounded-2xl border border-rose-100 bg-white py-2 pr-3 pl-8 text-sm text-rose-800 placeholder:text-rose-300 focus:border-rose-300 focus:outline-none"
+                class="input-clay w-full py-2 pr-3 pl-8 text-sm"
                 value={search.value}
                 onInput$={(e) => {
                   search.value = (e.target as HTMLInputElement).value;
@@ -304,14 +313,14 @@ export default component$(() => {
             </div>
 
             {/* Sort tabs */}
-            <div class="flex rounded-2xl border border-rose-100 bg-white p-1 text-sm">
+            <div class="flex rounded-sm border border-[var(--color-base-300)] bg-[var(--color-base-100)] p-1 text-sm">
               {SORT_OPTIONS.map(({ key, label }) => (
                 <button
                   key={key}
-                  class={`rounded-xl px-3 py-1.5 font-medium transition-all ${
+                  class={`rounded-sm px-3 py-1.5 font-medium transition-all ${
                     sort.value === key
                       ? "bg-rose-500 text-white"
-                      : "text-rose-500 hover:bg-rose-50"
+                      : "text-[var(--color-neutral)] hover:bg-[var(--color-base-200)]"
                   }`}
                   onClick$={() => (sort.value = key)}
                 >
@@ -320,7 +329,7 @@ export default component$(() => {
               ))}
             </div>
 
-            <span class="flex-shrink-0 text-xs text-rose-400">
+            <span class="flex-shrink-0 text-xs text-[var(--color-base-400)]">
               {sortedList.items.length} 个{state.hasMore ? "+" : ""}
             </span>
           </div>
@@ -334,12 +343,12 @@ export default component$(() => {
             {Array.from({ length: 8 }).map((_, i) => (
               <div
                 key={i}
-                class="h-44 animate-pulse rounded-3xl bg-rose-100/50"
+                class="h-44 animate-pulse rounded-md bg-[var(--color-base-200)]"
               />
             ))}
           </div>
         ) : sortedList.items.length === 0 ? (
-          <div class="flex flex-col items-center justify-center py-24 text-rose-300">
+          <div class="flex flex-col items-center justify-center py-24 text-[var(--color-base-400)]">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="48"
@@ -359,7 +368,7 @@ export default component$(() => {
             </p>
             <a
               href="/"
-              class="mt-4 rounded-2xl bg-rose-500 px-5 py-2 text-sm font-semibold text-white hover:bg-rose-600"
+              class="clay-button mt-4 bg-rose-500 px-5 py-2 text-sm text-white"
             >
               创建图标集
             </a>
@@ -371,16 +380,16 @@ export default component$(() => {
                 <a
                   key={project.id}
                   href={`/project/${project.id}/view`}
-                  class="group flex flex-col rounded-3xl border border-rose-100 bg-white p-5 transition-all hover:border-rose-200 hover:shadow-md"
+                  class="group flex flex-col rounded-md border border-[var(--color-base-300)] bg-[var(--color-base-100)] p-5 transition-all hover:border-[var(--color-base-300)]"
                 >
                   {/* Header */}
                   <div class="flex items-start justify-between gap-2">
                     <div class="min-w-0 flex-1">
-                      <h3 class="truncate text-base font-bold text-rose-950">
+                      <h3 class="truncate text-base font-bold text-[var(--color-neutral)]">
                         {project.name}
                       </h3>
                       {project.description && (
-                        <p class="mt-0.5 line-clamp-2 text-xs text-rose-500/70">
+                        <p class="mt-0.5 line-clamp-2 text-xs text-[var(--color-base-400)]">
                           {project.description}
                         </p>
                       )}
@@ -392,24 +401,24 @@ export default component$(() => {
 
                   {/* Author */}
                   <div class="mt-3 flex items-center gap-1.5">
-                    <div class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-rose-100 text-[9px] font-bold text-rose-600">
+                    <div class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-base-200)] text-[9px] font-bold text-[var(--color-neutral)]">
                       {(project.author_name || project.author_email || "?")
                         .charAt(0)
                         .toUpperCase()}
                     </div>
-                    <span class="truncate text-xs text-rose-500">
+                    <span class="truncate text-xs text-[var(--color-neutral)]">
                       {project.author_name ||
                         project.author_email ||
                         "匿名作者"}
                     </span>
-                    <span class="text-rose-200">·</span>
-                    <span class="flex-shrink-0 text-xs text-rose-400">
+                    <span class="text-[var(--color-base-300)]">·</span>
+                    <span class="flex-shrink-0 text-xs text-[var(--color-base-400)]">
                       {formatDate(project.created_at)}
                     </span>
                   </div>
 
                   {/* Stats */}
-                  <div class="mt-auto flex items-center justify-between border-t border-rose-50 pt-4 text-xs text-rose-400">
+                  <div class="mt-auto flex items-center justify-between border-t border-[var(--color-base-300)] pt-4 text-xs text-[var(--color-base-400)]">
                     <div class="flex items-center gap-3">
                       <span>{project.icon_count} 图标</span>
                       <span class="flex items-center gap-0.5">
@@ -419,14 +428,14 @@ export default component$(() => {
                           height="10"
                           viewBox="0 0 24 24"
                           fill="currentColor"
-                          class="text-rose-400"
+                          class="text-[var(--color-base-400)]"
                         >
                           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                         </svg>
                         {project.favorites_count}
                       </span>
                     </div>
-                    <span class="rounded-full bg-rose-50 px-2 py-0.5 font-medium text-rose-500">
+                    <span class="rounded-full bg-[var(--color-base-200)] px-2 py-0.5 font-medium text-[var(--color-neutral)]">
                       {project.font_family}
                     </span>
                   </div>
@@ -437,12 +446,12 @@ export default component$(() => {
             {/* Infinite scroll sentinel */}
             <div ref={sentinel} class="mt-8 flex justify-center">
               {loadingMore.value && (
-                <span class="loading loading-spinner loading-sm text-rose-400" />
+                <span class="loading loading-spinner loading-sm text-[var(--color-base-400)]" />
               )}
               {!loadingMore.value &&
                 !state.hasMore &&
                 sortedList.items.length > 0 && (
-                  <p class="text-xs text-rose-300">已加载全部</p>
+                  <p class="text-xs text-[var(--color-base-400)]">已加载全部</p>
                 )}
             </div>
           </>

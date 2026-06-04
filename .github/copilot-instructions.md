@@ -52,6 +52,7 @@ if (session) {
 ```
 
 Auth stack:
+
 - `src/lib/auth.ts` — `betterAuth` instance backed by D1 via Drizzle adapter.
 - `src/lib/auth-client.ts` — Thin fetch wrapper for sign-up, sign-in, sign-out, get-session.
 - `src/lib/session.ts` — Server-side `getSessionFromRequest()` helper.

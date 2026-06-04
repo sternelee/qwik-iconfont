@@ -26,7 +26,7 @@ export const ThemeToggle = component$(() => {
       type="button"
       aria-label={isDark.value ? "切换到亮色模式" : "切换到暗色模式"}
       title={isDark.value ? "切换到亮色模式" : "切换到暗色模式"}
-      class="[data-theme='iconfont-dark']_&:hover:bg-rose-950/40 flex h-9 w-9 items-center justify-center rounded-xl transition-all hover:bg-rose-100 active:scale-95"
+      class="[data-theme='iconfont-dark']_&:hover:bg-rose-950/40 flex h-9 w-9 items-center justify-center rounded-md transition-all hover:bg-[var(--color-base-200)] active:scale-95"
       onClick$={() => {
         const next = isDark.value ? LIGHT : DARK;
         isDark.value = !isDark.value;
@@ -63,7 +63,7 @@ export const ThemeToggle = component$(() => {
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
-          class="text-rose-500"
+          class="text-[var(--color-neutral)]"
         >
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
         </svg>

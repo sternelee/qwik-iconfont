@@ -60,10 +60,10 @@ export const ToastContainer = component$((props: { toasts: ToastItem[] }) => {
     ),
   };
 
-  const alertClass = {
-    success: "alert-success",
-    error: "alert-error",
-    info: "alert-info",
+  const typeStyles = {
+    success: "border-l-emerald-500 text-emerald-600 dark:text-emerald-400",
+    error: "border-l-rose-500 text-rose-600 dark:text-rose-400",
+    info: "border-l-blue-500 text-blue-600 dark:text-blue-400",
   };
 
   return (
@@ -71,12 +71,12 @@ export const ToastContainer = component$((props: { toasts: ToastItem[] }) => {
       {props.toasts.map((toast) => (
         <div
           key={toast.id}
-          class={`alert ${alertClass[toast.type]} animate-toast-in pointer-events-auto max-w-sm min-w-[240px] overflow-hidden shadow-lg`}
+          class={`animate-toast-in pointer-events-auto relative flex max-w-sm min-w-[240px] items-center gap-3 overflow-hidden rounded-md border border-l-4 border-[var(--color-base-300)] bg-[var(--color-base-100)] px-4 py-3 shadow-sm ${typeStyles[toast.type]}`}
         >
-          <div class="flex items-center gap-2">
-            {iconMap[toast.type]}
-            <span class="text-sm">{toast.message}</span>
-          </div>
+          {iconMap[toast.type]}
+          <span class="flex-1 text-sm font-medium text-[var(--color-neutral)]">
+            {toast.message}
+          </span>
           <div class="toast-progress absolute bottom-0 left-0 h-0.5 bg-current opacity-30" />
         </div>
       ))}

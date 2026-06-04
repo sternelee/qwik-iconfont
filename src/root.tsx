@@ -18,7 +18,9 @@ export default component$(() => {
       <head>
         <meta charset="utf-8" />
         {/* Anti-FOUC: 在 CSS 渲染前从 localStorage 读取主题并设置 data-theme */}
-        <script dangerouslySetInnerHTML={`(function(){var t=localStorage.getItem('theme');if(t){document.documentElement.setAttribute('data-theme',t);}else if(window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.setAttribute('data-theme','iconfont-dark');}})()`} />
+        <script
+          dangerouslySetInnerHTML={`(function(){var t=localStorage.getItem('theme');if(t){document.documentElement.setAttribute('data-theme',t);}else if(window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.setAttribute('data-theme','iconfont-dark');}})()`}
+        />
         {!isDev && (
           <link
             rel="manifest"

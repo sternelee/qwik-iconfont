@@ -142,7 +142,9 @@ h1 {
   border-radius: 6px;
   background: var(--color-base-100);
   border: 1px solid var(--color-base-300);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .brand-card:hover,
@@ -199,7 +201,9 @@ h1 {
   border-radius: 6px;
   background: var(--color-base-100);
   border: 1px solid var(--color-base-300);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .brand-icon-card:hover,

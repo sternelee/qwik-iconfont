@@ -68,7 +68,7 @@ export const ColorLayerEditor = component$<ColorLayerEditorProps>(
 
     if (layers.length === 0) {
       return (
-        <div class="rounded-2xl border border-dashed border-rose-200 bg-rose-50/40 p-4 text-center text-sm text-rose-400">
+        <div class="rounded-md border border-dashed border-[var(--color-base-300)] bg-[var(--color-base-200)]/40 p-4 text-center text-sm text-[var(--color-base-400)]">
           无颜色图层
         </div>
       );
@@ -78,7 +78,7 @@ export const ColorLayerEditor = component$<ColorLayerEditorProps>(
       <div class="space-y-1.5">
         {/* Combined preview */}
         <div class="mb-3 flex items-center gap-3">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl border border-rose-100 bg-white">
+          <div class="flex h-12 w-12 items-center justify-center rounded-md border border-[var(--color-base-300)] bg-[var(--color-base-100)]">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 1000 1000"
@@ -95,10 +95,10 @@ export const ColorLayerEditor = component$<ColorLayerEditorProps>(
             </svg>
           </div>
           <div>
-            <p class="text-[11px] font-semibold tracking-wide text-rose-500 uppercase">
+            <p class="text-[11px] font-semibold tracking-wide text-[var(--color-neutral)] uppercase">
               彩色预览
             </p>
-            <p class="text-xs text-rose-400">
+            <p class="text-xs text-[var(--color-base-400)]">
               {layers.length} 个颜色图层 · COLRv0 格式
             </p>
           </div>
@@ -111,15 +111,15 @@ export const ColorLayerEditor = component$<ColorLayerEditorProps>(
           return (
             <div
               key={idx}
-              class="flex items-center gap-2 rounded-2xl border border-rose-100 bg-white px-3 py-2"
+              class="flex items-center gap-2 rounded-md border border-[var(--color-base-300)] bg-[var(--color-base-100)] px-3 py-2"
             >
               {/* Layer index badge */}
-              <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-rose-100 text-[9px] font-bold text-rose-600">
+              <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--color-base-200)] text-[9px] font-bold text-[var(--color-neutral)]">
                 {idx + 1}
               </span>
 
               {/* SVG preview of this layer */}
-              <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-rose-50 bg-rose-50/40">
+              <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-rose-50 bg-[var(--color-base-200)]/40">
                 <LayerPreviewSVG d={layer.d} color={layer.color} />
               </div>
 
@@ -127,7 +127,7 @@ export const ColorLayerEditor = component$<ColorLayerEditorProps>(
               <div class="flex min-w-0 flex-1 items-center gap-1.5">
                 <input
                   type="color"
-                  class="h-7 w-7 shrink-0 cursor-pointer rounded-md border border-rose-200 p-0.5"
+                  class="h-7 w-7 shrink-0 cursor-pointer rounded-md border border-[var(--color-base-300)] p-0.5"
                   value={displayColor}
                   title="选择颜色"
                   onInput$={(e) =>
@@ -136,7 +136,7 @@ export const ColorLayerEditor = component$<ColorLayerEditorProps>(
                 />
                 <input
                   type="text"
-                  class="w-24 rounded-xl border border-rose-100 bg-rose-50/50 px-2 py-1 font-mono text-xs text-rose-800 focus:border-rose-300 focus:outline-none"
+                  class="w-24 rounded-md border border-[var(--color-base-300)] bg-[var(--color-base-200)]/50 px-2 py-1 font-mono text-xs text-[var(--color-neutral)] focus:border-[var(--color-base-300)] focus:outline-none"
                   value={
                     layer.color === "currentColor"
                       ? "currentColor"
@@ -162,7 +162,7 @@ export const ColorLayerEditor = component$<ColorLayerEditorProps>(
               {/* Reorder + delete */}
               <div class="flex shrink-0 items-center gap-0.5">
                 <button
-                  class="flex h-6 w-6 items-center justify-center rounded-lg text-rose-300 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-30"
+                  class="flex h-6 w-6 items-center justify-center rounded-lg text-[var(--color-base-400)] hover:bg-[var(--color-base-200)] hover:text-[var(--color-neutral)] disabled:opacity-30"
                   title="上移"
                   disabled={idx === 0}
                   onClick$={() => moveUp(idx)}
@@ -170,7 +170,7 @@ export const ColorLayerEditor = component$<ColorLayerEditorProps>(
                   ↑
                 </button>
                 <button
-                  class="flex h-6 w-6 items-center justify-center rounded-lg text-rose-300 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-30"
+                  class="flex h-6 w-6 items-center justify-center rounded-lg text-[var(--color-base-400)] hover:bg-[var(--color-base-200)] hover:text-[var(--color-neutral)] disabled:opacity-30"
                   title="下移"
                   disabled={idx === layers.length - 1}
                   onClick$={() => moveDown(idx)}
@@ -178,7 +178,7 @@ export const ColorLayerEditor = component$<ColorLayerEditorProps>(
                   ↓
                 </button>
                 <button
-                  class="flex h-6 w-6 items-center justify-center rounded-lg text-rose-300 hover:bg-red-50 hover:text-red-500"
+                  class="flex h-6 w-6 items-center justify-center rounded-lg text-[var(--color-base-400)] hover:bg-red-50 hover:text-red-500"
                   title="删除此图层"
                   onClick$={() => deleteLayer(idx)}
                 >
@@ -189,7 +189,7 @@ export const ColorLayerEditor = component$<ColorLayerEditorProps>(
           );
         })}
 
-        <p class="pt-1 text-[11px] text-rose-400">
+        <p class="pt-1 text-[11px] text-[var(--color-base-400)]">
           图层从下到上叠加渲染 · 支持 IE9 / iOS 11+
         </p>
       </div>

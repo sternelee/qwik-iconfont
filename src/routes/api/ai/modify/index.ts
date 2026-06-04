@@ -41,7 +41,12 @@ export const onPost: RequestHandler = async ({ request, json, platform }) => {
         }
       : undefined;
 
-    const modified = await modifyIconSVG(platform, svg, instruction, credentials);
+    const modified = await modifyIconSVG(
+      platform,
+      svg,
+      instruction,
+      credentials,
+    );
 
     json(200, { svg: modified });
   } catch (e: any) {

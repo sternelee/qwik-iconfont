@@ -5,7 +5,11 @@ import {
   useStore,
   useVisibleTask$,
 } from "@builder.io/qwik";
-import { routeLoader$, useLocation } from "@builder.io/qwik-city";
+import {
+  routeLoader$,
+  useLocation,
+  type DocumentHead,
+} from "@builder.io/qwik-city";
 import type { Project, Icon } from "~/lib/types";
 import { generateFont, generateFontCSS } from "~/lib/font-gen";
 import {
@@ -27,6 +31,17 @@ interface PublicProjectData {
 }
 
 // ── Loader ─────────────────────────────────────────────────────────
+
+export const head: DocumentHead = {
+  title: "公开图标集 - Iconfont",
+  meta: [
+    {
+      name: "description",
+      content:
+        "浏览 Iconfont 公开图标集，收藏喜欢的图标库，下载 TTF / CSS / Symbol 字体。",
+    },
+  ],
+};
 
 export const usePublicProject = routeLoader$(
   async ({ params, platform, request, error }): Promise<PublicProjectData> => {
@@ -243,10 +258,10 @@ export default component$(() => {
     d ? new Date(d).toLocaleDateString("zh-CN") : "-";
 
   return (
-    <div class="min-h-screen bg-rose-50/30">
+    <div class="min-h-screen">
       {/* Toast */}
       {toast.value && (
-        <div class="fixed top-4 right-4 z-50 rounded-2xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-lg">
+        <div class="fixed top-4 right-4 z-50 rounded-sm bg-[var(--color-neutral)] px-4 py-2 text-sm font-semibold text-white">
           {toast.value}
         </div>
       )}
@@ -261,57 +276,56 @@ export default component$(() => {
       )}
 
       {/* Navbar */}
-      <nav class="sticky top-0 z-30 border-b border-rose-100 bg-white/70 backdrop-blur">
-        <div class="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
-          <a href="/" class="flex items-center gap-2">
-            <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-rose-400 to-rose-500 text-white">
+      <header class="clay-navbar sticky top-0 z-30">
+        <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+          <a href="/" class="flex items-center gap-3">
+            <div class="flex h-10 w-10 items-center justify-center rounded-md bg-rose-500">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
+                width="20"
+                height="20"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="currentColor"
+                stroke="white"
                 stroke-width="2.5"
                 stroke-linecap="round"
                 stroke-linejoin="round"
               >
-                <rect x="3" y="3" width="7" height="7" />
-                <rect x="14" y="3" width="7" height="7" />
-                <rect x="14" y="14" width="7" height="7" />
-                <rect x="3" y="14" width="7" height="7" />
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
               </svg>
             </div>
-            <span class="text-sm font-bold text-rose-900">
+            <span class="text-lg font-extrabold tracking-tight text-rose-600">
               Iconfont
             </span>
           </a>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-3">
             <a
               href="/"
-              class="rounded-xl px-3 py-1.5 text-sm font-medium text-rose-600 transition-all hover:bg-rose-50"
+              class="rounded-sm px-3 py-1.5 text-sm font-medium text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
             >
               首页
             </a>
             <a
               href="/explore"
-              class="rounded-xl px-3 py-1.5 text-sm font-medium text-rose-600 transition-all hover:bg-rose-50"
+              class="rounded-sm px-3 py-1.5 text-sm font-medium text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
             >
               探索
             </a>
             <a
               href="/favorites"
-              class="rounded-xl px-3 py-1.5 text-sm font-medium text-rose-600 transition-all hover:bg-rose-50"
+              class="rounded-sm px-3 py-1.5 text-sm font-medium text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
             >
               收藏
             </a>
             <ThemeToggle />
           </div>
         </div>
-      </nav>
+      </header>
 
       {/* ── Hero Header ─────────────────────────────────────────── */}
-      <section class="border-b border-rose-100 bg-white/70 backdrop-blur">
+      <section class="border-b border-[var(--color-base-300)]">
         <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6">
           <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             {/* Meta */}
@@ -319,7 +333,7 @@ export default component$(() => {
               <div class="mb-2 flex items-center gap-2">
                 <a
                   href="/"
-                  class="flex items-center gap-1 text-sm text-rose-400 transition-all hover:text-rose-600"
+                  class="flex items-center gap-1 text-sm text-[var(--color-base-400)] transition-all hover:text-[var(--color-neutral)]"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -336,41 +350,41 @@ export default component$(() => {
                   </svg>
                   首页
                 </a>
-                <span class="text-rose-200">/</span>
+                <span class="text-[var(--color-base-300)]">/</span>
                 <a
                   href="/explore"
-                  class="text-sm text-rose-400 transition-all hover:text-rose-600"
+                  class="text-sm text-[var(--color-base-400)] transition-all hover:text-[var(--color-neutral)]"
                 >
                   探索
                 </a>
-                <span class="text-rose-200">/</span>
-                <span class="max-w-[200px] truncate text-sm font-medium text-rose-600">
+                <span class="text-[var(--color-base-300)]">/</span>
+                <span class="max-w-[200px] truncate text-sm font-medium text-[var(--color-neutral)]">
                   {project.name}
                 </span>
               </div>
-              <h1 class="text-2xl font-extrabold text-rose-950 sm:text-3xl">
+              <h1 class="text-2xl font-extrabold text-[var(--color-neutral)] sm:text-3xl">
                 {project.name}
               </h1>
               {project.description && (
-                <p class="mt-1 max-w-xl text-sm text-rose-700/60">
+                <p class="mt-1 max-w-xl text-sm text-[var(--color-base-400)]">
                   {project.description}
                 </p>
               )}
               <div class="mt-3 flex items-center gap-2">
-                <div class="flex h-7 w-7 items-center justify-center rounded-full bg-rose-100 text-xs font-bold text-rose-600">
+                <div class="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-base-200)] text-xs font-bold text-[var(--color-neutral)]">
                   {(project.author_name || project.author_email || "?")
                     .charAt(0)
                     .toUpperCase()}
                 </div>
-                <span class="text-sm text-rose-700">
+                <span class="text-sm text-[var(--color-neutral)]">
                   {project.author_name || project.author_email || "匿名作者"}
                 </span>
-                <span class="text-rose-200">·</span>
-                <span class="text-xs text-rose-400">
+                <span class="text-[var(--color-base-300)]">·</span>
+                <span class="text-xs text-[var(--color-base-400)]">
                   {formatDate(project.created_at)}
                 </span>
               </div>
-              <div class="mt-4 flex flex-wrap items-center gap-4 text-sm text-rose-600">
+              <div class="mt-4 flex flex-wrap items-center gap-4 text-sm text-[var(--color-neutral)]">
                 <span class="flex items-center gap-1.5">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -395,7 +409,7 @@ export default component$(() => {
                     height="14"
                     viewBox="0 0 24 24"
                     fill="currentColor"
-                    class="text-rose-400"
+                    class="text-[var(--color-base-400)]"
                   >
                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                   </svg>
@@ -432,7 +446,7 @@ export default component$(() => {
                   </svg>
                   <strong>{project.downloads_count ?? 0}</strong> 下载
                 </span>
-                <span class="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-600">
+                <span class="rounded-full bg-[var(--color-base-200)] px-2 py-0.5 text-xs font-semibold text-[var(--color-neutral)]">
                   {project.font_family}
                 </span>
                 <span class="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-600">
@@ -445,7 +459,7 @@ export default component$(() => {
             <div class="flex flex-shrink-0 flex-wrap items-center gap-2">
               {!isOwner && (
                 <button
-                  class="flex items-center gap-1.5 rounded-2xl border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50"
+                  class="flex items-center gap-1.5 rounded-sm border border-[var(--color-base-300)] bg-[var(--color-base-100)] px-4 py-2 text-sm font-semibold text-[var(--color-neutral)] hover:bg-[var(--color-base-200)]"
                   onClick$={handleFork}
                   disabled={forkLoading.value}
                 >
@@ -473,13 +487,13 @@ export default component$(() => {
               {isOwner && (
                 <a
                   href={`/project/${project.id}`}
-                  class="rounded-2xl border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50"
+                  class="rounded-sm border border-[var(--color-base-300)] bg-[var(--color-base-100)] px-4 py-2 text-sm font-semibold text-[var(--color-neutral)] hover:bg-[var(--color-base-200)]"
                 >
                   编辑项目
                 </a>
               )}
               <button
-                class={`clay-button flex items-center gap-1.5 rounded-2xl px-4 py-2 text-sm font-semibold transition-all ${isFavorited.value ? "bg-rose-500 text-white" : "border border-rose-200 bg-white text-rose-600 hover:bg-rose-50"}`}
+                class={`clay-button flex items-center gap-1.5 rounded-sm px-4 py-2 text-sm font-semibold transition-all ${isFavorited.value ? "bg-[var(--color-base-200)] text-white" : "border border-[var(--color-base-300)] bg-[var(--color-base-100)] text-[var(--color-neutral)] hover:bg-[var(--color-base-200)]"}`}
                 onClick$={handleFavorite}
                 disabled={favLoading.value}
               >
@@ -501,7 +515,7 @@ export default component$(() => {
                 {isFavorited.value ? "已收藏" : "收藏"}
               </button>
               <button
-                class="clay-button flex items-center gap-1.5 rounded-2xl bg-rose-500 px-4 py-2 text-sm font-bold text-white"
+                class="clay-button flex items-center gap-1.5 rounded-sm bg-rose-500 px-4 py-2 text-sm font-bold text-white"
                 onClick$={handleDownload}
                 disabled={downloadLoading.value || icons.length === 0}
               >
@@ -541,7 +555,7 @@ export default component$(() => {
               fill="none"
               stroke="currentColor"
               stroke-width="2"
-              class="absolute top-1/2 left-3 -translate-y-1/2 text-rose-300"
+              class="absolute top-1/2 left-3 -translate-y-1/2 text-[var(--color-base-400)]"
             >
               <circle cx="11" cy="11" r="8" />
               <line x1="21" x2="16.65" y1="21" y2="16.65" />
@@ -549,20 +563,20 @@ export default component$(() => {
             <input
               type="text"
               placeholder="搜索图标名称或标签..."
-              class="w-full rounded-2xl border border-rose-100 bg-white py-2 pr-3 pl-8 text-sm text-rose-800 placeholder:text-rose-300 focus:border-rose-300 focus:outline-none"
+              class="w-full rounded-sm border border-[var(--color-base-300)] bg-[var(--color-base-100)] py-2 pr-3 pl-8 text-sm text-[var(--color-neutral)] placeholder:text-[var(--color-base-400)] focus:border-[var(--color-base-300)] focus:outline-none"
               value={search.value}
               onInput$={(e) =>
                 (search.value = (e.target as HTMLInputElement).value)
               }
             />
           </div>
-          <span class="text-xs text-rose-400">
+          <span class="text-xs text-[var(--color-base-400)]">
             {filteredIcons.list.length} / {icons.length} 图标
           </span>
         </div>
 
         {filteredIcons.list.length === 0 ? (
-          <div class="flex flex-col items-center justify-center py-24 text-rose-300">
+          <div class="flex flex-col items-center justify-center py-24 text-[var(--color-base-400)]">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="48"
@@ -584,7 +598,7 @@ export default component$(() => {
             {filteredIcons.list.map((icon) => (
               <div
                 key={icon.id}
-                class="group relative flex flex-col items-center gap-1.5 rounded-2xl border border-rose-50 bg-white p-3 text-center transition-all hover:border-rose-200 hover:shadow-sm"
+                class="group relative flex flex-col items-center gap-1.5 rounded-sm border border-[var(--color-base-300)] bg-[var(--color-base-100)] p-3 text-center transition-all hover:border-[var(--color-base-300)]"
               >
                 {/* Click icon to copy name */}
                 <button
@@ -598,16 +612,18 @@ export default component$(() => {
                     color="#e11d48"
                   />
                 </button>
-                <span class="w-full truncate text-[10px] font-medium text-rose-700">
+                <span class="w-full truncate text-[10px] font-medium text-[var(--color-neutral)]">
                   {icon.name}
                 </span>
                 {icon.unicode && (
-                  <span class="text-[9px] text-rose-300">{icon.unicode}</span>
+                  <span class="text-[9px] text-[var(--color-base-400)]">
+                    {icon.unicode}
+                  </span>
                 )}
 
                 {/* Add to project button — appears on hover */}
                 <button
-                  class="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[11px] font-bold text-white opacity-0 shadow transition-all group-hover:opacity-100 hover:bg-rose-600 active:scale-95"
+                  class="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[11px] font-bold text-white opacity-0 transition-all group-hover:opacity-100 hover:bg-rose-600 active:scale-95"
                   title="添加到我的项目"
                   onClick$={() => {
                     addingIcon.value = {
@@ -623,7 +639,7 @@ export default component$(() => {
                 </button>
 
                 {copied.value === icon.name && (
-                  <div class="absolute inset-0 flex items-center justify-center rounded-2xl bg-rose-500/90">
+                  <div class="absolute inset-0 flex items-center justify-center rounded-sm bg-[var(--color-base-200)]/90">
                     <span class="text-xs font-semibold text-white">已复制</span>
                   </div>
                 )}
@@ -635,9 +651,9 @@ export default component$(() => {
 
       {/* ── Usage + CDN ──────────────────────────────────────────── */}
       <section class="mx-auto max-w-7xl px-4 pb-12 sm:px-6">
-        <div class="rounded-3xl border border-rose-100 bg-white/60 p-6">
+        <div class="rounded-md border border-[var(--color-base-300)] bg-[var(--color-base-100)]/60 p-6">
           <div class="mb-4 flex items-center justify-between">
-            <h2 class="text-lg font-extrabold text-rose-950">
+            <h2 class="text-lg font-extrabold text-[var(--color-neutral)]">
               使用方法
             </h2>
             {isOwner && (
@@ -719,7 +735,7 @@ const PublishButton = component$<{
       )}
       {err.value && <span class="text-xs text-red-500">{err.value}</span>}
       <button
-        class="flex items-center gap-1.5 rounded-2xl border border-rose-200 bg-white px-3 py-1.5 text-sm font-semibold text-rose-600 hover:bg-rose-50"
+        class="flex items-center gap-1.5 rounded-sm border border-[var(--color-base-300)] bg-[var(--color-base-100)] px-3 py-1.5 text-sm font-semibold text-[var(--color-neutral)] hover:bg-[var(--color-base-200)]"
         onClick$={handlePublish}
         disabled={publishing.value || props.icons.length === 0}
       >
@@ -767,7 +783,7 @@ const CdnSnippet = component$<{
   return (
     <div class="space-y-4 text-sm">
       {published.value && (
-        <div class="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-3">
+        <div class="rounded-sm border border-emerald-200 bg-emerald-50/50 p-3">
           <p class="mb-1 text-xs font-semibold text-emerald-800">
             ✓ CDN 在线链接已可用
           </p>
@@ -785,13 +801,15 @@ const CdnSnippet = component$<{
         </div>
       )}
       <div>
-        <p class="mb-1 font-semibold text-rose-800">1. 引入 CSS</p>
+        <p class="mb-1 font-semibold text-[var(--color-neutral)]">
+          1. 引入 CSS
+        </p>
         <div class="flex items-start gap-2">
-          <pre class="flex-1 overflow-x-auto rounded-xl bg-rose-50 p-3 text-xs text-rose-600">
+          <pre class="flex-1 overflow-x-auto rounded-sm bg-[var(--color-base-200)] p-3 text-xs text-[var(--color-neutral)]">
             {cssLink}
           </pre>
           <button
-            class="mt-0.5 flex-shrink-0 rounded-xl bg-rose-100 px-2 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-200"
+            class="mt-0.5 flex-shrink-0 rounded-sm bg-[var(--color-base-200)] px-2 py-1 text-xs font-semibold text-[var(--color-neutral)] hover:bg-[var(--color-base-300)]"
             onClick$={() => copyText(cssLink, "css")}
           >
             {copied.value === "css" ? "已复制" : "复制"}
@@ -799,13 +817,15 @@ const CdnSnippet = component$<{
         </div>
       </div>
       <div>
-        <p class="mb-1 font-semibold text-rose-800">2. 使用图标</p>
+        <p class="mb-1 font-semibold text-[var(--color-neutral)]">
+          2. 使用图标
+        </p>
         <div class="flex items-start gap-2">
-          <pre class="flex-1 rounded-xl bg-rose-50 p-3 text-xs text-rose-600">
+          <pre class="flex-1 rounded-sm bg-[var(--color-base-200)] p-3 text-xs text-[var(--color-neutral)]">
             {usage}
           </pre>
           <button
-            class="mt-0.5 flex-shrink-0 rounded-xl bg-rose-100 px-2 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-200"
+            class="mt-0.5 flex-shrink-0 rounded-sm bg-[var(--color-base-200)] px-2 py-1 text-xs font-semibold text-[var(--color-neutral)] hover:bg-[var(--color-base-300)]"
             onClick$={() => copyText(usage, "usage")}
           >
             {copied.value === "usage" ? "已复制" : "复制"}

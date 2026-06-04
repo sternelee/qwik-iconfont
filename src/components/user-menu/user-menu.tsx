@@ -17,7 +17,7 @@ export const UserMenu = component$(() => {
       <div
         tabIndex={0}
         role="button"
-        class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-2xl transition-all hover:bg-rose-50"
+        class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-md transition-all hover:bg-[var(--color-base-200)]"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -29,7 +29,7 @@ export const UserMenu = component$(() => {
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
-          class="text-rose-600"
+          class="text-[var(--color-neutral)]"
         >
           <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
           <circle cx="12" cy="7" r="4" />
@@ -42,7 +42,7 @@ export const UserMenu = component$(() => {
         <li>
           <a
             href="/favorites"
-            class="rounded-xl px-3 py-2 text-sm text-rose-800 transition-all hover:bg-rose-50"
+            class="rounded-md px-3 py-2 text-sm text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
           >
             ♥️ 我的收藏
           </a>
@@ -50,14 +50,14 @@ export const UserMenu = component$(() => {
         <li>
           <a
             href="/settings/profile"
-            class="rounded-xl px-3 py-2 text-sm text-rose-800 transition-all hover:bg-rose-50"
+            class="rounded-md px-3 py-2 text-sm text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
           >
             👤 个人资料
           </a>
         </li>
-        <li class="mt-1 border-t border-rose-50 pt-1">
+        <li class="mt-1 border-t border-[var(--color-base-300)] pt-1">
           <button
-            class="w-full rounded-xl px-3 py-2 text-left text-sm text-rose-800 transition-all hover:bg-rose-50"
+            class="w-full rounded-md px-3 py-2 text-left text-sm text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
             onClick$={handleSignOut}
           >
             退出登录

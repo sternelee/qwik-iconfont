@@ -604,7 +604,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                                     "h-5 w-5 rounded border-2 transition-all hover:scale-110",
                                     colorStore.selectedIdx === e.idx
                                       ? "border-rose-500 ring-1 ring-rose-300"
-                                      : "border-rose-100 hover:border-rose-300",
+                                      : "border-[var(--color-base-300)] hover:border-[var(--color-base-400)]",
                                   ].join(" ")}
                                   style={{
                                     backgroundColor:
@@ -628,7 +628,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                                 <div class="flex items-center gap-2">
                                   <input
                                     type="color"
-                                    class="h-7 w-7 cursor-pointer rounded border-2 border-rose-200 p-0.5"
+                                    class="h-7 w-7 cursor-pointer rounded border-2 border-[var(--color-base-300)] p-0.5"
                                     value={
                                       colorStore.entries.find(
                                         (e) => e.idx === colorStore.selectedIdx,
@@ -1035,7 +1035,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
       {/* Confirm close with unsaved changes */}
       {showCloseConfirm.value && (
         <div class="fixed inset-0 z-60 flex items-center justify-center bg-black/60 p-4">
-          <div class="modal-box bg-base-100 w-full max-w-sm rounded-2xl shadow-2xl">
+          <div class="modal-box bg-base-100 w-full max-w-sm rounded-md shadow-2xl">
             <h4 class="mb-2 text-base font-bold">放弃未保存的修改？</h4>
             <p class="text-base-content/60 mb-4 text-sm">
               你对图标所做的修改尚未保存，关闭后将会丢失。

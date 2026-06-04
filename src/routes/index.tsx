@@ -7,8 +7,24 @@ import {
   useOnDocument,
   useVisibleTask$,
 } from "@builder.io/qwik";
-import { routeLoader$, routeAction$, useNavigate } from "@builder.io/qwik-city";
+import {
+  routeLoader$,
+  routeAction$,
+  useNavigate,
+  type DocumentHead,
+} from "@builder.io/qwik-city";
 import type { Project } from "~/lib/types";
+
+export const head: DocumentHead = {
+  title: "Iconfont - 图标字体管理平台",
+  meta: [
+    {
+      name: "description",
+      content:
+        "开源 SVG 图标集管理与图标字体生成平台。上传 SVG，一键生成 TTF、CSS 和 Symbol 精灵图。",
+    },
+  ],
+};
 import { ToastContainer, type ToastItem } from "~/components/toast/toast";
 import { SkeletonProjectCard } from "~/components/skeleton/skeleton";
 import { HighlightText } from "~/components/highlight-text/highlight-text";
@@ -408,7 +424,7 @@ export default component$(() => {
         <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           {/* Left: Logo */}
           <a href="/" class="flex items-center gap-3">
-            <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-rose-600 shadow-lg shadow-rose-500/20">
+            <div class="flex h-10 w-10 items-center justify-center rounded-md bg-rose-500">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="20"
@@ -429,7 +445,7 @@ export default component$(() => {
               <span class="text-lg font-extrabold tracking-tight text-rose-600">
                 Iconfont
               </span>
-              <span class="-mt-0.5 text-[10px] font-medium tracking-wider text-rose-400/70">
+              <span class="-mt-0.5 text-[10px] font-medium tracking-wider text-[var(--color-base-400)]">
                 开源版
               </span>
             </div>
@@ -441,19 +457,19 @@ export default component$(() => {
             {/* Explore link */}
             <a
               href="/explore"
-              class="hidden rounded-2xl px-3 py-2 text-sm font-semibold text-rose-600 transition-all hover:bg-rose-50 sm:block"
+              class="hidden rounded-md px-3 py-2 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)] sm:block"
             >
               探索
             </a>
             {isLocal && (
-              <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+              <span class="rounded-full bg-[var(--color-base-200)] px-3 py-1 text-xs font-semibold text-amber-700">
                 本地模式
               </span>
             )}
             {isLocal ? (
               <a
                 href="/login"
-                class="rounded-2xl px-4 py-2 text-sm font-semibold text-rose-600 transition-all hover:bg-rose-50"
+                class="rounded-md px-4 py-2 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
               >
                 登录
               </a>
@@ -461,7 +477,7 @@ export default component$(() => {
               <UserMenu />
             )}
             <button
-              class="clay-button flex items-center gap-2 rounded-2xl bg-rose-500 px-5 py-2.5 text-sm font-bold text-white"
+              class="clay-button flex items-center gap-2 bg-rose-500 px-5 py-2.5 text-sm font-bold text-white"
               onClick$={() => (showModal.value = true)}
             >
               <svg
@@ -487,15 +503,15 @@ export default component$(() => {
       {/* ── Hero Section ──────────────────────────────────────── */}
       <section class="relative mx-auto max-w-7xl px-4 pt-12 pb-16 sm:px-6 sm:pt-16 sm:pb-20">
         <div class="relative z-10 flex flex-col items-center text-center">
-          <div class="animate-fade-in-up mb-6 inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 shadow-sm backdrop-blur-sm">
+          <div class="animate-fade-in-up mb-6 inline-flex items-center gap-2 rounded-full bg-[var(--color-base-100)] px-4 py-2">
             <span class="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-            <span class="text-sm font-medium text-rose-700">
+            <span class="text-sm font-medium text-[var(--color-neutral)]">
               已支持 {totalIcons} 个图标 · {projectList.length} 个项目
             </span>
           </div>
 
           <h1
-            class="animate-fade-in-up text-4xl font-black tracking-tight text-rose-950 sm:text-5xl lg:text-6xl"
+            class="animate-fade-in-up text-4xl font-black tracking-tight text-[var(--color-neutral)] sm:text-5xl lg:text-6xl"
             style="animation-delay: 0.08s"
           >
             创建你的专属
@@ -506,7 +522,7 @@ export default component$(() => {
           </h1>
 
           <p
-            class="animate-fade-in-up mt-5 max-w-xl text-base leading-relaxed text-rose-800/70 sm:text-lg"
+            class="animate-fade-in-up mt-5 max-w-xl text-base leading-relaxed text-[var(--color-base-400)] sm:text-lg"
             style="animation-delay: 0.16s"
           >
             上传 SVG，一键生成 TTF 字体、CSS 样式和 Symbol 精灵图。
@@ -519,7 +535,7 @@ export default component$(() => {
             style="animation-delay: 0.24s"
           >
             <button
-              class="clay-button flex items-center gap-2 rounded-2xl bg-rose-500 px-7 py-3.5 text-base font-bold text-white"
+              class="clay-button flex items-center gap-2 bg-rose-500 px-7 py-3.5 text-base font-bold text-white"
               onClick$={() => (showModal.value = true)}
             >
               <svg
@@ -539,7 +555,7 @@ export default component$(() => {
               开始创建项目
             </button>
             <button
-              class="clay-button-secondary flex items-center gap-2 rounded-2xl border border-rose-200 bg-white px-6 py-3.5 text-base font-bold text-rose-700 hover:border-rose-300 hover:bg-rose-50"
+              class="clay-button-secondary flex items-center gap-2 rounded-md border border-[var(--color-base-300)] bg-[var(--color-base-100)] px-6 py-3.5 text-base font-bold text-[var(--color-neutral)] hover:border-[var(--color-base-400)] hover:bg-[var(--color-base-200)]"
               onClick$={() => (showGithubImport.value = true)}
             >
               <svg
@@ -555,7 +571,7 @@ export default component$(() => {
             </button>
             <a
               href="#featured"
-              class="clay-button-secondary flex items-center gap-2 rounded-2xl bg-blue-500 px-7 py-3.5 text-base font-bold text-white"
+              class="clay-button-secondary flex items-center gap-2 bg-blue-500 px-7 py-3.5 text-base font-bold text-white"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -605,7 +621,7 @@ export default component$(() => {
                   stroke-width="1.5"
                   stroke-linecap="round"
                   stroke-linejoin="round"
-                  class="h-5 w-5 text-rose-400 sm:h-6 sm:w-6"
+                  class="h-5 w-5 text-[var(--color-base-400)] sm:h-6 sm:w-6"
                 >
                   <path d={d} />
                 </svg>
@@ -622,10 +638,10 @@ export default component$(() => {
       >
         <div class="mb-8 flex items-end justify-between">
           <div>
-            <h2 class="text-2xl font-extrabold text-rose-950 sm:text-3xl">
+            <h2 class="text-2xl font-extrabold text-[var(--color-neutral)] sm:text-3xl">
               推荐图标集
             </h2>
-            <p class="mt-1 text-sm text-rose-700/60">
+            <p class="mt-1 text-sm text-[var(--color-base-400)]">
               精选热门风格，一键创建相似项目
             </p>
           </div>
@@ -643,19 +659,19 @@ export default component$(() => {
                 >
                   {/* Project preview */}
                   <div class="mb-4 flex items-center gap-3">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-400 to-rose-500 text-lg font-extrabold text-white shadow-md shadow-rose-500/20">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-md bg-gradient-to-br from-rose-400 to-rose-500 text-lg font-extrabold text-white">
                       {project.name.charAt(0).toUpperCase()}
                     </div>
                     <div class="min-w-0 flex-1">
-                      <h3 class="truncate text-base font-bold text-rose-950">
+                      <h3 class="truncate text-base font-bold text-[var(--color-neutral)]">
                         {project.name}
                       </h3>
                       <div class="mt-0.5 flex items-center gap-2">
-                        <span class="text-[10px] font-medium text-rose-400/70">
+                        <span class="text-[10px] font-medium text-[var(--color-base-400)]">
                           {project.author_name || "匿名作者"}
                         </span>
                         {project.visibility === "public" && (
-                          <span class="rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-600">
+                          <span class="rounded-full bg-[var(--color-base-200)] px-1.5 py-0.5 text-[9px] font-semibold text-emerald-600">
                             公开
                           </span>
                         )}
@@ -673,7 +689,7 @@ export default component$(() => {
                         fill="none"
                         stroke="#E11D48"
                         stroke-width="2"
-                        class="text-rose-400"
+                        class="text-[var(--color-base-400)]"
                       >
                         <rect
                           x="3"
@@ -686,7 +702,7 @@ export default component$(() => {
                         <circle cx="8.5" cy="8.5" r="1.5" />
                         <polyline points="21 15 16 10 5 21" />
                       </svg>
-                      <span class="text-xs font-semibold text-rose-800/70">
+                      <span class="text-xs font-semibold text-[var(--color-base-400)]">
                         {project.icon_count || 0}
                       </span>
                     </div>
@@ -700,17 +716,17 @@ export default component$(() => {
                         fill="none"
                         stroke="#E11D48"
                         stroke-width="2"
-                        class="text-rose-400"
+                        class="text-[var(--color-base-400)]"
                       >
                         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                       </svg>
-                      <span class="text-xs font-semibold text-rose-800/70">
+                      <span class="text-xs font-semibold text-[var(--color-base-400)]">
                         {project.favorites_count || 0}
                       </span>
                     </div>
                   </div>
 
-                  <p class="line-clamp-2 text-xs text-rose-600/50">
+                  <p class="line-clamp-2 text-xs text-[var(--color-base-400)]">
                     {project.description || "暂无描述"}
                   </p>
                 </div>
@@ -748,10 +764,12 @@ export default component$(() => {
 
                   <div class="flex items-center justify-between">
                     <div>
-                      <h3 class="text-base font-bold text-rose-950">
+                      <h3 class="text-base font-bold text-[var(--color-neutral)]">
                         {set.name}
                       </h3>
-                      <p class="text-xs text-rose-600/60">{set.count} 个图标</p>
+                      <p class="text-xs text-[var(--color-base-400)]">
+                        {set.count} 个图标
+                      </p>
                     </div>
                     <div
                       class="flex h-9 w-9 items-center justify-center rounded-xl transition-all"
@@ -780,30 +798,95 @@ export default component$(() => {
         </div>
       </section>
 
+      {/* ── Features ──────────────────────────────────────────── */}
+      <section class="relative z-10 mx-auto max-w-7xl px-4 py-12 sm:px-6">
+        <div class="mb-8 text-center">
+          <h2 class="text-2xl font-extrabold text-[var(--color-neutral)] sm:text-3xl">
+            核心功能
+          </h2>
+          <p class="mt-2 text-sm text-[var(--color-base-400)]">
+            为开发者和设计师打造的图标工作流
+          </p>
+        </div>
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            {
+              title: "图标字体生成",
+              desc: "一键将 SVG 转为 TTF 字体、CSS 类名和 Symbol 精灵图，前端接入零配置。",
+              icon: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z",
+            },
+            {
+              title: "COLRv0 彩色字体",
+              desc: "提取多色 SVG 的颜色层，生成原生彩色字体，现代浏览器直接渲染多彩图标。",
+              icon: "M12 3a9 9 0 0 0 0 18 9 9 0 0 0 0-18zm0 16a7 7 0 1 1 0-14 7 7 0 0 1 0 14z M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3z",
+            },
+            {
+              title: "AI 辅助设计",
+              desc: "通过自然语言描述生成 SVG 图标，或让 AI 修改现有图标，降低设计门槛。",
+              icon: "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z",
+            },
+            {
+              title: "开源与协作",
+              desc: "发布公开图标集，浏览社区作品，收藏和 Fork 他人的项目，共建图标生态。",
+              icon: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75",
+            },
+          ].map((f, idx) => (
+            <div
+              key={f.title}
+              class="animate-fade-in-up clay-card p-5"
+              style={`animation-delay: ${idx * 0.06}s`}
+            >
+              <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-md bg-[var(--color-base-200)]">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="text-rose-500"
+                >
+                  <path d={f.icon} />
+                </svg>
+              </div>
+              <h3 class="mb-1 text-sm font-bold text-[var(--color-neutral)]">
+                {f.title}
+              </h3>
+              <p class="text-xs leading-relaxed text-[var(--color-base-400)]">
+                {f.desc}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* ── Main Content ──────────────────────────────────────── */}
       <main class="relative z-10 mx-auto max-w-7xl px-4 py-8 sm:px-6">
         {/* Section header */}
         <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 class="text-2xl font-extrabold text-rose-950">
+            <h2 class="text-2xl font-extrabold text-[var(--color-neutral)]">
               我的项目
             </h2>
-            <p class="mt-1 text-sm text-rose-700/60">
+            <p class="mt-1 text-sm text-[var(--color-base-400)]">
               {projectList.length} 个项目 · {totalIcons} 个图标
             </p>
             {/* Quota bar */}
             {loaderData.value.mode === "server" &&
               loaderData.value.quota &&
               loaderData.value.quota.maxProjects !== Infinity && (
-                <div class="mt-2 flex items-center gap-2 text-xs text-rose-500">
-                  <span class="rounded-full bg-rose-100 px-2 py-0.5 font-medium">
+                <div class="mt-2 flex items-center gap-2 text-xs text-[var(--color-base-400)]">
+                  <span class="rounded-full bg-[var(--color-base-200)] px-2 py-0.5 font-medium">
                     {loaderData.value.quota.plan}
                   </span>
                   <span>
                     项目 {projectList.length}/
                     {loaderData.value.quota.maxProjects}
                   </span>
-                  <div class="h-1.5 w-16 overflow-hidden rounded-full bg-rose-100">
+                  <div class="h-1.5 w-16 overflow-hidden rounded-full bg-[var(--color-base-200)]">
                     <div
                       class="h-full rounded-full bg-rose-400"
                       style={`width:${Math.min(100, (projectList.length / loaderData.value.quota.maxProjects) * 100)}%`}
@@ -832,7 +915,7 @@ export default component$(() => {
                 onInput$={(ev: any) => (searchQuery.value = ev.target.value)}
               />
               <svg
-                class="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-rose-400"
+                class="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-[var(--color-base-400)]"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 fill="none"
@@ -851,9 +934,9 @@ export default component$(() => {
         {/* Empty State */}
         {projectList.length === 0 ? (
           <div class="animate-fade-in-up clay-card flex flex-col items-center justify-center py-20">
-            <div class="mb-5 flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-rose-100 to-pink-100">
+            <div class="mb-5 flex h-24 w-24 items-center justify-center rounded-md bg-[var(--color-base-200)]">
               <svg
-                class="h-12 w-12 text-rose-400"
+                class="h-12 w-12 text-[var(--color-base-400)]"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 fill="none"
@@ -867,10 +950,10 @@ export default component$(() => {
                 <polyline points="21 15 16 10 5 21" />
               </svg>
             </div>
-            <h2 class="mb-2 text-lg font-bold text-rose-950">
+            <h2 class="mb-2 text-lg font-bold text-[var(--color-neutral)]">
               {debouncedQuery.value ? "未找到匹配的项目" : "还没有项目"}
             </h2>
-            <p class="mb-6 max-w-sm text-center text-sm text-rose-700/60">
+            <p class="mb-6 max-w-sm text-center text-sm text-[var(--color-base-400)]">
               {debouncedQuery.value
                 ? "尝试其他关键词"
                 : isLocal
@@ -878,26 +961,44 @@ export default component$(() => {
                   : "创建你的第一个图标库，开始管理和生成 iconfont"}
             </p>
             {!debouncedQuery.value && (
-              <button
-                class="clay-button flex items-center gap-2 rounded-2xl bg-rose-500 px-6 py-2.5 text-sm font-bold text-white"
-                onClick$={() => (showModal.value = true)}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+              <div class="flex flex-col items-center gap-3">
+                <button
+                  class="clay-button flex items-center gap-2 bg-rose-500 px-6 py-2.5 text-sm font-bold text-white"
+                  onClick$={() => (showModal.value = true)}
                 >
-                  <line x1="12" x2="12" y1="5" y2="19" />
-                  <line x1="5" x2="19" y1="12" y2="12" />
-                </svg>
-                新建项目
-              </button>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <line x1="12" x2="12" y1="5" y2="19" />
+                    <line x1="5" x2="19" y1="12" y2="12" />
+                  </svg>
+                  新建项目
+                </button>
+                <div class="flex items-center gap-4">
+                  <a
+                    href="/guide"
+                    class="text-xs font-medium text-[var(--color-neutral)] transition-colors hover:text-[var(--color-base-400)]"
+                  >
+                    查看使用指南 →
+                  </a>
+                  {isLocal && (
+                    <a
+                      href="/register"
+                      class="text-xs font-medium text-[var(--color-neutral)] transition-colors hover:text-[var(--color-base-400)]"
+                    >
+                      注册账号，数据上云 →
+                    </a>
+                  )}
+                </div>
+              </div>
             )}
           </div>
         ) : (
@@ -915,13 +1016,13 @@ export default component$(() => {
                 >
                   <div class="mb-4 flex items-start justify-between">
                     <div class="flex items-center gap-3">
-                      <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-400 to-rose-500 text-white shadow-lg shadow-rose-500/20">
+                      <div class="flex h-11 w-11 items-center justify-center rounded-md bg-gradient-to-br from-rose-400 to-rose-500 text-white">
                         <span class="text-lg font-bold">
                           {project.name.charAt(0).toUpperCase()}
                         </span>
                       </div>
                       <div class="flex flex-col">
-                        <h3 class="text-lg font-bold text-rose-950">
+                        <h3 class="text-lg font-bold text-[var(--color-neutral)]">
                           <HighlightText
                             text={project.name}
                             query={debouncedQuery.value}
@@ -929,16 +1030,16 @@ export default component$(() => {
                         </h3>
                         <div class="mt-0.5 flex items-center gap-1.5">
                           {project.visibility === "public" ? (
-                            <span class="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
+                            <span class="rounded-full bg-[var(--color-base-200)] px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
                               公开
                             </span>
                           ) : (
-                            <span class="rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-500">
+                            <span class="rounded-full bg-[var(--color-base-200)] px-2 py-0.5 text-[10px] font-semibold text-rose-500">
                               私有
                             </span>
                           )}
                           {project.favorites_count > 0 && (
-                            <span class="flex items-center gap-0.5 text-[10px] text-rose-400/70">
+                            <span class="flex items-center gap-0.5 text-[10px] text-[var(--color-base-400)]">
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 width="10"
@@ -957,7 +1058,7 @@ export default component$(() => {
                       </div>
                     </div>
                     <button
-                      class="flex h-8 w-8 items-center justify-center rounded-xl text-rose-400 opacity-0 transition-all group-hover:opacity-100 hover:bg-rose-50 hover:text-rose-600"
+                      class="flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-base-400)] opacity-0 transition-all group-hover:opacity-100 hover:bg-[var(--color-base-200)] hover:text-[var(--color-neutral)]"
                       onClick$={(ev: any) => {
                         ev.stopPropagation();
                         handleDelete(project);
@@ -986,7 +1087,7 @@ export default component$(() => {
                   </div>
 
                   {project.description && (
-                    <p class="mb-4 line-clamp-2 text-sm leading-relaxed text-rose-800/50">
+                    <p class="mb-4 line-clamp-2 text-sm leading-relaxed text-[var(--color-base-400)]">
                       <HighlightText
                         text={project.description}
                         query={debouncedQuery.value}
@@ -1005,7 +1106,7 @@ export default component$(() => {
                         fill="none"
                         stroke="currentColor"
                         stroke-width="2"
-                        class="text-rose-400"
+                        class="text-[var(--color-base-400)]"
                       >
                         <rect
                           x="3"
@@ -1018,29 +1119,29 @@ export default component$(() => {
                         <circle cx="8.5" cy="8.5" r="1.5" />
                         <polyline points="21 15 16 10 5 21" />
                       </svg>
-                      <span class="text-xs font-semibold text-rose-800/70">
+                      <span class="text-xs font-semibold text-[var(--color-base-400)]">
                         {project.icon_count ?? 0}
                       </span>
                     </div>
                     <div class="h-4 w-px bg-rose-200" />
-                    <span class="max-w-[80px] truncate text-xs text-rose-600/50">
+                    <span class="max-w-[80px] truncate text-xs text-[var(--color-base-400)]">
                       {project.author_name || "我"}
                     </span>
                     <div class="h-4 w-px bg-rose-200" />
-                    <span class="font-mono text-xs text-rose-600/50">
+                    <span class="font-mono text-xs text-[var(--color-base-400)]">
                       {project.font_family}
                     </span>
                     <div class="h-4 w-px bg-rose-200" />
-                    <span class="font-mono text-xs text-rose-600/50">
+                    <span class="font-mono text-xs text-[var(--color-base-400)]">
                       {project.prefix}
                     </span>
                   </div>
 
                   <div class="flex items-center justify-between">
-                    <span class="text-xs text-rose-400/60">
+                    <span class="text-xs text-[var(--color-base-400)]">
                       {new Date(project.updated_at).toLocaleDateString("zh-CN")}
                     </span>
-                    <span class="flex items-center gap-1 text-xs font-semibold text-rose-500 transition-colors group-hover:text-rose-600">
+                    <span class="flex items-center gap-1 text-xs font-semibold text-[var(--color-base-400)] transition-colors group-hover:text-[var(--color-neutral)]">
                       管理
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -1068,11 +1169,11 @@ export default component$(() => {
       {showModal.value && (
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-lg">
-            <div class="border-b border-rose-100 px-6 py-4">
-              <h3 class="text-lg font-bold text-rose-950">
+            <div class="border-b border-[var(--color-base-300)] px-6 py-4">
+              <h3 class="text-lg font-bold text-[var(--color-neutral)]">
                 新建项目
               </h3>
-              <p class="mt-1 text-sm text-rose-700/60">
+              <p class="mt-1 text-sm text-[var(--color-base-400)]">
                 设置项目名称和配置，后续上传图标后用于代码生成。
               </p>
             </div>
@@ -1080,7 +1181,7 @@ export default component$(() => {
               <div class="space-y-4 px-6 py-5">
                 <div class="form-control">
                   <label class="label py-1">
-                    <span class="label-text text-sm font-semibold text-rose-800">
+                    <span class="label-text text-sm font-semibold text-[var(--color-neutral)]">
                       项目名称 *
                     </span>
                   </label>
@@ -1094,7 +1195,7 @@ export default component$(() => {
                 </div>
                 <div class="form-control">
                   <label class="label py-1">
-                    <span class="label-text text-sm font-semibold text-rose-800">
+                    <span class="label-text text-sm font-semibold text-[var(--color-neutral)]">
                       描述
                     </span>
                   </label>
@@ -1108,7 +1209,7 @@ export default component$(() => {
                 <div class="grid grid-cols-2 gap-3">
                   <div class="form-control">
                     <label class="label py-1">
-                      <span class="label-text text-sm font-semibold text-rose-800">
+                      <span class="label-text text-sm font-semibold text-[var(--color-neutral)]">
                         Font Family
                       </span>
                     </label>
@@ -1121,7 +1222,7 @@ export default component$(() => {
                   </div>
                   <div class="form-control">
                     <label class="label py-1">
-                      <span class="label-text text-sm font-semibold text-rose-800">
+                      <span class="label-text text-sm font-semibold text-[var(--color-neutral)]">
                         Class 前缀
                       </span>
                     </label>
@@ -1135,12 +1236,12 @@ export default component$(() => {
                 </div>
                 <div class="form-control">
                   <label class="label py-1">
-                    <span class="label-text text-sm font-semibold text-rose-800">
+                    <span class="label-text text-sm font-semibold text-[var(--color-neutral)]">
                       可见性
                     </span>
                   </label>
                   <div class="flex gap-2">
-                    <label class="flex flex-1 cursor-pointer items-center gap-2 rounded-2xl border border-rose-200 bg-white/60 px-4 py-2.5 transition-all has-[:checked]:border-rose-400 has-[:checked]:bg-rose-50">
+                    <label class="flex flex-1 cursor-pointer items-center gap-2 rounded-md border border-[var(--color-base-300)] bg-[var(--color-base-100)] px-4 py-2.5 transition-all has-[:checked]:border-[var(--color-neutral)] has-[:checked]:bg-[var(--color-base-200)]">
                       <input
                         type="radio"
                         name="visibility"
@@ -1148,41 +1249,45 @@ export default component$(() => {
                         class="radio radio-sm"
                         defaultChecked
                       />
-                      <span class="text-sm text-rose-800">私有</span>
+                      <span class="text-sm text-[var(--color-neutral)]">
+                        私有
+                      </span>
                     </label>
-                    <label class="flex flex-1 cursor-pointer items-center gap-2 rounded-2xl border border-rose-200 bg-white/60 px-4 py-2.5 transition-all has-[:checked]:border-emerald-400 has-[:checked]:bg-emerald-50">
+                    <label class="flex flex-1 cursor-pointer items-center gap-2 rounded-md border border-[var(--color-base-300)] bg-[var(--color-base-100)] px-4 py-2.5 transition-all has-[:checked]:border-emerald-500 has-[:checked]:bg-[var(--color-base-200)]">
                       <input
                         type="radio"
                         name="visibility"
                         value="public"
                         class="radio radio-sm"
                       />
-                      <span class="text-sm text-rose-800">公开</span>
+                      <span class="text-sm text-[var(--color-neutral)]">
+                        公开
+                      </span>
                     </label>
                   </div>
                   <label class="label">
-                    <span class="label-text-alt text-xs text-rose-400/60">
+                    <span class="label-text-alt text-xs text-[var(--color-base-400)]">
                       公开项目将展示在首页推荐中，所有人可见
                     </span>
                   </label>
                 </div>
-                <div class="rounded-2xl bg-blue-50 px-4 py-3 text-xs text-blue-700">
+                <div class="rounded-md bg-[var(--color-base-200)] px-4 py-3 text-xs text-[var(--color-neutral)]">
                   生成 class 时会得到类似{" "}
                   <span class="font-mono font-semibold">icon-home</span>{" "}
                   的名称。
                 </div>
               </div>
-              <div class="flex justify-end gap-3 border-t border-rose-100 px-6 py-4">
+              <div class="flex justify-end gap-3 border-t border-[var(--color-base-300)] px-6 py-4">
                 <button
                   type="button"
-                  class="rounded-2xl px-5 py-2.5 text-sm font-semibold text-rose-700 transition-all hover:bg-rose-50"
+                  class="rounded-md px-5 py-2.5 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
                   onClick$={() => (showModal.value = false)}
                 >
                   取消
                 </button>
                 <button
                   type="submit"
-                  class="clay-button rounded-2xl bg-rose-500 px-6 py-2.5 text-sm font-bold text-white"
+                  class="clay-button bg-rose-500 px-6 py-2.5 text-sm font-bold text-white"
                 >
                   创建
                 </button>
@@ -1201,7 +1306,7 @@ export default component$(() => {
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-sm text-center">
             <div class="p-6">
-              <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-100">
+              <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-md bg-[var(--color-base-200)]">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="28"
@@ -1217,16 +1322,16 @@ export default component$(() => {
                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                 </svg>
               </div>
-              <h3 class="text-lg font-bold text-rose-950">
+              <h3 class="text-lg font-bold text-[var(--color-neutral)]">
                 确认删除
               </h3>
-              <p class="mt-2 text-sm text-rose-700/60">
+              <p class="mt-2 text-sm text-[var(--color-base-400)]">
                 确定要删除项目 "{confirmState.project?.name}"
                 吗？此操作将删除项目下的所有图标，不可恢复。
               </p>
               <div class="mt-5 flex justify-center gap-3">
                 <button
-                  class="rounded-2xl px-5 py-2.5 text-sm font-semibold text-rose-700 transition-all hover:bg-rose-50"
+                  class="rounded-md px-5 py-2.5 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
                   onClick$={() => {
                     confirmState.show = false;
                     confirmState.project = null;
@@ -1235,7 +1340,7 @@ export default component$(() => {
                   取消
                 </button>
                 <button
-                  class="clay-button rounded-2xl bg-rose-500 px-6 py-2.5 text-sm font-bold text-white"
+                  class="clay-button bg-rose-500 px-6 py-2.5 text-sm font-bold text-white"
                   onClick$={confirmDelete}
                 >
                   删除
@@ -1258,7 +1363,7 @@ export default component$(() => {
         <div class="modal modal-open">
           <div class="clay-card animate-modal mx-4 max-w-xs">
             <div class="p-5">
-              <h3 class="mb-4 text-base font-bold text-rose-950">
+              <h3 class="mb-4 text-base font-bold text-[var(--color-neutral)]">
                 键盘快捷键
               </h3>
               <div class="space-y-2 text-sm">
@@ -1271,8 +1376,8 @@ export default component$(() => {
                     class="flex items-center justify-between py-1"
                     key={label}
                   >
-                    <span class="text-rose-700/60">{label}</span>
-                    <kbd class="rounded-lg bg-rose-50 px-2 py-1 text-xs font-semibold text-rose-600">
+                    <span class="text-[var(--color-base-400)]">{label}</span>
+                    <kbd class="rounded-md bg-[var(--color-base-200)] px-2 py-1 text-xs font-semibold text-[var(--color-neutral)]">
                       {key}
                     </kbd>
                   </div>
@@ -1280,7 +1385,7 @@ export default component$(() => {
               </div>
               <div class="mt-4 flex justify-end">
                 <button
-                  class="rounded-2xl px-4 py-2 text-sm font-semibold text-rose-700 transition-all hover:bg-rose-50"
+                  class="rounded-md px-4 py-2 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
                   onClick$={() => (showShortcuts.value = false)}
                 >
                   关闭

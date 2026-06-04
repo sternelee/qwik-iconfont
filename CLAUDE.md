@@ -36,10 +36,12 @@ The app supports two mutually exclusive data modes:
 2. **Anonymous mode** — When no auth session exists, all data (projects + icons) is stored in **browser localStorage** via `src/lib/local-storage.ts`. No server persistence.
 
 Pages and API routes branch on `getSessionFromRequest()`:
+
 - Authenticated → query D1 via Drizzle ORM, store SVGs in R2.
 - Anonymous → read/write `localStorage` on the client side.
 
 Auth stack:
+
 - `src/lib/auth.ts` — Creates a `betterAuth` instance backed by D1 via Drizzle adapter.
 - `src/lib/auth-client.ts` — Thin fetch wrapper for sign-up, sign-in, sign-out, get-session.
 - `src/lib/session.ts` — Server-side `getSessionFromRequest()` helper for route loaders/actions.

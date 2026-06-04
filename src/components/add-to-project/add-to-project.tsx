@@ -184,14 +184,14 @@ export const AddToProjectDrawer = component$<AddToProjectDrawerProps>(
         <div class="flex-1 bg-black/30 backdrop-blur-sm" onClick$={onClose$} />
 
         {/* Drawer panel */}
-        <div class="flex h-full w-full max-w-xs flex-col border-l border-rose-100 bg-white shadow-2xl sm:max-w-sm">
+        <div class="flex h-full w-full max-w-xs flex-col border-l border-[var(--color-base-300)] bg-[var(--color-base-100)] shadow-2xl sm:max-w-sm">
           {/* Header */}
-          <div class="flex shrink-0 items-center justify-between border-b border-rose-100 px-5 py-4">
-            <h2 class="text-base font-extrabold text-rose-950">
+          <div class="flex shrink-0 items-center justify-between border-b border-[var(--color-base-300)] px-5 py-4">
+            <h2 class="text-base font-extrabold text-[var(--color-neutral)]">
               添加到项目
             </h2>
             <button
-              class="flex h-7 w-7 items-center justify-center rounded-lg text-rose-400 hover:bg-rose-50"
+              class="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--color-base-400)] hover:bg-[var(--color-base-200)]"
               onClick$={onClose$}
             >
               ✕
@@ -205,21 +205,21 @@ export const AddToProjectDrawer = component$<AddToProjectDrawerProps>(
                 ✓
               </div>
               <div>
-                <p class="text-lg font-extrabold text-rose-950">
+                <p class="text-lg font-extrabold text-[var(--color-neutral)]">
                   已添加！
                 </p>
-                <p class="mt-1 text-sm text-rose-500">
+                <p class="mt-1 text-sm text-[var(--color-neutral)]">
                   已将「{iconName.value}」保存到「{savedToName.value}」
                 </p>
               </div>
               <a
                 href={`/project/${selectedId.value}`}
-                class="rounded-2xl bg-rose-500 px-5 py-2 text-sm font-bold text-white hover:bg-rose-600"
+                class="bg-[var(--color-base-200)]0 rounded-md px-5 py-2 text-sm font-bold text-white hover:bg-rose-600"
               >
                 查看项目 →
               </a>
               <button
-                class="text-xs text-rose-400 hover:text-rose-600"
+                class="text-xs text-[var(--color-base-400)] hover:text-[var(--color-neutral)]"
                 onClick$={() => {
                   step.value = "select";
                   savedToName.value = "";
@@ -231,9 +231,9 @@ export const AddToProjectDrawer = component$<AddToProjectDrawerProps>(
           ) : (
             <div class="flex flex-1 flex-col overflow-hidden">
               {/* Icon preview + name input */}
-              <div class="shrink-0 border-b border-rose-50 px-5 py-4">
+              <div class="shrink-0 border-b border-[var(--color-base-200)] px-5 py-4">
                 <div class="flex items-center gap-3">
-                  <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-rose-100 bg-rose-50">
+                  <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-md border border-[var(--color-base-300)] bg-[var(--color-base-200)]">
                     {icon.content ? (
                       <SvgPreview
                         content={icon.content}
@@ -241,16 +241,18 @@ export const AddToProjectDrawer = component$<AddToProjectDrawerProps>(
                         color="#e11d48"
                       />
                     ) : (
-                      <span class="text-[10px] text-rose-300">无预览</span>
+                      <span class="text-[10px] text-[var(--color-base-400)]">
+                        无预览
+                      </span>
                     )}
                   </div>
                   <div class="min-w-0 flex-1">
-                    <label class="mb-1 block text-[11px] font-semibold tracking-wide text-rose-400 uppercase">
+                    <label class="mb-1 block text-[11px] font-semibold tracking-wide text-[var(--color-base-400)] uppercase">
                       图标名称
                     </label>
                     <input
                       type="text"
-                      class="w-full rounded-xl border border-rose-100 bg-rose-50/50 px-3 py-1.5 text-sm text-rose-900 focus:border-rose-300 focus:outline-none"
+                      class="w-full rounded-md border border-[var(--color-base-300)] bg-[var(--color-base-200)]/50 px-3 py-1.5 text-sm text-[var(--color-neutral)] focus:border-[var(--color-base-300)] focus:outline-none"
                       value={iconName.value}
                       onInput$={(e) =>
                         (iconName.value = (e.target as HTMLInputElement).value)
@@ -268,11 +270,11 @@ export const AddToProjectDrawer = component$<AddToProjectDrawerProps>(
               {/* Project list */}
               <div class="flex-1 overflow-y-auto px-5 py-4">
                 <div class="mb-3 flex items-center justify-between">
-                  <p class="text-[11px] font-semibold tracking-wide text-rose-400 uppercase">
+                  <p class="text-[11px] font-semibold tracking-wide text-[var(--color-base-400)] uppercase">
                     目标项目
                   </p>
                   <button
-                    class="text-xs font-semibold text-rose-500 hover:text-rose-700"
+                    class="text-xs font-semibold text-[var(--color-neutral)] hover:text-[var(--color-neutral)]"
                     onClick$={() => {
                       creatingNew.value = !creatingNew.value;
                       newProjectName.value = "";
@@ -284,11 +286,11 @@ export const AddToProjectDrawer = component$<AddToProjectDrawerProps>(
 
                 {/* Inline new-project form */}
                 {creatingNew.value && (
-                  <div class="mb-3 rounded-2xl border border-rose-200 bg-rose-50 p-3">
+                  <div class="mb-3 rounded-md border border-[var(--color-base-300)] bg-[var(--color-base-200)] p-3">
                     <input
                       type="text"
                       placeholder="项目名称..."
-                      class="mb-2 w-full rounded-xl border border-rose-100 bg-white px-3 py-1.5 text-sm text-rose-900 focus:border-rose-300 focus:outline-none"
+                      class="mb-2 w-full rounded-md border border-[var(--color-base-300)] bg-[var(--color-base-100)] px-3 py-1.5 text-sm text-[var(--color-neutral)] focus:border-[var(--color-base-300)] focus:outline-none"
                       value={newProjectName.value}
                       onInput$={(e) =>
                         (newProjectName.value = (
@@ -298,10 +300,10 @@ export const AddToProjectDrawer = component$<AddToProjectDrawerProps>(
                     />
                     <button
                       class={[
-                        "w-full rounded-xl py-1.5 text-sm font-bold text-white transition-all",
+                        "w-full rounded-md py-1.5 text-sm font-bold text-white transition-all",
                         newProjectName.value.trim()
-                          ? "bg-rose-500 hover:bg-rose-600"
-                          : "cursor-not-allowed bg-rose-200",
+                          ? "bg-[var(--color-base-200)]0 hover:bg-rose-600"
+                          : "cursor-not-allowed bg-[var(--color-base-300)]",
                       ].join(" ")}
                       disabled={
                         !newProjectName.value.trim() || creatingLoading.value
@@ -316,12 +318,12 @@ export const AddToProjectDrawer = component$<AddToProjectDrawerProps>(
                 {/* Project entries */}
                 {loading.value ? (
                   <div class="flex justify-center py-8">
-                    <div class="h-6 w-6 animate-spin rounded-full border-2 border-rose-200 border-t-rose-500" />
+                    <div class="h-6 w-6 animate-spin rounded-full border-2 border-[var(--color-base-300)] border-t-rose-500" />
                   </div>
                 ) : projects.value.length === 0 ? (
                   <div class="py-8 text-center">
-                    <p class="text-sm text-rose-300">暂无项目</p>
-                    <p class="mt-1 text-xs text-rose-300">
+                    <p class="text-sm text-[var(--color-base-400)]">暂无项目</p>
+                    <p class="mt-1 text-xs text-[var(--color-base-400)]">
                       点击上方「+ 新建项目」开始
                     </p>
                   </div>
@@ -333,10 +335,10 @@ export const AddToProjectDrawer = component$<AddToProjectDrawerProps>(
                         <button
                           key={p.id}
                           class={[
-                            "flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition-all",
+                            "flex w-full items-center justify-between rounded-md border px-4 py-3 text-left transition-all",
                             isSelected
-                              ? "border-rose-400 bg-rose-50 ring-1 ring-rose-300"
-                              : "border-rose-100 bg-white hover:border-rose-200 hover:bg-rose-50/50",
+                              ? "border-[var(--color-base-300)] bg-[var(--color-base-200)] ring-1 ring-[var(--color-base-300)]"
+                              : "border-[var(--color-base-300)] bg-[var(--color-base-100)] hover:border-[var(--color-base-300)] hover:bg-[var(--color-base-200)]/50",
                           ].join(" ")}
                           onClick$={() => (selectedId.value = p.id)}
                         >
@@ -345,11 +347,11 @@ export const AddToProjectDrawer = component$<AddToProjectDrawerProps>(
                               class={[
                                 "h-4 w-4 shrink-0 rounded-full border-2 transition-all",
                                 isSelected
-                                  ? "border-rose-500 bg-rose-500"
-                                  : "border-rose-200",
+                                  ? "border-[var(--color-base-200)]0 bg-[var(--color-base-200)]0"
+                                  : "border-[var(--color-base-300)]",
                               ].join(" ")}
                             />
-                            <span class="truncate text-sm font-medium text-rose-900">
+                            <span class="truncate text-sm font-medium text-[var(--color-neutral)]">
                               {p.name}
                             </span>
                             {p.isLocal && (
@@ -358,7 +360,7 @@ export const AddToProjectDrawer = component$<AddToProjectDrawerProps>(
                               </span>
                             )}
                           </div>
-                          <span class="ml-2 shrink-0 text-xs text-rose-400">
+                          <span class="ml-2 shrink-0 text-xs text-[var(--color-base-400)]">
                             {p.iconCount} 个
                           </span>
                         </button>
@@ -369,16 +371,16 @@ export const AddToProjectDrawer = component$<AddToProjectDrawerProps>(
               </div>
 
               {/* Footer */}
-              <div class="shrink-0 border-t border-rose-100 px-5 py-4">
+              <div class="shrink-0 border-t border-[var(--color-base-300)] px-5 py-4">
                 {error.value && (
                   <p class="mb-2 text-xs text-red-600">{error.value}</p>
                 )}
                 <button
                   class={[
-                    "w-full rounded-2xl py-2.5 text-sm font-bold text-white transition-all",
+                    "w-full rounded-md py-2.5 text-sm font-bold text-white transition-all",
                     canSave
-                      ? "bg-rose-500 hover:bg-rose-600 active:scale-[0.98]"
-                      : "cursor-not-allowed bg-rose-200",
+                      ? "bg-[var(--color-base-200)]0 hover:bg-rose-600 active:scale-[0.98]"
+                      : "cursor-not-allowed bg-[var(--color-base-300)]",
                   ].join(" ")}
                   disabled={!canSave}
                   onClick$={handleSave}
@@ -386,7 +388,7 @@ export const AddToProjectDrawer = component$<AddToProjectDrawerProps>(
                   {step.value === "saving" ? "保存中..." : "保存到项目"}
                 </button>
                 {!userId && (
-                  <p class="mt-2 text-center text-[11px] text-rose-300">
+                  <p class="mt-2 text-center text-[11px] text-[var(--color-base-400)]">
                     未登录 — 图标将保存到本地临时项目
                   </p>
                 )}

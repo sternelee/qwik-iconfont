@@ -64,8 +64,8 @@ export const IconDetailPanel = component$((props: IconDetailPanelProps) => {
         onClick$={(e: any) => e.stopPropagation()}
       >
         {/* Header */}
-        <div class="flex items-center justify-between border-b border-rose-100 px-5 py-4">
-          <h3 class="flex items-center gap-2 text-base font-bold text-rose-950">
+        <div class="flex items-center justify-between border-b border-[var(--color-base-300)] px-5 py-4">
+          <h3 class="flex items-center gap-2 text-base font-bold text-[var(--color-neutral)]">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -84,7 +84,7 @@ export const IconDetailPanel = component$((props: IconDetailPanelProps) => {
             {icon.name}
           </h3>
           <button
-            class="flex h-8 w-8 items-center justify-center rounded-xl text-rose-400 transition-all hover:bg-rose-50 hover:text-rose-600"
+            class="flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-base-400)] transition-all hover:bg-[var(--color-base-200)] hover:text-[var(--color-neutral)]"
             onClick$={onClose$}
           >
             <svg
@@ -108,18 +108,20 @@ export const IconDetailPanel = component$((props: IconDetailPanelProps) => {
         <div class="flex flex-col items-center gap-4 px-5 py-6">
           {/* Preview size selector */}
           <div class="flex items-center gap-3">
-            <span class="text-xs font-medium text-rose-400/70">预览大小:</span>
+            <span class="text-xs font-medium text-[var(--color-base-400)]">
+              预览大小:
+            </span>
             <input
               type="range"
               min="16"
               max="256"
               value={previewSize.value}
-              class="h-1.5 w-32 cursor-pointer appearance-none rounded-full bg-rose-100 accent-rose-500"
+              class="h-1.5 w-32 cursor-pointer appearance-none rounded-full bg-[var(--color-base-200)] accent-[var(--color-neutral)]"
               onInput$={(e: any) =>
                 (previewSize.value = Number(e.target.value))
               }
             />
-            <span class="font-mono text-xs text-rose-600">
+            <span class="font-mono text-xs text-[var(--color-neutral)]">
               {previewSize.value}px
             </span>
           </div>
@@ -155,7 +157,9 @@ export const IconDetailPanel = component$((props: IconDetailPanelProps) => {
           {/* Color picker */}
           {!isColorIcon && (
             <div class="flex items-center gap-2">
-              <span class="text-xs font-medium text-rose-400/70">颜色:</span>
+              <span class="text-xs font-medium text-[var(--color-base-400)]">
+                颜色:
+              </span>
               <input
                 type="color"
                 class="h-7 w-7 cursor-pointer overflow-hidden rounded-full border-0 p-0"
@@ -175,7 +179,7 @@ export const IconDetailPanel = component$((props: IconDetailPanelProps) => {
                 ].map((c) => (
                   <button
                     key={c}
-                    class={`h-6 w-6 rounded-full border-2 transition-transform hover:scale-110 ${fillColor.value === c ? "scale-110 border-rose-400" : "border-transparent"}`}
+                    class={`h-6 w-6 rounded-full border-2 transition-transform hover:scale-110 ${fillColor.value === c ? "scale-110 border-[var(--color-base-300)]" : "border-transparent"}`}
                     style={{ backgroundColor: c }}
                     onClick$={() => (fillColor.value = c)}
                   />
@@ -186,67 +190,75 @@ export const IconDetailPanel = component$((props: IconDetailPanelProps) => {
         </div>
 
         {/* Metadata */}
-        <div class="border-t border-rose-100 px-5 py-4">
+        <div class="border-t border-[var(--color-base-300)] px-5 py-4">
           <div class="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <label class="mb-1 block text-[10px] font-semibold tracking-wider text-rose-400/60 uppercase">
+              <label class="mb-1 block text-[10px] font-semibold tracking-wider text-[var(--color-base-400)] uppercase">
                 名称
               </label>
-              <div class="font-mono text-sm text-rose-800">{icon.name}</div>
-            </div>
-            <div>
-              <label class="mb-1 block text-[10px] font-semibold tracking-wider text-rose-400/60 uppercase">
-                Unicode
-              </label>
-              <div class="font-mono text-sm text-rose-800">
-                {icon.unicode || <span class="text-rose-300">未设置</span>}
+              <div class="font-mono text-sm text-[var(--color-neutral)]">
+                {icon.name}
               </div>
             </div>
             <div>
-              <label class="mb-1 block text-[10px] font-semibold tracking-wider text-rose-400/60 uppercase">
+              <label class="mb-1 block text-[10px] font-semibold tracking-wider text-[var(--color-base-400)] uppercase">
+                Unicode
+              </label>
+              <div class="font-mono text-sm text-[var(--color-neutral)]">
+                {icon.unicode || (
+                  <span class="text-[var(--color-base-400)]">未设置</span>
+                )}
+              </div>
+            </div>
+            <div>
+              <label class="mb-1 block text-[10px] font-semibold tracking-wider text-[var(--color-base-400)] uppercase">
                 ViewBox
               </label>
-              <div class="font-mono text-xs text-rose-600">
+              <div class="font-mono text-xs text-[var(--color-neutral)]">
                 {icon.view_box || "0 0 1024 1024"}
               </div>
             </div>
             <div>
-              <label class="mb-1 block text-[10px] font-semibold tracking-wider text-rose-400/60 uppercase">
+              <label class="mb-1 block text-[10px] font-semibold tracking-wider text-[var(--color-base-400)] uppercase">
                 尺寸
               </label>
-              <div class="font-mono text-xs text-rose-600">
+              <div class="font-mono text-xs text-[var(--color-neutral)]">
                 {icon.width && icon.height
                   ? `${icon.width} × ${icon.height}`
                   : "自动"}
               </div>
             </div>
             <div class="col-span-2">
-              <label class="mb-1 block text-[10px] font-semibold tracking-wider text-rose-400/60 uppercase">
+              <label class="mb-1 block text-[10px] font-semibold tracking-wider text-[var(--color-base-400)] uppercase">
                 ID
               </label>
-              <div class="font-mono text-xs text-rose-300">#{icon.id}</div>
+              <div class="font-mono text-xs text-[var(--color-base-400)]">
+                #{icon.id}
+              </div>
             </div>
           </div>
 
           {/* Usage code */}
           {props.prefix && (
-            <div class="mt-4 rounded-2xl bg-gradient-to-br from-rose-50 to-pink-50 p-3">
-              <label class="mb-2 block text-[10px] font-semibold tracking-wider text-rose-400/60 uppercase">
+            <div class="mt-4 rounded-md bg-[var(--color-base-200)] p-3">
+              <label class="mb-2 block text-[10px] font-semibold tracking-wider text-[var(--color-base-400)] uppercase">
                 使用方法
               </label>
               <div class="space-y-1.5 font-mono text-xs">
                 <div>
-                  <span class="text-rose-400/60">Font class: </span>
-                  <code class="font-semibold text-rose-600">{`<i class="${props.prefix}${icon.name}"></i>`}</code>
+                  <span class="text-[var(--color-base-400)]">Font class: </span>
+                  <code class="font-semibold text-[var(--color-neutral)]">{`<i class="${props.prefix}${icon.name}"></i>`}</code>
                 </div>
                 <div>
-                  <span class="text-rose-400/60">Symbol: </span>
+                  <span class="text-[var(--color-base-400)]">Symbol: </span>
                   <code class="font-semibold text-blue-500">{`<svg><use href="#${props.prefix}${icon.name}"></use></svg>`}</code>
                 </div>
                 {icon.unicode && (
                   <div>
-                    <span class="text-rose-400/60">Unicode: </span>
-                    <code class="text-rose-800">{icon.unicode}</code>
+                    <span class="text-[var(--color-base-400)]">Unicode: </span>
+                    <code class="text-[var(--color-neutral)]">
+                      {icon.unicode}
+                    </code>
                   </div>
                 )}
               </div>
@@ -255,9 +267,9 @@ export const IconDetailPanel = component$((props: IconDetailPanelProps) => {
         </div>
 
         {/* SVG Content (collapsible) */}
-        <div class="border-t border-rose-100 px-4 py-2">
+        <div class="border-t border-[var(--color-base-300)] px-4 py-2">
           <button
-            class="flex w-full items-center justify-between rounded-xl py-2 text-sm font-medium text-rose-700 transition-all hover:bg-rose-50"
+            class="flex w-full items-center justify-between rounded-md py-2 text-sm font-medium text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
             onClick$={() => (showRawContent.value = !showRawContent.value)}
           >
             <span class="flex items-center gap-2">
@@ -293,16 +305,16 @@ export const IconDetailPanel = component$((props: IconDetailPanelProps) => {
             </svg>
           </button>
           {showRawContent.value && (
-            <pre class="mt-1 mb-2 max-h-40 overflow-auto rounded-xl bg-rose-950 p-3 font-mono text-xs text-rose-100">
+            <pre class="mt-1 mb-2 max-h-40 overflow-auto rounded-md bg-[var(--color-neutral)] p-3 font-mono text-xs text-[var(--color-base-100)]">
               {icon.content || "无内容"}
             </pre>
           )}
         </div>
 
         {/* Actions */}
-        <div class="flex flex-wrap items-center gap-2 border-t border-rose-100 px-5 py-4">
+        <div class="flex flex-wrap items-center gap-2 border-t border-[var(--color-base-300)] px-5 py-4">
           <button
-            class="flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-rose-600 transition-all hover:bg-rose-50"
+            class="flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
             onClick$={() => onDelete$(icon.id!)}
           >
             <svg
@@ -323,14 +335,14 @@ export const IconDetailPanel = component$((props: IconDetailPanelProps) => {
           </button>
           {onAIModify$ && (
             <button
-              class="flex items-center gap-1.5 rounded-xl bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-600 transition-all hover:bg-violet-100"
+              class="flex items-center gap-1.5 rounded-md bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-600 transition-all hover:bg-violet-100"
               onClick$={() => onAIModify$(icon)}
             >
               ✨ AI 修改
             </button>
           )}
           <button
-            class="clay-button ml-auto flex items-center gap-1.5 rounded-2xl bg-rose-500 px-5 py-2 text-sm font-bold text-white"
+            class="clay-button ml-auto flex items-center gap-1.5 rounded-md bg-rose-500 px-5 py-2 text-sm font-bold text-white"
             onClick$={() => onEdit$(icon)}
           >
             <svg
