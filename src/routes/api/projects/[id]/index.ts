@@ -26,7 +26,7 @@ export const onGet: RequestHandler = async ({
     .select()
     .from(projects)
     .where(and(eq(projects.id, id), eq(projects.user_id, session.user.id)));
-  const project = projectResult[0] as Project | undefined;
+  const project = projectResult[0] as unknown as Project | undefined;
 
   if (!project) {
     json(404, { error: "Project not found" });

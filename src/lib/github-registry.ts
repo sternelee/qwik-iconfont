@@ -45,6 +45,13 @@ export function parseGitHubUrl(raw: string): ParsedGitHubUrl | null {
   }
 }
 
+/** Build a stable canonical key from a parsed GitHub URL.
+ *  Format: "owner/repo/branch/path" (trailing slashes stripped) — used to dedupe
+ *  imports of the same source. Always returns a non-empty string. */
+export function canonicalSourceKey(p: ParsedGitHubUrl): string {
+  return `${p.repo}/${p.branch}/${p.path}`.replace(/\/+$/, "") || `${p.repo}/${p.branch}`;
+}
+
 /** Build a raw.githubusercontent.com URL for a file in the repo. */
 export function rawGitHubUrl(
   repo: string,

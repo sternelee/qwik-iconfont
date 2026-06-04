@@ -7,6 +7,16 @@ interface IconItem {
   previewUrl: string;
 }
 
+interface ExistingProject {
+  id: number;
+  name: string;
+  visibility?: string;
+  owner_name?: string | null;
+  icon_count?: number;
+  updated_at?: string | null;
+  is_owner?: boolean;
+}
+
 export interface GithubImportProps {
   onClose$: QRL<() => void>;
 }
@@ -14,7 +24,7 @@ export interface GithubImportProps {
 // ── Component ────────────────────────────────────────────────────────────────
 
 export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
-  type Step = "input" | "browse" | "importing" | "done";
+  type Step = "input" | "browse" | "duplicate" | "importing" | "done";
   const step = useSignal<Step>("input");
 
   // URL input
@@ -33,6 +43,11 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
   // Selection
   const selected = useSignal<string[]>([]);
 
+  // Existing projects that share this source (dedupe candidates)
+  const existingProjects = useSignal<ExistingProject[]>([]);
+  // True when at least one of existingProjects belongs to the current user
+  const hasOwnDuplicates = useSignal(false);
+
   // Import config + result
   const projectName = useSignal("");
   const importedId = useSignal(0);
@@ -48,6 +63,8 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
     iconList.value = [];
     selected.value = [];
     displayCount.value = 120;
+    existingProjects.value = [];
+    hasOwnDuplicates.value = false;
 
     try {
       const res = await fetch(
@@ -56,11 +73,23 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
       const data = (await res.json()) as {
         icons?: IconItem[];
         label?: string;
+        existingProjects?: ExistingProject[];
         error?: string;
       };
       if (!res.ok) throw new Error(data.error ?? "加载失败");
       iconList.value = data.icons ?? [];
       if (data.label) repoLabel.value = data.label;
+      const existing = data.existingProjects ?? [];
+      existingProjects.value = existing;
+      hasOwnDuplicates.value = existing.some((p) => p.is_owner);
+
+      // If the caller has already imported this source, jump to duplicate step.
+      // Pre-select every available icon so the "重新导入" button has something
+      // to submit (the user never saw the grid to make their own selection).
+      if (hasOwnDuplicates.value) {
+        selected.value = iconList.value.map((ic) => ic.name);
+        step.value = "duplicate";
+      }
     } catch (e: any) {
       loadError.value = e.message;
     } finally {
@@ -90,6 +119,59 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
     search.value = "";
     projectName.value = "";
     importedId.value = 0;
+    importedCount.value = 0;
+    importedFailed.value = 0;
+    importError.value = "";
+    existingProjects.value = [];
+    hasOwnDuplicates.value = false;
+  });
+
+  // Submit import. If `force` is true, bypass duplicate guard.
+  const submitImport$ = $(async (force: boolean) => {
+    if (!projectName.value.trim() || selected.value.length === 0) return;
+
+    step.value = "importing";
+    importError.value = "";
+
+    try {
+      const res = await fetch("/api/github-import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url: githubUrl.value,
+          icons: selected.value,
+          projectName: projectName.value.trim(),
+          force,
+        }),
+      });
+      const data = (await res.json()) as {
+        projectId?: number;
+        imported?: number;
+        failed?: number;
+        existingProjects?: { id: number; name: string; icon_count: number }[];
+        error?: string;
+      };
+      if (res.status === 409 && data.error === "DUPLICATE") {
+        // Server-side guard caught a duplicate — surface to user
+        existingProjects.value = (data.existingProjects ?? []).map((p) => ({
+          ...p,
+          visibility: "private",
+          is_owner: true,
+        }));
+        hasOwnDuplicates.value = true;
+        step.value = "duplicate";
+        return;
+      }
+      if (!res.ok) throw new Error(data.error ?? "导入失败，请重试");
+
+      importedId.value = data.projectId ?? 0;
+      importedCount.value = data.imported ?? 0;
+      importedFailed.value = data.failed ?? 0;
+      step.value = "done";
+    } catch (e: any) {
+      importError.value = e.message;
+      step.value = "browse";
+    }
   });
 
   return (
@@ -125,6 +207,13 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
                   {filteredIcons.length.toLocaleString()} 个图标
                   {selected.value.length > 0 &&
                     `，已选 ${selected.value.length} 个`}
+                  {existingProjects.value.filter((p) => !p.is_owner).length >
+                    0 && (
+                    <>
+                      {" "}
+                      · 其他人也已导入
+                    </>
+                  )}
                 </p>
               )}
             </div>
@@ -391,44 +480,7 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
                     !projectName.value.trim() ||
                     loadingIcons.value
                   }
-                  onClick$={async () => {
-                    if (
-                      !projectName.value.trim() ||
-                      selected.value.length === 0
-                    )
-                      return;
-
-                    step.value = "importing";
-                    importError.value = "";
-
-                    try {
-                      const res = await fetch("/api/github-import", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          url: githubUrl.value,
-                          icons: selected.value,
-                          projectName: projectName.value.trim(),
-                        }),
-                      });
-                      const data = (await res.json()) as {
-                        projectId?: number;
-                        imported?: number;
-                        failed?: number;
-                        error?: string;
-                      };
-                      if (!res.ok)
-                        throw new Error(data.error ?? "导入失败，请重试");
-
-                      importedId.value = data.projectId ?? 0;
-                      importedCount.value = data.imported ?? 0;
-                      importedFailed.value = data.failed ?? 0;
-                      step.value = "done";
-                    } catch (e: any) {
-                      importError.value = e.message;
-                      step.value = "browse";
-                    }
-                  }}
+                  onClick$={() => submitImport$(false)}
                 >
                   导入
                   {selected.value.length > 0
@@ -441,6 +493,98 @@ export const GithubImport = component$<GithubImportProps>(({ onClose$ }) => {
               )}
             </div>
           </>
+        )}
+
+        {/* Step: duplicate — same source has already been imported */}
+        {step.value === "duplicate" && (
+          <div class="flex flex-1 flex-col overflow-hidden">
+            <div class="shrink-0 border-b border-[var(--color-base-300)] bg-amber-50 px-5 py-3 dark:bg-amber-950/30">
+              <div class="flex items-start gap-2.5">
+                <span class="text-lg leading-none">⚠️</span>
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-bold text-amber-900 dark:text-amber-200">
+                    该 GitHub 源已被你导入过
+                  </p>
+                  <p class="mt-0.5 text-xs text-amber-800 dark:text-amber-300">
+                    {repoLabel.value}
+                    {githubUrl.value.includes(`/tree/`) && (
+                      <>
+                        {" · "}
+                        <span class="font-mono text-[11px] break-all">
+                          {githubUrl.value.split("/tree/")[1] ?? ""}
+                        </span>
+                      </>
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-4">
+              <p class="mb-2.5 text-xs font-semibold text-[var(--color-base-500)]">
+                已有项目 ({existingProjects.value.length})
+              </p>
+              <div class="space-y-2">
+                {existingProjects.value.map((p) => (
+                  <a
+                    key={p.id}
+                    href={`/project/${p.id}`}
+                    target="_blank"
+                    rel="noopener"
+                    class="flex items-center gap-3 rounded-md border border-[var(--color-base-300)] bg-[var(--color-base-100)] p-3 transition-all hover:border-[var(--color-base-300)] hover:bg-[var(--color-base-200)]/50"
+                  >
+                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[var(--color-base-200)] text-base">
+                      📦
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <div class="flex items-center gap-2">
+                        <span class="truncate text-sm font-bold text-[var(--color-neutral)]">
+                          {p.name}
+                        </span>
+                        {p.visibility === "public" && (
+                          <span class="shrink-0 rounded-sm bg-emerald-100 px-1.5 py-px text-[10px] font-semibold text-emerald-700">
+                            公开
+                          </span>
+                        )}
+                      </div>
+                      <p class="mt-0.5 text-[11px] text-[var(--color-base-400)]">
+                        {(p.icon_count ?? 0).toLocaleString()} 个图标
+                        {p.owner_name && !p.is_owner && ` · ${p.owner_name}`}
+                        {p.is_owner && " · 你的项目"}
+                      </p>
+                    </div>
+                    <span class="shrink-0 text-xs text-[var(--color-base-400)]">
+                      查看 →
+                    </span>
+                  </a>
+                ))}
+              </div>
+
+              <p class="mt-4 text-[11px] leading-relaxed text-[var(--color-base-400)]">
+                重新导入会创建一个新的项目副本，所有图标会重新下载。不会影响已有项目。
+              </p>
+            </div>
+
+            <div class="shrink-0 border-t border-[var(--color-base-300)] bg-[var(--color-base-100)] px-5 py-3.5">
+              <div class="flex items-center gap-2.5">
+                <button
+                  class="flex-1 rounded-md border border-[var(--color-base-300)] bg-[var(--color-base-100)] px-4 py-2 text-sm font-semibold text-[var(--color-neutral)] hover:bg-[var(--color-base-200)] active:scale-95"
+                  onClick$={() => (step.value = "browse")}
+                >
+                  返回浏览
+                </button>
+                <button
+                  class="bg-[var(--color-base-200)]0 shrink-0 rounded-md px-4 py-2 text-sm font-bold text-white hover:bg-rose-600 active:scale-95"
+                  onClick$={() => submitImport$(true)}
+                >
+                  重新导入
+                  {selected.value.length > 0
+                    ? ` ${selected.value.length} 个`
+                    : ""}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Step: importing */}

@@ -451,6 +451,7 @@ export async function initDB(_db: AppDatabase, platform?: any) {
           `font_family TEXT DEFAULT 'iconfont' NOT NULL, ` +
           `prefix TEXT DEFAULT 'icon-' NOT NULL, ` +
           `visibility TEXT DEFAULT 'private' NOT NULL, ` +
+          `source_url TEXT, ` +
           `favorites_count INTEGER DEFAULT 0 NOT NULL, ` +
           `views_count INTEGER DEFAULT 0 NOT NULL, ` +
           `downloads_count INTEGER DEFAULT 0 NOT NULL, ` +
@@ -561,6 +562,18 @@ export async function initDB(_db: AppDatabase, platform?: any) {
         await d1.exec(`ALTER TABLE icons ADD COLUMN tags TEXT`);
       } catch {
         // Column may already exist
+      }
+      // Add color_layers column if it doesn't exist
+      try {
+        await d1.exec(`ALTER TABLE icons ADD COLUMN color_layers TEXT`);
+      } catch {
+        /* Column may already exist */
+      }
+      // Add source_url column if it doesn't exist (GitHub import dedupe)
+      try {
+        await d1.exec(`ALTER TABLE projects ADD COLUMN source_url TEXT`);
+      } catch {
+        /* Column may already exist */
       }
     } catch {
       // Tables may already exist or migrations have been applied; ignore errors

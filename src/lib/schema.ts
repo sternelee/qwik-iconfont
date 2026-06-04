@@ -87,6 +87,7 @@ export const projects = sqliteTable("projects", {
   font_family: text("font_family").notNull().default("iconfont"),
   prefix: text("prefix").notNull().default("icon-"),
   visibility: text("visibility").notNull().default("private"), // 'private' | 'public'
+  source_url: text("source_url"), // canonical key for dedupe (e.g. owner/repo/branch/path) — used by GitHub import
   favorites_count: integer("favorites_count", { mode: "number" })
     .notNull()
     .default(0),

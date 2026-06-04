@@ -1,5 +1,5 @@
 import type { RequestHandler } from "@builder.io/qwik-city";
-import { parseGitHubUrl, rawGitHubUrl } from "~/lib/github-registry";
+import { parseGitHubUrl, rawGitHubUrl, canonicalSourceKey } from "~/lib/github-registry";
 import { extractSvgViewBox, DEFAULT_VIEW_BOX } from "~/lib/types";
 
 // ── Per-Worker in-memory cache ───────────────────────────────────────────────
@@ -59,7 +59,7 @@ async function fetchIconNames(
 }
 
 // ── GET /api/github-import?url=<github-tree-url>[&search=...] ────────────────
-export const onGet: RequestHandler = async ({ url, json, platform }) => {
+export const onGet: RequestHandler = async ({ url, json, platform, request }) => {
   const githubUrl = url.searchParams.get("url");
   const search = url.searchParams.get("search")?.toLowerCase().trim() ?? "";
 
@@ -90,6 +90,63 @@ export const onGet: RequestHandler = async ({ url, json, platform }) => {
 
     const baseRaw = rawGitHubUrl(parsed.repo, parsed.branch, parsed.path);
 
+    // Dedupe check: find existing projects that were imported from the same source.
+    // Returns public projects (anyone) + the caller's own private projects.
+    let existingProjects: Array<{
+      id: number;
+      name: string;
+      visibility: string;
+      owner_name: string | null;
+      icon_count: number;
+      updated_at: string | null;
+      is_owner: boolean;
+    }> = [];
+    try {
+      const { getDB, initDB } = await import("~/lib/db");
+      const { projects, icons, user } = await import("~/lib/schema");
+      const { eq, and, or, count, desc } = await import("drizzle-orm");
+      const { getSessionFromRequest } = await import("~/lib/session");
+      const session = await getSessionFromRequest(platform, request);
+      const sourceKey = canonicalSourceKey(parsed);
+      const db = getDB(platform);
+      await initDB(db, platform);
+
+      const visibilityFilter = session
+        ? or(eq(projects.visibility, "public"), eq(projects.user_id, session.user.id))
+        : eq(projects.visibility, "public");
+
+      const rows = await db
+        .select({
+          id: projects.id,
+          name: projects.name,
+          visibility: projects.visibility,
+          user_id: projects.user_id,
+          owner_name: user.name,
+          updated_at: projects.updated_at,
+          icon_count: count(icons.id),
+        })
+        .from(projects)
+        .leftJoin(icons, eq(projects.id, icons.project_id))
+        .leftJoin(user, eq(projects.user_id, user.id))
+        .where(and(eq(projects.source_url, sourceKey), visibilityFilter))
+        .groupBy(projects.id)
+        .orderBy(desc(projects.id))
+        .limit(20);
+
+      existingProjects = rows.map((r) => ({
+        id: r.id,
+        name: r.name,
+        visibility: r.visibility,
+        owner_name: r.owner_name ?? null,
+        icon_count: r.icon_count ?? 0,
+        updated_at: r.updated_at ?? null,
+        is_owner: !!(session && r.user_id === session.user.id),
+      }));
+    } catch {
+      // Dedupe lookup is best-effort; never block listing
+      existingProjects = [];
+    }
+
     json(200, {
       repo: parsed.repo,
       branch: parsed.branch,
@@ -100,6 +157,7 @@ export const onGet: RequestHandler = async ({ url, json, platform }) => {
         name,
         previewUrl: `${baseRaw}/${name}.svg`,
       })),
+      existingProjects,
     });
     return;
   } catch (err: any) {
@@ -122,9 +180,10 @@ export const onPost: RequestHandler = async ({ json, request, platform }) => {
     url: string;
     icons: string[];
     projectName: string;
+    force?: boolean;
   };
 
-  const { url: githubUrl, icons: iconNames, projectName } = body;
+  const { url: githubUrl, icons: iconNames, projectName, force } = body;
 
   if (!githubUrl) {
     json(400, { error: "缺少 url 参数" });
@@ -150,8 +209,42 @@ export const onPost: RequestHandler = async ({ json, request, platform }) => {
   const db = getDB(platform);
   await initDB(db, platform);
   const { projects, icons, user } = await import("~/lib/schema");
-  const { eq, count } = await import("drizzle-orm");
+  const { eq, and, count } = await import("drizzle-orm");
   const { getQuota } = await import("~/lib/quota");
+
+  // Dedupe check — refuse if this source was already imported by the current user.
+  // Other users may still import the same public source. Caller can bypass with `force: true`
+  // after UI confirmation (we surface the list so they can decide).
+  const sourceKey = canonicalSourceKey(parsed);
+  if (!force) {
+    const dupes = await db
+      .select({
+        id: projects.id,
+        name: projects.name,
+        icon_count: count(icons.id),
+      })
+      .from(projects)
+      .leftJoin(icons, eq(projects.id, icons.project_id))
+      .where(
+        and(
+          eq(projects.source_url, sourceKey),
+          eq(projects.user_id, session.user.id),
+        ),
+      )
+      .groupBy(projects.id);
+    if (dupes.length > 0) {
+      json(409, {
+        error: "DUPLICATE",
+        message: "该 GitHub 源已被你导入过",
+        existingProjects: dupes.map((r) => ({
+          id: r.id,
+          name: r.name,
+          icon_count: r.icon_count ?? 0,
+        })),
+      });
+      return;
+    }
+  }
 
   // Quota check
   const userRows = await db
@@ -191,6 +284,7 @@ export const onPost: RequestHandler = async ({ json, request, platform }) => {
       font_family: fontFamily,
       prefix: "icon-",
       visibility: "public",
+      source_url: sourceKey,
     })
     .returning({ id: projects.id });
 
