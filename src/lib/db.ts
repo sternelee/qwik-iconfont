@@ -100,89 +100,109 @@ class MockExecutor {
     const colsExpr = fromMatch[1];
     const table = fromMatch[2];
 
+    // Parse WHERE
     const whereMatch = sql.match(
       /WHERE\s+(.+?)(?:\s+GROUP\s+BY|\s+ORDER\s+BY|$)/i,
     );
     const whereClause = whereMatch ? whereMatch[1] : null;
 
-    const joinMatch = sql.match(
-      /LEFT\s+JOIN\s+"?(\w+)"?\s+ON\s+(.+?)(?:\s+WHERE|\s+GROUP\s+BY|\s+ORDER\s+BY|$)/i,
-    );
+    // Parse ALL LEFT JOINs
+    const joinRegex =
+      /LEFT\s+JOIN\s+"?(\w+)"?\s+ON\s+(.+?)(?=\s+LEFT\s+JOIN|\s+WHERE|\s+GROUP\s+BY|\s+ORDER\s+BY|$)/gi;
+    const joins: { table: string; fromCol: string; toCol: string }[] = [];
+    let jm: RegExpExecArray | null;
+    while ((jm = joinRegex.exec(sql)) !== null) {
+      const joinTable = jm[1];
+      const joinCond = jm[2].trim();
+      const parts = joinCond.match(
+        /"?\w+"?\.\s*"?(\w+)"?\s*=\s*"?\w+"?\.\s*"?(\w+)"?/,
+      );
+      if (parts) {
+        joins.push({ table: joinTable, fromCol: parts[1], toCol: parts[2] });
+      }
+    }
 
     const orderMatch = sql.match(/ORDER\s+BY\s+(.+?)$/i);
+
+    const tableData: Record<string, any[]> = {
+      projects: this.projects,
+      icons: this.icons,
+    };
 
     let items: any[] =
       table === "projects" ? [...this.projects] : [...this.icons];
 
-    // Apply WHERE
+    // Resolve joined rows and build __tables__ for WHERE evaluation.
+    // This lets WHERE reference columns from joined tables by their
+    // table qualifier (e.g. "projects"."visibility" when FROM is icons).
+    const itemsWithJoins: {
+      item: any;
+      joined: Record<string, any>;
+      tables: Record<string, any>;
+    }[] = [];
+    for (const item of items) {
+      const joined: Record<string, any> = {};
+      const tables: Record<string, any> = { [table]: item };
+      for (const j of joins) {
+        const candidates = tableData[j.table] ?? [];
+        const match = candidates.find((c) => c[j.toCol] === item[j.fromCol]);
+        joined[j.table] = match ?? null;
+        if (match) tables[j.table] = match;
+      }
+      itemsWithJoins.push({ item, joined, tables });
+    }
+
+    // Apply WHERE against __tables__ data
     if (whereClause) {
-      items = items.filter((item) =>
-        this.matchesWhere(whereClause, item, params),
+      itemsWithJoins.splice(
+        0,
+        itemsWithJoins.length,
+        ...itemsWithJoins.filter(({ tables }) =>
+          this.evaluateCondition(whereClause, { __tables__: tables }, params)
+            .result,
+        ),
       );
     }
 
-    // Handle JOIN
-    let results: any[] = [];
-    if (joinMatch) {
-      const joinTable = joinMatch[1];
-      const joinItems =
-        joinTable === "icons" ? [...this.icons] : [...this.projects];
-      const joinColExpr = joinMatch[2];
-      const joinParts = joinColExpr.match(
-        /"?\w+"?\."?(\w+)"?\s*=\s*"?(\w+)"?\."?(\w+)"?/,
-      );
+    const cols = parseColumns(colsExpr);
+    const results: any[] = [];
 
-      for (const item of items) {
-        const joined = joinItems.filter((j) => {
-          if (!joinParts) return false;
-          return item[joinParts[1]] === j[joinParts[3]];
-        });
-        const cols = parseColumns(colsExpr);
-        const row: any = {};
-        for (const col of cols) {
-          const alias = extractAlias(col);
-          if (col.toLowerCase().includes("count(")) {
-            row[alias] = joined.length;
-          } else if (col.includes(".")) {
-            const parts = col.match(/"?\w+"?\."?(\w+)"?/);
-            if (parts) {
-              const tableName = col.match(/"?(\w+)"?\./)?.[1];
-              if (tableName === table) {
-                row[alias] = item[parts[1]];
-              } else {
-                row[alias] = joined[0]?.[parts[1]] ?? null;
-              }
-            }
+    for (const { item, joined } of itemsWithJoins) {
+      const row: any = {};
+      for (const col of cols) {
+        const alias = extractAlias(col);
+        if (col.toLowerCase().includes("count(")) {
+          const j = joins[0];
+          if (j) {
+            const candidates = tableData[j.table] ?? [];
+            row[alias] = candidates.filter(
+              (c) => c[j.toCol] === item[j.fromCol],
+            ).length;
           } else {
-            row[alias] = item[alias];
+            row[alias] = 0;
           }
-        }
-        results.push(row);
-      }
-    } else {
-      const cols = parseColumns(colsExpr);
-      for (const item of items) {
-        const row: any = {};
-        for (const col of cols) {
-          const alias = extractAlias(col);
-          if (col.includes(".")) {
-            const parts = col.match(/"?\w+"?\."?(\w+)"?/);
-            if (parts) {
-              row[alias] = item[parts[1]];
+        } else if (col.includes(".")) {
+          const parts = col.match(/"?(\w+)"?\.\s*"?(\w+)"?/);
+          if (parts) {
+            const srcTable = col.match(/"?(\w+)"?\./)?.[1];
+            if (srcTable === table) {
+              row[alias] = item[parts[2]];
+            } else {
+              row[alias] = joined[srcTable ?? ""]?.[parts[2]] ?? null;
             }
-          } else {
-            row[alias] = item[alias];
           }
+        } else {
+          row[alias] = item[alias];
         }
-        results.push(row);
       }
+      results.push(row);
     }
 
-    // Apply ORDER BY
+    // Apply ORDER BY (best-effort)
     if (orderMatch) {
       const orderExpr = orderMatch[1];
       const desc = orderExpr.toLowerCase().includes("desc");
-      const colMatch = orderExpr.match(/"?\w+"?\."?(\w+)"?/);
+      const colMatch = orderExpr.match(/"?\w+"?\.\s*"?(\w+)"?/);
       if (colMatch) {
         const col = colMatch[1];
         results.sort((a, b) => {
@@ -197,24 +217,139 @@ class MockExecutor {
     return results;
   }
 
-  private matchesWhere(whereClause: string, item: any, params: any[]): boolean {
-    // "projects"."id" = ?
-    const eqMatch = whereClause.match(/"?\w+"?\."?(\w+)"?\s*=\s*\?/);
-    if (eqMatch) {
-      const col = eqMatch[1];
-      const val = params.shift();
-      return item[col] === val;
+  private evaluateCondition(
+    clause: string,
+    data: Record<string, any>,
+    params: any[],
+    originalClause?: string,
+  ): { result: boolean; consumed: number } {
+    const s = clause.trim();
+    if (!s) return { result: true, consumed: 0 };
+    const original = originalClause ?? s;
+
+    // ── Top-level OR ─────────────────────────────────────────────
+    const orParts = this.splitTopLevel(s, "OR");
+    if (orParts.length > 1) {
+      let maxConsumed = 0;
+      for (const part of orParts) {
+        const r = this.evaluateCondition(part, data, params, original);
+        maxConsumed = Math.max(maxConsumed, r.consumed);
+        if (r.result) return { result: true, consumed: r.consumed };
+      }
+      return { result: false, consumed: maxConsumed };
     }
-    // "icons"."id" IN (?, ?, ...)
-    const inMatch = whereClause.match(/"?\w+"?\."?(\w+)"?\s+IN\s+\(([^)]+)\)/);
-    if (inMatch) {
-      const col = inMatch[1];
-      const count = inMatch[2].split(",").length;
-      const vals = params.splice(0, count);
-      return vals.includes(item[col]);
+
+    // ── Top-level AND ────────────────────────────────────────────
+    const andParts = this.splitTopLevel(s, "AND");
+    if (andParts.length > 1) {
+      let totalConsumed = 0;
+      for (const part of andParts) {
+        const r = this.evaluateCondition(part, data, params, original);
+        totalConsumed = Math.max(totalConsumed, r.consumed);
+        if (!r.result) return { result: false, consumed: totalConsumed };
+      }
+      return { result: true, consumed: totalConsumed };
     }
-    return true;
+
+    // ── Parenthesized group ──────────────────────────────────────
+    if (s.startsWith("(") && s.endsWith(")")) {
+      return this.evaluateCondition(s.slice(1, -1), data, params, original);
+    }
+
+    // ── Leaf condition ───────────────────────────────────────────
+    // Compute absolute param index: count ? before this sub-clause in original
+    // + number of ? in this sub-clause - 1.
+    const tables = (data as any).__tables__ as
+      | Record<string, any>
+      | undefined;
+    const qInSub = (s.match(/\?/g) || []).length;
+    const trimmedOriginal = original.trim();
+    const idx = trimmedOriginal.indexOf(s);
+    const qBefore =
+      idx >= 0
+        ? (trimmedOriginal.substring(0, idx).match(/\?/g) || []).length
+        : 0;
+    const paramIdx = qBefore + qInSub - 1;
+
+    const leaf = s.match(
+      /^(?:"?(\w+)?"?\.)?"?(\w+)"?\s+(NOT\s+LIKE|LIKE|!=|=)\s+\?$/i,
+    );
+    if (leaf) {
+      const srcTable = leaf[1];
+      const col = leaf[2];
+      const op = leaf[3].toUpperCase();
+      const val = params[paramIdx];
+      let itemVal: any;
+      if (tables && srcTable && tables[srcTable]) {
+        itemVal = tables[srcTable][col];
+      } else {
+        itemVal = data[col];
+      }
+      if (op === "LIKE") {
+        const pattern = String(val).replace(/%/g, "");
+        return {
+          result: String(itemVal ?? "")
+            .toLowerCase()
+            .includes(pattern.toLowerCase()),
+          consumed: 1,
+        };
+      }
+      if (op === "NOT LIKE") {
+        const pattern = String(val).replace(/%/g, "");
+        return {
+          result: !String(itemVal ?? "")
+            .toLowerCase()
+            .includes(pattern.toLowerCase()),
+          consumed: 1,
+        };
+      }
+      if (op === "=") return { result: itemVal === val, consumed: 1 };
+      if (op === "!=") return { result: itemVal !== val, consumed: 1 };
+    }
+
+    // IS [NOT] NULL
+    const isNull = s.match(
+      /^(?:"?(\w+)?"?\.)?"?(\w+)"?\s+IS\s+(NOT\s+)?NULL$/i,
+    );
+    if (isNull) {
+      const srcTable = isNull[1];
+      const col = isNull[2];
+      const negated = !!isNull[3];
+      let v: any;
+      if (tables && srcTable && tables[srcTable]) {
+        v = tables[srcTable][col];
+      } else {
+        v = data[col];
+      }
+      return { result: negated ? v != null : v == null, consumed: 0 };
+    }
+
+    return { result: true, consumed: 0 };
   }
+
+  private splitTopLevel(s: string, keyword: string): string[] {
+    const parts: string[] = [];
+    let depth = 0;
+    let current = "";
+    const kw = ` ${keyword} `;
+    let i = 0;
+    while (i < s.length) {
+      if (s[i] === "(") depth++;
+      else if (s[i] === ")") depth--;
+      if (depth === 0 && s.substring(i, i + kw.length).toUpperCase() === kw) {
+        parts.push(current);
+        current = "";
+        i += kw.length;
+        continue;
+      }
+      current += s[i];
+      i++;
+    }
+    if (current.trim()) parts.push(current);
+    return parts;
+  }
+
+
 
   private insert(sql: string, params: any[]): any[] {
     const match = sql.match(

@@ -219,6 +219,7 @@ export default component$(() => {
               </span>
               <input
                 type="search"
+                name="q"
                 placeholder="按名称或标签搜索图标..."
                 class="w-full rounded-md border border-[var(--color-base-300)] bg-[var(--color-base-200)]/40 py-2 pr-3 pl-9 text-sm text-[var(--color-neutral)] focus:border-[var(--color-base-300)] focus:outline-none"
                 value={q.value}
