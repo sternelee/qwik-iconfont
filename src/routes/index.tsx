@@ -454,6 +454,13 @@ export default component$(() => {
           {/* Right: Actions */}
           <div class="flex items-center gap-3">
             <ThemeToggle />
+            {/* Search link */}
+            <a
+              href="/search"
+              class="hidden rounded-md px-3 py-2 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)] sm:block"
+            >
+              搜索
+            </a>
             {/* Explore link */}
             <a
               href="/explore"
