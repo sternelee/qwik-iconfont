@@ -292,13 +292,21 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
     }
   });
 
-  const handleKeyDown = $((e: KeyboardEvent) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === "s") {
-      e.preventDefault();
-      handleSave();
-      return;
-    }
-    if (e.key === "Escape") handleClose();
+  const modalRef = useSignal<HTMLDivElement>();
+  useTask$(({ cleanup }) => {
+    if (typeof window === "undefined") return;
+    const el = modalRef.value;
+    if (!el) return;
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        handleSave();
+        return;
+      }
+      if (e.key === "Escape") handleClose();
+    };
+    el.addEventListener("keydown", handler);
+    cleanup(() => el.removeEventListener("keydown", handler));
   });
 
   // ---- render --------------------------------------------------------------
@@ -307,7 +315,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
   const isEmpty = !svgContent.value;
 
   return (
-    <div class="modal modal-open p-4" onKeyDown$={handleKeyDown} tabIndex={0}>
+    <div ref={modalRef} class="modal modal-open p-4" tabIndex={0}>
       <div class="modal-box animate-modal-box bg-base-100 flex max-h-[calc(100vh-2rem)] w-full max-w-6xl flex-col overflow-hidden p-0 shadow-2xl">
         {/* Header */}
         <div class="border-base-200 bg-base-200/60 flex items-start justify-between gap-4 border-b px-6 py-5">
