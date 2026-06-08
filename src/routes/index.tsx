@@ -239,8 +239,9 @@ export default component$(() => {
     loaded: false,
   });
 
-  // Fetch public projects — only relevant on the client
-  useVisibleTask$(() => {
+  // Fetch public projects
+  useTask$(() => {
+    if (typeof window === "undefined") return;
     fetch("/api/projects?visibility=public")
       .then((res) => res.json())
       .then((data: any) => {

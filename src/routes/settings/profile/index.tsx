@@ -1,4 +1,4 @@
-import { component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
+import { component$, useSignal, useTask$ } from "@builder.io/qwik";
 import {
   routeLoader$,
   Form,
@@ -122,8 +122,9 @@ export default component$(() => {
   const newToken = useSignal<string | null>(null);
   const tokenLoading = useSignal(false);
 
-  // Fetch tokens — only available on the client
-  useVisibleTask$(async () => {
+  // Fetch tokens
+  useTask$(async () => {
+    if (typeof window === "undefined") return;
     const res = await fetch("/api/tokens");
     if (res.ok) {
       const data = (await res.json()) as any;

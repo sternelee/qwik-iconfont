@@ -4,7 +4,6 @@ import {
   $,
   useStore,
   useTask$,
-  useVisibleTask$,
 } from "@builder.io/qwik";
 import {
   routeLoader$,
@@ -151,8 +150,9 @@ export default component$(() => {
       : icons;
   });
 
-  // Track view count — only meaningful on the client
-  useVisibleTask$(() => {
+  // Track view count
+  useTask$(() => {
+    if (typeof window === "undefined") return;
     fetch(`/api/projects/${project.id}/stats`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -758,8 +758,9 @@ const CdnSnippet = component$<{
   const published = useSignal<{ cssUrl: string; ttfUrl: string } | null>(null);
   const copied = useSignal<string | null>(null);
 
-  // Fetch publish status — only available on the client
-  useVisibleTask$(async () => {
+  // Fetch publish status
+  useTask$(async () => {
+    if (typeof window === "undefined") return;
     const res = await fetch(`/api/projects/${props.projectId}/publish`);
     if (res.ok) {
       const data = (await res.json()) as any;

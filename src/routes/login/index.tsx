@@ -1,4 +1,4 @@
-import { component$, useSignal, $, useVisibleTask$ } from "@builder.io/qwik";
+import { component$, useSignal, $, useTask$ } from "@builder.io/qwik";
 import { useNavigate, type DocumentHead } from "@builder.io/qwik-city";
 import { signIn, getSession, signInSocial } from "~/lib/auth-client";
 import { migrateLocalProjects } from "~/lib/local-migration";
@@ -19,8 +19,9 @@ export default component$(() => {
   const loading = useSignal(false);
   const nav = useNavigate();
 
-  // Session check + redirect — only meaningful on the client
-  useVisibleTask$(async () => {
+  // Session check + redirect
+  useTask$(async () => {
+    if (typeof window === "undefined") return;
     const { data } = await getSession();
     if (data?.session) nav("/");
   });
