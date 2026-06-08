@@ -5,7 +5,7 @@ import {
   useStore,
   useTask$,
   useComputed$,
-  useOnDocument,
+
 } from "@builder.io/qwik";
 import {
   routeLoader$,
@@ -627,9 +627,9 @@ export default component$(() => {
   });
 
   // Keyboard shortcuts
-  useOnDocument(
-    "keydown",
-    $((ev: KeyboardEvent) => {
+  useTask$(({ cleanup }) => {
+    if (typeof window === "undefined") return;
+    const handler = (ev: KeyboardEvent) => {
       const target = ev.target as HTMLElement;
       if (
         target?.tagName === "INPUT" ||
@@ -713,8 +713,10 @@ export default component$(() => {
         ) as HTMLInputElement;
         searchInput?.focus();
       }
-    }),
-  );
+    };
+    document.addEventListener("keydown", handler);
+    cleanup(() => document.removeEventListener("keydown", handler));
+  });
 
   const renamePreview = useComputed$(() => {
     const selected = icons.list.filter((i) => selectedIds.ids.has(i.id));
