@@ -5,7 +5,6 @@ import {
   useStore,
   useTask$,
   useOnDocument,
-  useVisibleTask$,
 } from "@builder.io/qwik";
 import {
   routeLoader$,
@@ -263,16 +262,16 @@ export default component$(() => {
     }, 3000);
   });
 
-  // Hydrate localStorage projects — client only
-  useVisibleTask$(() => {
+  useTask$(() => {
+    if (typeof window === "undefined") return;
     if (loaderData.value.mode === "local") {
       localProjects.items = getLocalProjects();
       localProjects.loaded = true;
     }
   });
 
-  // Set page title — needs DOM
-  useVisibleTask$(() => {
+  useTask$(() => {
+    if (typeof window === "undefined") return;
     document.title = "Iconfont - 图标字体管理平台";
   });
 

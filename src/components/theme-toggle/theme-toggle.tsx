@@ -1,4 +1,4 @@
-import { component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
+import { component$, useSignal, useTask$ } from "@builder.io/qwik";
 
 const LIGHT = "iconfont";
 const DARK = "iconfont-dark";
@@ -7,8 +7,8 @@ const KEY = "theme";
 export const ThemeToggle = component$(() => {
   const isDark = useSignal(false);
 
-  // localStorage + matchMedia + DOM — client only
-  useVisibleTask$(() => {
+  useTask$(() => {
+    if (typeof window === "undefined") return;
     // 读取存储的偏好，或跟随系统
     const stored = localStorage.getItem(KEY);
     const prefersDark =

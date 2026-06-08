@@ -6,7 +6,6 @@ import {
   useTask$,
   useComputed$,
   useOnDocument,
-  useVisibleTask$,
 } from "@builder.io/qwik";
 import {
   routeLoader$,
@@ -310,8 +309,8 @@ export default component$(() => {
     list: [...(data.value.icons || [])],
   });
 
-  // Hydrate localStorage project — client only
-  useVisibleTask$(() => {
+  useTask$(() => {
+    if (typeof window === "undefined") return;
     if (isLocal) {
       const id = parseInt(loc.params.id, 10);
       const localProject = getLocalProject(id);
@@ -403,8 +402,8 @@ export default component$(() => {
   const aiBaseUrl = useSignal("");
   const aiModel = useSignal("");
 
-  // Hydrate AI settings from localStorage — client only
-  useVisibleTask$(() => {
+  useTask$(() => {
+    if (typeof window === "undefined") return;
     const s = getAIUserSettings();
     aiApiKey.value = s.apiKey;
     aiBaseUrl.value = s.baseUrl;
@@ -621,8 +620,8 @@ export default component$(() => {
     }
   });
 
-  // Dynamic page title — needs DOM
-  useVisibleTask$(({ track }) => {
+  useTask$(({ track }) => {
+    if (typeof window === "undefined") return;
     track(() => project.name);
     document.title = `${project.name} - Iconfont`;
   });
