@@ -51,8 +51,7 @@ export const AddToProjectDrawer = component$<AddToProjectDrawerProps>(
     const newProjectName = useSignal("");
     const creatingLoading = useSignal(false);
 
-    // ── Load projects ─────────────────────────────────────────────
-    // eslint-disable-next-line qwik/no-use-visible-task
+    // ── Load projects — only available on the client ──────────────
     useVisibleTask$(async () => {
       if (userId) {
         const res = await fetch("/api/projects");

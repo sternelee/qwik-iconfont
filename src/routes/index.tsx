@@ -239,7 +239,7 @@ export default component$(() => {
     loaded: false,
   });
 
-  // eslint-disable-next-line qwik/no-use-visible-task
+  // Fetch public projects — only relevant on the client
   useVisibleTask$(() => {
     fetch("/api/projects?visibility=public")
       .then((res) => res.json())
@@ -262,7 +262,7 @@ export default component$(() => {
     }, 3000);
   });
 
-  // eslint-disable-next-line qwik/no-use-visible-task
+  // Hydrate localStorage projects — client only
   useVisibleTask$(() => {
     if (loaderData.value.mode === "local") {
       localProjects.items = getLocalProjects();
@@ -270,7 +270,7 @@ export default component$(() => {
     }
   });
 
-  // eslint-disable-next-line qwik/no-use-visible-task
+  // Set page title — needs DOM
   useVisibleTask$(() => {
     document.title = "Iconfont - 图标字体管理平台";
   });
@@ -300,7 +300,6 @@ export default component$(() => {
         return;
       }
       if (ev.key === "/") {
-        // eslint-disable-next-line qwik/no-async-prevent-default
         ev.preventDefault();
         (
           document.querySelector(

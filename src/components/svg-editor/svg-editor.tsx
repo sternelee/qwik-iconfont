@@ -294,7 +294,6 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
 
   const handleKeyDown = $((e: KeyboardEvent) => {
     if ((e.ctrlKey || e.metaKey) && e.key === "s") {
-      // eslint-disable-next-line qwik/no-async-prevent-default
       e.preventDefault();
       handleSave();
       return;

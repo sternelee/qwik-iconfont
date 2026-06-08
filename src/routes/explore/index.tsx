@@ -3,6 +3,7 @@ import {
   useSignal,
   $,
   useStore,
+  useTask$,
   useVisibleTask$,
   noSerialize,
 } from "@builder.io/qwik";
@@ -186,8 +187,7 @@ export default component$(() => {
   const searchTick = useSignal(0);
 
   // Search: debounce 300ms before fetching
-  // eslint-disable-next-line qwik/no-use-visible-task
-  useVisibleTask$(({ track, cleanup }) => {
+  useTask$(({ track, cleanup }) => {
     track(() => searchTick.value);
     if (searchTick.value === 0) return;
     const timer = setTimeout(() => {
@@ -197,15 +197,13 @@ export default component$(() => {
   });
 
   // Re-sort when sort changes
-  // eslint-disable-next-line qwik/no-use-visible-task
-  useVisibleTask$(({ track }) => {
+  useTask$(({ track }) => {
     track(() => sort.value);
     applySort();
   });
 
-  // Infinite scroll sentinel
+  // Infinite scroll sentinel — needs DOM (IntersectionObserver)
   const sentinel = useSignal<HTMLDivElement | undefined>();
-  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(({ cleanup }) => {
     if (!sentinel.value) return;
     const observer = new IntersectionObserver(

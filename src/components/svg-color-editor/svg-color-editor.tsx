@@ -91,8 +91,7 @@ export const SvgColorCanvas = component$<SvgColorCanvasProps>(
   ({ svgContent, store }) => {
     const containerRef = useSignal<Element>();
 
-    // ── Phase 1: mount + wire events ───────────────────────────────
-    // eslint-disable-next-line qwik/no-use-visible-task
+    // ── Phase 1: mount + wire events — needs DOM ───────────────────
     useVisibleTask$(() => {
       const container = containerRef.value;
       if (!container) return;
@@ -136,8 +135,7 @@ export const SvgColorCanvas = component$<SvgColorCanvasProps>(
       store.entries = entries;
     });
 
-    // ── Phase 2: highlight selected path ───────────────────────────
-    // eslint-disable-next-line qwik/no-use-visible-task
+    // ── Phase 2: highlight selected path — needs DOM ──────────────
     useVisibleTask$(({ track }) => {
       const sel = track(() => store.selectedIdx);
       const svg = containerRef.value?.querySelector("svg");
@@ -148,8 +146,7 @@ export const SvgColorCanvas = component$<SvgColorCanvasProps>(
       });
     });
 
-    // ── Phase 3: apply colour changes from col-3 picker ───────────
-    // eslint-disable-next-line qwik/no-use-visible-task
+    // ── Phase 3: apply colour changes from col-3 picker — needs DOM
     useVisibleTask$(({ track }) => {
       const change = track(() => store.pendingColorChange);
       if (!change) return;

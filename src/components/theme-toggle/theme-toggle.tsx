@@ -7,7 +7,7 @@ const KEY = "theme";
 export const ThemeToggle = component$(() => {
   const isDark = useSignal(false);
 
-  // eslint-disable-next-line qwik/no-use-visible-task
+  // localStorage + matchMedia + DOM — client only
   useVisibleTask$(() => {
     // 读取存储的偏好，或跟随系统
     const stored = localStorage.getItem(KEY);

@@ -122,7 +122,7 @@ export default component$(() => {
   const newToken = useSignal<string | null>(null);
   const tokenLoading = useSignal(false);
 
-  // eslint-disable-next-line qwik/no-use-visible-task
+  // Fetch tokens — only available on the client
   useVisibleTask$(async () => {
     const res = await fetch("/api/tokens");
     if (res.ok) {

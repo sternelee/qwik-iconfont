@@ -19,7 +19,7 @@ export default component$(() => {
   const loading = useSignal(false);
   const nav = useNavigate();
 
-  // eslint-disable-next-line qwik/no-use-visible-task
+  // Session check + redirect — only meaningful on the client
   useVisibleTask$(async () => {
     const { data } = await getSession();
     if (data?.session) nav("/");

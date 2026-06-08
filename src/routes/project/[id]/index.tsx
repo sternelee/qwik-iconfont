@@ -310,7 +310,7 @@ export default component$(() => {
     list: [...(data.value.icons || [])],
   });
 
-  // eslint-disable-next-line qwik/no-use-visible-task
+  // Hydrate localStorage project — client only
   useVisibleTask$(() => {
     if (isLocal) {
       const id = parseInt(loc.params.id, 10);
@@ -403,8 +403,7 @@ export default component$(() => {
   const aiBaseUrl = useSignal("");
   const aiModel = useSignal("");
 
-  // Hydrate AI settings from localStorage on client
-  // eslint-disable-next-line qwik/no-use-visible-task
+  // Hydrate AI settings from localStorage — client only
   useVisibleTask$(() => {
     const s = getAIUserSettings();
     aiApiKey.value = s.apiKey;
@@ -622,8 +621,7 @@ export default component$(() => {
     }
   });
 
-  // Dynamic page title
-  // eslint-disable-next-line qwik/no-use-visible-task
+  // Dynamic page title — needs DOM
   useVisibleTask$(({ track }) => {
     track(() => project.name);
     document.title = `${project.name} - Iconfont`;
@@ -694,7 +692,6 @@ export default component$(() => {
       }
 
       if ((ev.ctrlKey || ev.metaKey) && ev.key === "a") {
-        // eslint-disable-next-line qwik/no-async-prevent-default
         ev.preventDefault();
         selectAll();
         return;
@@ -711,7 +708,6 @@ export default component$(() => {
       }
 
       if (ev.key === "/") {
-        // eslint-disable-next-line qwik/no-async-prevent-default
         ev.preventDefault();
         const searchInput = document.querySelector(
           'input[placeholder="搜索图标..."]',

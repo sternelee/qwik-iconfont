@@ -3,6 +3,7 @@ import {
   useSignal,
   $,
   useStore,
+  useTask$,
   useVisibleTask$,
 } from "@builder.io/qwik";
 import {
@@ -138,8 +139,8 @@ export default component$(() => {
     addingIcon.value = null;
   });
 
-  // eslint-disable-next-line qwik/no-use-visible-task
-  useVisibleTask$(({ track }) => {
+  // Client-side icon filtering — pure reactive computation
+  useTask$(({ track }) => {
     const q = track(() => search.value).toLowerCase();
     filteredIcons.list = q
       ? icons.filter(
@@ -150,8 +151,7 @@ export default component$(() => {
       : icons;
   });
 
-  // Track view count
-  // eslint-disable-next-line qwik/no-use-visible-task
+  // Track view count — only meaningful on the client
   useVisibleTask$(() => {
     fetch(`/api/projects/${project.id}/stats`, {
       method: "POST",
@@ -758,7 +758,7 @@ const CdnSnippet = component$<{
   const published = useSignal<{ cssUrl: string; ttfUrl: string } | null>(null);
   const copied = useSignal<string | null>(null);
 
-  // eslint-disable-next-line qwik/no-use-visible-task
+  // Fetch publish status — only available on the client
   useVisibleTask$(async () => {
     const res = await fetch(`/api/projects/${props.projectId}/publish`);
     if (res.ok) {
