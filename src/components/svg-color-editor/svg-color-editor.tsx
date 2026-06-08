@@ -10,7 +10,7 @@
  *   parent picker → store.pendingColorChange → canvas applies to DOM → store.pendingSvg
  *   parent useTask$ → svgContent.value = store.pendingSvg
  */
-import { component$, useSignal, useTask$, useVisibleTask$ } from "@builder.io/qwik";
+import { component$, useSignal, useTask$ } from "@builder.io/qwik";
 
 // ── Shared state interface ────────────────────────────────────────────────────
 
@@ -91,8 +91,9 @@ export const SvgColorCanvas = component$<SvgColorCanvasProps>(
   ({ svgContent, store }) => {
     const containerRef = useSignal<Element>();
 
-    // ── Phase 1: mount + wire events — needs DOM ───────────────────
-    useVisibleTask$(() => {
+    // ── Phase 1: mount + wire events ──────────────────────────────
+    useTask$(() => {
+      if (typeof window === "undefined") return;
       const container = containerRef.value;
       if (!container) return;
 
