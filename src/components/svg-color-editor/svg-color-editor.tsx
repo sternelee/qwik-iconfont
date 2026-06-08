@@ -10,7 +10,7 @@
  *   parent picker → store.pendingColorChange → canvas applies to DOM → store.pendingSvg
  *   parent useTask$ → svgContent.value = store.pendingSvg
  */
-import { component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
+import { component$, useSignal, useTask$, useVisibleTask$ } from "@builder.io/qwik";
 
 // ── Shared state interface ────────────────────────────────────────────────────
 
@@ -135,8 +135,9 @@ export const SvgColorCanvas = component$<SvgColorCanvasProps>(
       store.entries = entries;
     });
 
-    // ── Phase 2: highlight selected path — needs DOM ──────────────
-    useVisibleTask$(({ track }) => {
+    // ── Phase 2: highlight selected path ─────────────────────────
+    useTask$(({ track }) => {
+      if (typeof window === "undefined") return;
       const sel = track(() => store.selectedIdx);
       const svg = containerRef.value?.querySelector("svg");
       if (!svg) return;
@@ -146,8 +147,9 @@ export const SvgColorCanvas = component$<SvgColorCanvasProps>(
       });
     });
 
-    // ── Phase 3: apply colour changes from col-3 picker — needs DOM
-    useVisibleTask$(({ track }) => {
+    // ── Phase 3: apply colour changes from col-3 picker ───────────
+    useTask$(({ track }) => {
+      if (typeof window === "undefined") return;
       const change = track(() => store.pendingColorChange);
       if (!change) return;
       const svg = containerRef.value?.querySelector("svg");
