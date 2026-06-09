@@ -223,9 +223,19 @@ class MockExecutor {
     params: any[],
     originalClause?: string,
   ): { result: boolean; consumed: number } {
-    const s = clause.trim();
+    let s = clause.trim();
     if (!s) return { result: true, consumed: 0 };
     const original = originalClause ?? s;
+
+    // Strip fully-wrapping outer parentheses so nested groups don't hide top-level operators.
+    // We only strip when the first `(` matches the last `)` (depth reaches 0 only at the end).
+    while (
+      s.startsWith("(") &&
+      s.endsWith(")") &&
+      this.isFullyWrapped(s)
+    ) {
+      s = s.slice(1, -1).trim();
+    }
 
     // ── Top-level OR ─────────────────────────────────────────────
     const orParts = this.splitTopLevel(s, "OR");
@@ -249,11 +259,6 @@ class MockExecutor {
         if (!r.result) return { result: false, consumed: totalConsumed };
       }
       return { result: true, consumed: totalConsumed };
-    }
-
-    // ── Parenthesized group ──────────────────────────────────────
-    if (s.startsWith("(") && s.endsWith(")")) {
-      return this.evaluateCondition(s.slice(1, -1), data, params, original);
     }
 
     // ── Leaf condition ───────────────────────────────────────────
@@ -325,6 +330,16 @@ class MockExecutor {
     }
 
     return { result: true, consumed: 0 };
+  }
+
+  private isFullyWrapped(s: string): boolean {
+    let depth = 0;
+    for (let i = 0; i < s.length; i++) {
+      if (s[i] === "(") depth++;
+      else if (s[i] === ")") depth--;
+      if (depth === 0 && i < s.length - 1) return false;
+    }
+    return depth === 0;
   }
 
   private splitTopLevel(s: string, keyword: string): string[] {

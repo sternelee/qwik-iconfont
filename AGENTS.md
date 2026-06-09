@@ -77,6 +77,8 @@ Upload/import/generate SVG
 ```bash
 # Development
 pnpm dev              # Vite SSR dev server (mock DB/R2, anonymous mode)
+pnpm start            # Same as dev, but opens browser
+pnpm dev.debug        # Dev server with Node inspector breakpoint
 pnpm serve            # Wrangler dev server (D1/R2/auth/full Workers runtime)
 
 # Build
@@ -201,6 +203,7 @@ pnpm deploy           # wrangler deploy
 - Keep shared app types in `src/lib/types.ts`; add library declarations in `src/types/`.
 - Prefer dynamic imports inside loaders/actions when following existing route patterns.
 - Preserve Qwik resumability constraints: avoid capturing non-serializable values in QRL closures unless wrapped with `noSerialize`.
+- ESLint: `@typescript-eslint/no-explicit-any` is disabled — `any` is allowed in this codebase.
 
 ### Qwik Patterns
 

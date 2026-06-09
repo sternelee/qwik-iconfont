@@ -3,11 +3,13 @@ import {
   useSignal,
   useStore,
   useTask$,
+  useVisibleTask$,
 } from "@builder.io/qwik";
 import { routeLoader$, type DocumentHead } from "@builder.io/qwik-city";
 import { SvgPreview } from "~/components/svg-preview/svg-preview";
 import { HighlightText } from "~/components/highlight-text/highlight-text";
 import { ThemeToggle } from "~/components/theme-toggle/theme-toggle";
+import { getLocalProjects, getLocalIcons } from "~/lib/local-storage";
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -33,6 +35,7 @@ interface SearchResult {
   q: string;
   limit: number;
   icons: SearchIcon[];
+  mode?: "server" | "local";
 }
 
 interface ProjectGroup {
@@ -66,24 +69,27 @@ export const useSearchResults = routeLoader$(
       return { q, limit: 50, icons: [] };
     }
 
+    const { getSessionFromRequest } = await import("~/lib/session");
+    const session = await getSessionFromRequest(platform, request);
+
+    if (!session) {
+      return { q, limit: 50, icons: [], mode: "local" };
+    }
+
     const { getDB, initDB } = await import("~/lib/db");
     const db = getDB(platform);
     await initDB(db, platform);
     const { icons, projects, user } = await import("~/lib/schema");
     const { eq, and, or, like, sql, asc, desc } = await import("drizzle-orm");
-    const { getSessionFromRequest } = await import("~/lib/session");
-    const session = await getSessionFromRequest(platform, request);
 
     // Note: LIKE wildcards in q are treated as wildcards; injection is
     // prevented by parameterized binding.
     const pattern = `%${q}%`;
 
-    const visibility = session
-      ? or(
-          eq(projects.visibility, "public"),
-          eq(projects.user_id, session.user.id),
-        )
-      : eq(projects.visibility, "public");
+    const visibility = or(
+      eq(projects.visibility, "public"),
+      eq(projects.user_id, session.user.id),
+    );
 
     const match = or(like(icons.name, pattern), like(icons.tags, pattern));
     const where = and(match, visibility);
@@ -114,7 +120,7 @@ export const useSearchResults = routeLoader$(
       )
       .limit(50);
 
-    return { q, limit: 50, icons: rows };
+    return { q, limit: 50, icons: rows, mode: "server" };
   },
 );
 
@@ -139,6 +145,44 @@ export default component$(() => {
   const results = useStore<{ list: SearchIcon[] }>({ list: data.value.icons });
   useTask$(({ track }) => {
     results.list = track(() => data.value.icons);
+  });
+
+  // Anonymous mode: the server returned an empty list because localStorage
+  // only exists in the browser. Hydrate results client-side by scanning all
+  // local projects and filtering their icons by name/tag.
+  // eslint-disable-next-line qwik/no-use-visible-task
+  useVisibleTask$(({ track }) => {
+    const serverData = track(() => data.value);
+    if (serverData.mode !== "local" || typeof window === "undefined") return;
+    const rawQ = serverData.q.toLowerCase();
+    if (!rawQ) return;
+
+    const projects = getLocalProjects();
+    const matched: SearchIcon[] = [];
+    for (const p of projects) {
+      if (p.visibility !== "public") continue;
+      const icons = getLocalIcons(p.id);
+      for (const ic of icons) {
+        const nameMatch = ic.name.toLowerCase().includes(rawQ);
+        const tagMatch = (ic.tags ?? "").toLowerCase().includes(rawQ);
+        if (!nameMatch && !tagMatch) continue;
+        matched.push({
+          id: ic.id,
+          name: ic.name,
+          unicode: ic.unicode,
+          tags: ic.tags,
+          view_box: ic.view_box,
+          content: ic.content,
+          project_id: p.id,
+          project_name: p.name,
+          project_font_family: p.font_family,
+          project_visibility: p.visibility,
+          project_favorites_count: p.favorites_count,
+          author_name: p.author_name,
+        });
+      }
+    }
+    results.list = matched;
   });
 
   // Group results by project, then re-sort groups by the best (max)
