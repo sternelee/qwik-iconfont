@@ -1,5 +1,6 @@
 import { component$, $ } from "@builder.io/qwik";
 import { useNavigate } from "@builder.io/qwik-city";
+import { signOut } from "~/lib/auth-client";
 
 /**
  * Authenticated user dropdown menu.
@@ -9,7 +10,7 @@ import { useNavigate } from "@builder.io/qwik-city";
 export const UserMenu = component$(() => {
   const nav = useNavigate();
   const handleSignOut = $(async () => {
-    await fetch("/api/auth/sign-out", { method: "POST" });
+    await signOut();
     nav("/");
   });
   return (
