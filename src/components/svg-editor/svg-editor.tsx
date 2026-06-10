@@ -18,7 +18,6 @@ import { SvgPreview } from "~/components/svg-preview/svg-preview";
 import {
   SvgColorCanvas,
   svgHasMultipleColors,
-  normalizeSvgStyleFills,
   type ColorEditorStore,
 } from "~/components/svg-color-editor/svg-color-editor";
 
@@ -77,9 +76,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
   const name = useSignal(icon.name || "");
   const unicode = useSignal(icon.unicode || "");
   const viewBox = useSignal(initialViewBox);
-  // Normalize style-based fills to attributes on load so detection and colour
-  // replacement work correctly for multi-colour SVGs.
-  const svgContent = useSignal(normalizeSvgStyleFills(icon.content || ""));
+  const svgContent = useSignal(icon.content || "");
   const tags = useSignal(parseTags(icon.tags ?? null).join(", "));
   const fillColor = useSignal("#000000");
   // Detect multi-colour SVG (regex — fast, no DOM)
