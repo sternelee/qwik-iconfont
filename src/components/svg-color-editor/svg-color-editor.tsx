@@ -191,11 +191,108 @@ export const SvgColorCanvas = component$<SvgColorCanvasProps>(
   },
 );
 
-// ── Re-exported utility ───────────────────────────────────────────────────────
+// ── Re-exported utilities ──────────────────────────────────────────────────────
+
+/**
+ * Normalize SVG: convert style-based fill/stroke to attribute-based so that
+ * regex-based colour detection and replacement work correctly.
+ *
+ * Handles:
+ *  1. Inline style="fill: red; stroke: blue" → fill="red" stroke="blue"
+ *  2. CSS classes in <style> blocks — extracts fill/stroke values per class
+ *     and applies them as attributes (best-effort, single-class per element).
+ */
+export function normalizeSvgStyleFills(svg: string): string {
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svg, "image/svg+xml");
+    const root = doc.querySelector("svg");
+    if (!root) return svg;
+
+    // Strip dangerous elements/attributes but keep <style>
+    root.querySelectorAll("script, foreignObject").forEach((el) => el.remove());
+    root.querySelectorAll("*").forEach((el) => {
+      for (const a of Array.from(el.attributes)) {
+        if (
+          a.name.startsWith("on") ||
+          a.value.toLowerCase().startsWith("javascript:")
+        ) {
+          el.removeAttribute(a.name);
+        }
+      }
+    });
+
+    // Extract fill/stroke from <style> rules (simple class selectors only)
+    const styleEl = root.querySelector("style");
+    const classColorMap: Record<string, { fill?: string; stroke?: string }> = {};
+    if (styleEl) {
+      const cssText = styleEl.textContent || "";
+      const ruleRe = /\.([a-zA-Z0-9_-]+)\s*\{([^}]*)\}/g;
+      let ruleMatch: RegExpExecArray | null;
+      while ((ruleMatch = ruleRe.exec(cssText))) {
+        const cls = ruleMatch[1];
+        const body = ruleMatch[2];
+        const fillMatch = body.match(/(?:^|;)\s*fill\s*:\s*([^;]+)/i);
+        const strokeMatch = body.match(/(?:^|;)\s*stroke\s*:\s*([^;]+)/i);
+        if (fillMatch || strokeMatch) {
+          classColorMap[cls] = {};
+          if (fillMatch) classColorMap[cls].fill = fillMatch[1].trim();
+          if (strokeMatch) classColorMap[cls].stroke = strokeMatch[1].trim();
+        }
+      }
+    }
+
+    const shapes = root.querySelectorAll(
+      "path, rect, circle, ellipse, line, polyline, polygon, g, use, text",
+    );
+    shapes.forEach((el) => {
+      // 1. Inline style → attribute
+      const style = el.getAttribute("style") || "";
+      const styleFill = style.match(/(?:^|;)\s*fill\s*:\s*([^;]+)/i);
+      const styleStroke = style.match(/(?:^|;)\s*stroke\s*:\s*([^;]+)/i);
+      if (styleFill) {
+        const val = styleFill[1].trim();
+        if (!el.getAttribute("fill")) el.setAttribute("fill", val);
+      }
+      if (styleStroke) {
+        const val = styleStroke[1].trim();
+        if (!el.getAttribute("stroke")) el.setAttribute("stroke", val);
+      }
+      // Clean style attr after extracting
+      if (styleFill || styleStroke) {
+        const cleaned = style
+          .replace(/(?:^|;)\s*fill\s*:[^;]*/gi, "")
+          .replace(/(?:^|;)\s*stroke\s*:[^;]*/gi, "")
+          .replace(/^;+|;+$/g, "")
+          .trim();
+        if (cleaned) el.setAttribute("style", cleaned);
+        else el.removeAttribute("style");
+      }
+
+      // 2. CSS class → attribute (first class that has colours)
+      const classAttr = el.getAttribute("class") || "";
+      const classes = classAttr.split(/\s+/).filter(Boolean);
+      for (const cls of classes) {
+        if (classColorMap[cls]) {
+          if (classColorMap[cls].fill && !el.getAttribute("fill"))
+            el.setAttribute("fill", classColorMap[cls].fill!);
+          if (classColorMap[cls].stroke && !el.getAttribute("stroke"))
+            el.setAttribute("stroke", classColorMap[cls].stroke!);
+        }
+      }
+    });
+
+    return new XMLSerializer().serializeToString(root);
+  } catch {
+    return svg;
+  }
+}
 
 export function svgHasMultipleColors(svg: string): boolean {
+  // First normalize so style-based and class-based fills become attributes
+  const normalized = normalizeSvgStyleFills(svg);
   const seen = new Set<string>();
-  for (const m of svg.matchAll(/\bfill="([^"]+)"/gi)) {
+  for (const m of normalized.matchAll(/\bfill="([^"]+)"/gi)) {
     const f = m[1].toLowerCase().trim();
     if (f !== "none" && f !== "currentcolor") seen.add(f);
     if (seen.size > 1) return true;

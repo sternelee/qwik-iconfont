@@ -1,6 +1,7 @@
 import { component$, useSignal, type QRL } from "@builder.io/qwik";
 import type { Icon } from "~/lib/types";
 import { SvgPreview } from "~/components/svg-preview/svg-preview";
+import { normalizeSvgStyleFills } from "~/components/svg-color-editor/svg-color-editor";
 
 interface IconDetailPanelProps {
   icon: Partial<Icon>;
@@ -18,9 +19,10 @@ function hasNativeColors(icon: Partial<Icon>): boolean {
   const content = icon.content;
   if (!content) return false;
 
+  // Normalize style-based fills to attributes first
+  const normalized = normalizeSvgStyleFills(content);
   const colors = new Set<string>();
   const attrRe = /\b(?:fill|stroke)=["']([^"']+)["']/gi;
-  const styleRe = /(?:^|;)\s*(?:fill|stroke)\s*:\s*([^;"]+)/gi;
   let match: RegExpExecArray | null;
 
   const addColor = (raw: string) => {
@@ -36,8 +38,7 @@ function hasNativeColors(icon: Partial<Icon>): boolean {
     colors.add(value);
   };
 
-  while ((match = attrRe.exec(content))) addColor(match[1]);
-  while ((match = styleRe.exec(content))) addColor(match[1]);
+  while ((match = attrRe.exec(normalized))) addColor(match[1]);
 
   return colors.size > 1;
 }
