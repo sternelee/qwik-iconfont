@@ -53,8 +53,9 @@ export default component$(() => {
       error.value = authError.message;
       return;
     }
-    if (data?.session) {
-      await migrateLocalProjects();
+    if (data) {
+      // Fire-and-forget: migrate local projects in background
+      migrateLocalProjects();
       nav("/");
     } else {
       loading.value = false;
