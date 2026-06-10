@@ -6,12 +6,14 @@ import { icons, projects } from "~/lib/schema";
 import { eq, and, count } from "drizzle-orm";
 import { resolveSvgViewBox, type Icon } from "~/lib/types";
 import { getQuota } from "~/lib/quota";
+import { sanitizeSVG } from "~/lib/ai";
 
 export const onGet: RequestHandler = async ({
   params,
   platform,
   request,
   json,
+  query,
 }) => {
   const session = await getSessionFromRequest(platform, request);
   if (!session) {
@@ -35,13 +37,18 @@ export const onGet: RequestHandler = async ({
     return;
   }
 
+  const limit = Math.min(parseInt(query.get("limit") || "500", 10), 1000);
+  const offset = parseInt(query.get("offset") || "0", 10);
+
   const result = await db
     .select()
     .from(icons)
     .where(eq(icons.project_id, projectId))
-    .orderBy(icons.created_at);
+    .orderBy(icons.created_at)
+    .limit(limit)
+    .offset(offset);
 
-  json(200, { icons: result as Icon[] });
+  json(200, { icons: result as Icon[], limit, offset });
 };
 
 export const onPost: RequestHandler = async ({
@@ -117,8 +124,16 @@ export const onPost: RequestHandler = async ({
     return;
   }
 
+  // Validate SVG content
+  const trimmed = content.trim();
+  if (!trimmed.toLowerCase().startsWith("<svg")) {
+    json(400, { error: "content must be a valid SVG starting with <svg>" });
+    return;
+  }
+
   const cleanName = name.replace(/\.svg$/i, "").replace(/[^a-zA-Z0-9_-]/g, "-");
-  const svgPath = await uploadSVG(platform, projectId, cleanName, content);
+  const sanitizedContent = sanitizeSVG(trimmed);
+  const svgPath = await uploadSVG(platform, projectId, cleanName, sanitizedContent);
 
   const result = await db
     .insert(icons)
@@ -128,7 +143,7 @@ export const onPost: RequestHandler = async ({
       unicode,
       svg_path: svgPath,
       view_box: viewBox,
-      content,
+      content: sanitizedContent,
       color_layers: colorLayers,
     })
     .returning();

@@ -1,6 +1,8 @@
 import { getDB, initDB } from "./db";
 import { apiTokens } from "./schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
+
+const LAST_USED_THROTTLE_MS = 60 * 60 * 1000; // 1 hour
 
 /**
  * Resolve user from Bearer token.
@@ -22,18 +24,24 @@ export async function resolveTokenUser(
     .join("");
 
   const result = await db
-    .select({ user_id: apiTokens.user_id })
+    .select({ user_id: apiTokens.user_id, last_used_at: apiTokens.last_used_at })
     .from(apiTokens)
     .where(eq(apiTokens.token_hash, hashHex))
     .limit(1);
 
   if (!result[0]) return null;
 
-  // Update last_used_at
-  await db
-    .update(apiTokens)
-    .set({ last_used_at: new Date().toISOString() })
-    .where(eq(apiTokens.token_hash, hashHex));
+  // Throttle last_used_at updates to once per hour
+  const now = Date.now();
+  const lastUsed = result[0].last_used_at
+    ? new Date(result[0].last_used_at).getTime()
+    : 0;
+  if (now - lastUsed > LAST_USED_THROTTLE_MS) {
+    await db
+      .update(apiTokens)
+      .set({ last_used_at: new Date().toISOString() })
+      .where(eq(apiTokens.token_hash, hashHex));
+  }
 
   return result[0].user_id;
 }

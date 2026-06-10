@@ -527,6 +527,11 @@ export function getDB(platform: any): AppDatabase {
   ) as AppDatabase;
 }
 
+function isAlreadyExistsError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return /already exists/i.test(msg);
+}
+
 export async function initDB(_db: AppDatabase, platform?: any) {
   // Auto-create tables on D1 as a fallback when migrations haven't been applied
   if (platform?.env?.DB) {
@@ -643,72 +648,72 @@ export async function initDB(_db: AppDatabase, platform?: any) {
       // Add user_id column if it doesn't exist (migration for existing databases)
       try {
         await d1.exec(`ALTER TABLE projects ADD COLUMN user_id TEXT`);
-      } catch {
-        // Column may already exist
+      } catch (err) {
+        if (!isAlreadyExistsError(err)) throw err;
       }
       // Add visibility column if it doesn't exist
       try {
         await d1.exec(
           `ALTER TABLE projects ADD COLUMN visibility TEXT DEFAULT 'private'`,
         );
-      } catch {
-        // Column may already exist
+      } catch (err) {
+        if (!isAlreadyExistsError(err)) throw err;
       }
       // Add favorites_count column if it doesn't exist
       try {
         await d1.exec(
           `ALTER TABLE projects ADD COLUMN favorites_count INTEGER DEFAULT 0`,
         );
-      } catch {
-        // Column may already exist
+      } catch (err) {
+        if (!isAlreadyExistsError(err)) throw err;
       }
       // Add sort_order column if it doesn't exist
       try {
         await d1.exec(
           `ALTER TABLE icons ADD COLUMN sort_order INTEGER DEFAULT 0`,
         );
-      } catch {
-        /* Column may already exist */
+      } catch (err) {
+        if (!isAlreadyExistsError(err)) throw err;
       }
       // Add views_count column if it doesn't exist
       try {
         await d1.exec(
           `ALTER TABLE projects ADD COLUMN views_count INTEGER DEFAULT 0`,
         );
-      } catch {
-        /* Column may already exist */
+      } catch (err) {
+        if (!isAlreadyExistsError(err)) throw err;
       }
       // Add downloads_count column if it doesn't exist
       try {
         await d1.exec(
           `ALTER TABLE projects ADD COLUMN downloads_count INTEGER DEFAULT 0`,
         );
-      } catch {
-        /* Column may already exist */
+      } catch (err) {
+        if (!isAlreadyExistsError(err)) throw err;
       }
       // Add plan column if it doesn't exist
       try {
         await d1.exec(`ALTER TABLE "user" ADD COLUMN plan TEXT DEFAULT 'free'`);
-      } catch {
-        /* Column may already exist */
+      } catch (err) {
+        if (!isAlreadyExistsError(err)) throw err;
       }
       // Add tags column if it doesn't exist
       try {
         await d1.exec(`ALTER TABLE icons ADD COLUMN tags TEXT`);
-      } catch {
-        // Column may already exist
+      } catch (err) {
+        if (!isAlreadyExistsError(err)) throw err;
       }
       // Add color_layers column if it doesn't exist
       try {
         await d1.exec(`ALTER TABLE icons ADD COLUMN color_layers TEXT`);
-      } catch {
-        /* Column may already exist */
+      } catch (err) {
+        if (!isAlreadyExistsError(err)) throw err;
       }
       // Add source_url column if it doesn't exist (GitHub import dedupe)
       try {
         await d1.exec(`ALTER TABLE projects ADD COLUMN source_url TEXT`);
-      } catch {
-        /* Column may already exist */
+      } catch (err) {
+        if (!isAlreadyExistsError(err)) throw err;
       }
     } catch {
       // Tables may already exist or migrations have been applied; ignore errors

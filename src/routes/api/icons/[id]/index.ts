@@ -1,10 +1,33 @@
 import type { RequestHandler } from "@builder.io/qwik-city";
 import { getDB, initDB } from "~/lib/db";
-import { getBucket, uploadSVG } from "~/lib/storage";
+import { uploadSVG, deleteSVG } from "~/lib/storage";
 import { getSessionFromRequest } from "~/lib/session";
-import { icons, projects } from "~/lib/schema";
+import { icons, projects, projectMembers } from "~/lib/schema";
 import { eq, and } from "drizzle-orm";
 import { resolveSvgViewBox, type Icon } from "~/lib/types";
+
+async function canEditProject(
+  db: any,
+  projectId: number,
+  userId: string,
+): Promise<boolean> {
+  const [project] = await db
+    .select({ user_id: projects.user_id })
+    .from(projects)
+    .where(eq(projects.id, projectId));
+  if (project?.user_id === userId) return true;
+
+  const [member] = await db
+    .select({ role: projectMembers.role })
+    .from(projectMembers)
+    .where(
+      and(
+        eq(projectMembers.project_id, projectId),
+        eq(projectMembers.user_id, userId),
+      ),
+    );
+  return member?.role === "editor";
+}
 
 export const onGet: RequestHandler = async ({
   params,
@@ -22,19 +45,28 @@ export const onGet: RequestHandler = async ({
   await initDB(db, platform);
   const id = parseInt(params.id, 10);
 
-  // Get icon and verify project ownership
+  // Get icon and verify project access
   const result = await db
     .select()
     .from(icons)
     .innerJoin(projects, eq(icons.project_id, projects.id))
-    .where(and(eq(icons.id, id), eq(projects.user_id, session.user.id)));
+    .where(eq(icons.id, id));
 
-  if (!result[0]) {
+  const current = result[0];
+  if (!current) {
     json(404, { error: "Icon not found" });
     return;
   }
 
-  json(200, { icon: result[0].icons as Icon });
+  const hasAccess =
+    current.projects.user_id === session.user.id ||
+    (await canEditProject(db, current.icons.project_id, session.user.id));
+  if (!hasAccess) {
+    json(404, { error: "Icon not found" });
+    return;
+  }
+
+  json(200, { icon: current.icons as Icon });
 };
 
 export const onPut: RequestHandler = async ({
@@ -55,16 +87,24 @@ export const onPut: RequestHandler = async ({
   const body = (await request.json()) as any;
   const { name, unicode, view_box, content, tags } = body;
 
-  // Get icon and verify project ownership
+  // Get icon and verify project access
   const result = await db
     .select()
     .from(icons)
     .innerJoin(projects, eq(icons.project_id, projects.id))
-    .where(and(eq(icons.id, id), eq(projects.user_id, session.user.id)));
+    .where(eq(icons.id, id));
 
   const current = result[0]?.icons as Icon | undefined;
 
   if (!current) {
+    json(404, { error: "Icon not found" });
+    return;
+  }
+
+  const hasAccess =
+    result[0]?.projects.user_id === session.user.id ||
+    (await canEditProject(db, current.project_id, session.user.id));
+  if (!hasAccess) {
     json(404, { error: "Icon not found" });
     return;
   }
@@ -118,20 +158,27 @@ export const onDelete: RequestHandler = async ({
 
   const db = getDB(platform);
   await initDB(db, platform);
-  const bucket = getBucket(platform);
   const id = parseInt(params.id, 10);
 
-  // Get icon and verify project ownership
+  // Get icon and verify project access
   const result = await db
     .select()
     .from(icons)
     .innerJoin(projects, eq(icons.project_id, projects.id))
-    .where(and(eq(icons.id, id), eq(projects.user_id, session.user.id)));
+    .where(eq(icons.id, id));
 
   const current = result[0]?.icons;
+  const hasAccess =
+    result[0]?.projects.user_id === session.user.id ||
+    (await canEditProject(db, current?.project_id, session.user.id));
 
-  if (current) {
-    await bucket.delete(current.svg_path);
+  if (current && hasAccess) {
+    await deleteSVG(platform, current.svg_path);
+  }
+
+  if (!hasAccess) {
+    json(404, { error: "Icon not found" });
+    return;
   }
 
   await db.delete(icons).where(eq(icons.id, id));
