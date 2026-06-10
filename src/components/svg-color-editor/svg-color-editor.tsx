@@ -240,6 +240,23 @@ export function normalizeSvgStyleFills(svg: string): string {
           if (strokeMatch) classColorMap[cls].stroke = strokeMatch[1].trim();
         }
       }
+      // Remove fill/stroke rules from <style> so they don't override attribute-based fills
+      let cleanedCss = cssText;
+      for (const cls of Object.keys(classColorMap)) {
+        cleanedCss = cleanedCss.replace(
+          new RegExp(`\\.${cls}\\s*\\{[^}]*\\}`, "g"),
+          (match) => {
+            const remaining = match
+              .replace(/(?:^|;)\s*fill\s*:[^;]*/gi, "")
+              .replace(/(?:^|;)\s*stroke\s*:[^;]*/gi, "")
+              .replace(/\{;+/g, "{")
+              .replace(/;+\}/g, "}")
+              .replace(/\{\s*\}/g, "");
+            return remaining;
+          },
+        );
+      }
+      styleEl.textContent = cleanedCss;
     }
 
     const shapes = root.querySelectorAll(
