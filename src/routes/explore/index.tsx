@@ -4,7 +4,6 @@ import {
   $,
   useStore,
   useTask$,
-  useVisibleTask$,
   noSerialize,
 } from "@builder.io/qwik";
 import { routeLoader$, type DocumentHead } from "@builder.io/qwik-city";
@@ -202,9 +201,10 @@ export default component$(() => {
     applySort();
   });
 
-  // Infinite scroll sentinel — needs DOM (IntersectionObserver)
+  // Infinite scroll sentinel
   const sentinel = useSignal<HTMLDivElement | undefined>();
-  useVisibleTask$(({ cleanup }) => {
+  useTask$(({ cleanup }) => {
+    if (typeof window === "undefined") return;
     if (!sentinel.value) return;
     const observer = new IntersectionObserver(
       (entries) => {

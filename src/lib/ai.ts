@@ -137,11 +137,11 @@ export async function callAI(
   );
 }
 
-/** Strip dangerous SVG content (scripts, styles with JS, event handlers, javascript: URIs). */
+/** Strip dangerous SVG content (scripts, event handlers, javascript: URIs).
+ *  Preserves <style> blocks — CSS alone cannot execute JS in modern browsers. */
 export function sanitizeSVG(svg: string): string {
   return svg
     .replace(/<script[\s\S]*?<\/script>/gi, "")
-    .replace(/<style[\s\S]*?<\/style>/gi, "")
     .replace(/\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s/>]*)/gi, "")
     .replace(/(href|xlink:href)\s*=\s*['"]javascript:[^'"]*['"]/gi, "");
 }

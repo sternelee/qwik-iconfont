@@ -20,7 +20,6 @@ function hasNativeColors(icon: Partial<Icon>): boolean {
 
   const colors = new Set<string>();
   const attrRe = /\b(?:fill|stroke)=["']([^"']+)["']/gi;
-  const styleRe = /(?:^|;)\s*(?:fill|stroke)\s*:\s*([^;"]+)/gi;
   let match: RegExpExecArray | null;
 
   const addColor = (raw: string) => {
@@ -37,7 +36,6 @@ function hasNativeColors(icon: Partial<Icon>): boolean {
   };
 
   while ((match = attrRe.exec(content))) addColor(match[1]);
-  while ((match = styleRe.exec(content))) addColor(match[1]);
 
   return colors.size > 1;
 }

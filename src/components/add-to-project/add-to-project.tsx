@@ -1,7 +1,7 @@
 import {
   component$,
   useSignal,
-  useVisibleTask$,
+  useTask$,
   $,
   type QRL,
 } from "@builder.io/qwik";
@@ -51,8 +51,9 @@ export const AddToProjectDrawer = component$<AddToProjectDrawerProps>(
     const newProjectName = useSignal("");
     const creatingLoading = useSignal(false);
 
-    // ── Load projects — only available on the client ──────────────
-    useVisibleTask$(async () => {
+    // ── Load projects
+    useTask$(async () => {
+      if (typeof window === "undefined") return;
       if (userId) {
         const res = await fetch("/api/projects");
         if (res.ok) {

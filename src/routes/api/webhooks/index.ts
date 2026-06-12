@@ -3,6 +3,29 @@ import { getSessionFromRequest } from "~/lib/session";
 import { getDB, initDB } from "~/lib/db";
 import { eq, and } from "drizzle-orm";
 
+function validateWebhookUrl(raw: string): string | null {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return "URL 格式无效";
+  }
+  if (url.protocol !== "https:" && url.protocol !== "http:") {
+    return "URL 必须使用 HTTP 或 HTTPS";
+  }
+  if (url.username || url.password) {
+    return "URL 不允许包含认证信息";
+  }
+  if (
+    /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|::1|0\.)/i.test(
+      url.hostname,
+    )
+  ) {
+    return "URL 不允许使用内网地址";
+  }
+  return null;
+}
+
 export const onGet: RequestHandler = async ({ json, platform }) => {
   const session = await getSessionFromRequest(platform, platform.request!);
   if (!session) {
@@ -42,6 +65,12 @@ export const onPost: RequestHandler = async ({ json, platform }) => {
 
   if (!body.url || !body.project_id) {
     json(400, { error: "url and project_id required" });
+    return;
+  }
+
+  const urlError = validateWebhookUrl(body.url);
+  if (urlError) {
+    json(400, { error: urlError });
     return;
   }
 

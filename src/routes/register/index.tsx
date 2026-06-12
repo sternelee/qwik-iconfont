@@ -1,4 +1,4 @@
-import { component$, useSignal, $, useVisibleTask$ } from "@builder.io/qwik";
+import { component$, useSignal, $, useTask$ } from "@builder.io/qwik";
 import { useNavigate, type DocumentHead } from "@builder.io/qwik-city";
 import { signUp, getSession, signInSocial } from "~/lib/auth-client";
 import { migrateLocalProjects } from "~/lib/local-migration";
@@ -21,8 +21,9 @@ export default component$(() => {
   const loading = useSignal(false);
   const nav = useNavigate();
 
-  // Session check + redirect — only meaningful on the client
-  useVisibleTask$(async () => {
+  // Session check + redirect
+  useTask$(async () => {
+    if (typeof window === "undefined") return;
     const { data } = await getSession();
     if (data?.session) nav("/");
   });
@@ -52,8 +53,9 @@ export default component$(() => {
       error.value = authError.message;
       return;
     }
-    if (data?.session) {
-      await migrateLocalProjects();
+    if (data) {
+      // Fire-and-forget: migrate local projects in background
+      migrateLocalProjects();
       nav("/");
     } else {
       loading.value = false;

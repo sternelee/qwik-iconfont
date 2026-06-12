@@ -1,4 +1,4 @@
-import { component$, useSignal, useVisibleTask$, $ } from "@builder.io/qwik";
+import { component$, useSignal, useTask$, $ } from "@builder.io/qwik";
 
 interface Member {
   id: number;
@@ -86,7 +86,8 @@ export const ProjectMembers = component$(
       }).then(() => fetchMembers());
     });
 
-    useVisibleTask$(() => {
+    useTask$(() => {
+      if (typeof window === "undefined") return;
       fetchMembers();
     });
 

@@ -2,7 +2,7 @@ import type { RequestHandler } from "@builder.io/qwik-city";
 import { getDB, initDB } from "~/lib/db";
 import { getSessionFromRequest } from "~/lib/session";
 import { favorites, projects } from "~/lib/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 
 export const onPost: RequestHandler = async ({
   platform,
@@ -57,15 +57,21 @@ export const onPost: RequestHandler = async ({
     project_id: projectId,
   });
 
-  // Increment favorites_count
+  // Atomic increment favorites_count
   await db
     .update(projects)
-    .set({ favorites_count: (project.favorites_count || 0) + 1 })
+    .set({ favorites_count: sql`${projects.favorites_count} + 1` })
+    .where(eq(projects.id, projectId));
+
+  // Read updated count
+  const updated = await db
+    .select({ favorites_count: projects.favorites_count })
+    .from(projects)
     .where(eq(projects.id, projectId));
 
   json(200, {
     success: true,
-    favorites_count: (project.favorites_count || 0) + 1,
+    favorites_count: updated[0]?.favorites_count ?? 0,
   });
 };
 
@@ -105,14 +111,19 @@ export const onDelete: RequestHandler = async ({
       ),
     );
 
-  // Decrement favorites_count
-  const newCount = Math.max(0, (project.favorites_count || 0) - 1);
+  // Atomic decrement favorites_count (floor at 0)
   await db
     .update(projects)
-    .set({ favorites_count: newCount })
+    .set({ favorites_count: sql`MAX(${projects.favorites_count} - 1, 0)` })
     .where(eq(projects.id, projectId));
 
-  json(200, { success: true, favorites_count: newCount });
+  // Read updated count
+  const updated = await db
+    .select({ favorites_count: projects.favorites_count })
+    .from(projects)
+    .where(eq(projects.id, projectId));
+
+  json(200, { success: true, favorites_count: updated[0]?.favorites_count ?? 0 });
 };
 
 export const onGet: RequestHandler = async ({

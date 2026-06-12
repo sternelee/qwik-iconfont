@@ -4,8 +4,6 @@ import {
   $,
   useStore,
   useTask$,
-  useOnDocument,
-  useVisibleTask$,
 } from "@builder.io/qwik";
 import {
   routeLoader$,
@@ -239,8 +237,9 @@ export default component$(() => {
     loaded: false,
   });
 
-  // Fetch public projects — only relevant on the client
-  useVisibleTask$(() => {
+  // Fetch public projects
+  useTask$(() => {
+    if (typeof window === "undefined") return;
     fetch("/api/projects?visibility=public")
       .then((res) => res.json())
       .then((data: any) => {
@@ -262,22 +261,22 @@ export default component$(() => {
     }, 3000);
   });
 
-  // Hydrate localStorage projects — client only
-  useVisibleTask$(() => {
+  useTask$(() => {
+    if (typeof window === "undefined") return;
     if (loaderData.value.mode === "local") {
       localProjects.items = getLocalProjects();
       localProjects.loaded = true;
     }
   });
 
-  // Set page title — needs DOM
-  useVisibleTask$(() => {
+  useTask$(() => {
+    if (typeof window === "undefined") return;
     document.title = "Iconfont - 图标字体管理平台";
   });
 
-  useOnDocument(
-    "keydown",
-    $((ev: KeyboardEvent) => {
+  useTask$(({ cleanup }) => {
+    if (typeof window === "undefined") return;
+    const handler = (ev: KeyboardEvent) => {
       const target = ev.target as HTMLElement;
       if (
         target?.tagName === "INPUT" ||
@@ -307,8 +306,10 @@ export default component$(() => {
           ) as HTMLInputElement
         )?.focus();
       }
-    }),
-  );
+    };
+    document.addEventListener("keydown", handler);
+    cleanup(() => document.removeEventListener("keydown", handler));
+  });
 
   const confirmState = useStore<{ show: boolean; project: any | null }>({
     show: false,
