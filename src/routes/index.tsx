@@ -104,6 +104,76 @@ export const useProjects = routeLoader$(
   },
 );
 
+export const useFeaturedProjects = routeLoader$(
+  async ({ platform }): Promise<(Project & { icon_count: number })[]> => {
+    const { getDB, initDB } = await import("~/lib/db");
+    const db = getDB(platform);
+    await initDB(db, platform);
+    const { projects, icons, user } = await import("~/lib/schema");
+    const { eq, desc, count } = await import("drizzle-orm");
+
+    const result = await db
+      .select({
+        id: projects.id,
+        user_id: projects.user_id,
+        name: projects.name,
+        description: projects.description,
+        font_family: projects.font_family,
+        prefix: projects.prefix,
+        visibility: projects.visibility,
+        favorites_count: projects.favorites_count,
+        views_count: projects.views_count,
+        downloads_count: projects.downloads_count,
+        author_name: user.name,
+        author_email: user.email,
+        author_image: user.image,
+        created_at: projects.created_at,
+        updated_at: projects.updated_at,
+        icon_count: count(icons.id),
+      })
+      .from(projects)
+      .leftJoin(icons, eq(projects.id, icons.project_id))
+      .leftJoin(user, eq(projects.user_id, user.id))
+      .where(eq(projects.visibility, "public"))
+      .groupBy(projects.id)
+      .orderBy(
+        desc(projects.favorites_count),
+        desc(projects.views_count),
+        desc(projects.downloads_count),
+        desc(projects.id),
+      )
+      .limit(8);
+
+    return result as (Project & { icon_count: number })[];
+  },
+);
+
+export const usePlatformStats = routeLoader$(
+  async ({ platform }): Promise<{ projectCount: number; iconCount: number }> => {
+    const { getDB, initDB } = await import("~/lib/db");
+    const db = getDB(platform);
+    await initDB(db, platform);
+    const { projects, icons } = await import("~/lib/schema");
+    const { eq, count } = await import("drizzle-orm");
+
+    const projectResult = await db
+      .select({ count: count() })
+      .from(projects)
+      .where(eq(projects.visibility, "public"));
+
+    const iconResult = await db
+      .select({ count: count() })
+      .from(icons)
+      .innerJoin(projects, eq(icons.project_id, projects.id))
+      .where(eq(projects.visibility, "public"));
+
+    return {
+      projectCount: projectResult[0]?.count ?? 0,
+      iconCount: iconResult[0]?.count ?? 0,
+    };
+  },
+);
+
 export const useCreateProject = routeAction$(
   async (data, { platform, request }) => {
     const session = await getSessionFromRequest(platform, request);
@@ -156,61 +226,10 @@ export const useDeleteProject = routeAction$(
   },
 );
 
-// ── Featured Icon Sets Data ─────────────────────────────────────────
-
-const FEATURED_SETS = [
-  {
-    id: 1,
-    name: "Material Outlined",
-    count: 120,
-    color: "#E11D48",
-    icons: [
-      "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z",
-      "M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z",
-      "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z",
-      "M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z",
-    ],
-  },
-  {
-    id: 2,
-    name: "Feather Line",
-    count: 86,
-    color: "#2563EB",
-    icons: [
-      "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8",
-      "M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z",
-      "M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z",
-      "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75",
-    ],
-  },
-  {
-    id: 3,
-    name: "Bold & Round",
-    count: 64,
-    color: "#F59E0B",
-    icons: [
-      "M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z",
-      "M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 14H7v-2h5zm5-4H7v-2h10zm0-4H7V7h10z",
-      "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z",
-      "M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 0 0-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2z",
-    ],
-  },
-  {
-    id: 4,
-    name: "Emoji & Playful",
-    count: 48,
-    color: "#22C55E",
-    icons: [
-      "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-4-8c.79 0 1.5-.71 1.5-1.5S8.79 9 8 9s-1.5.71-1.5 1.5S7.21 12 8 12zm8 0c.79 0 1.5-.71 1.5-1.5S16.79 9 16 9s-1.5.71-1.5 1.5.71 1.5 1.5 1.5zm-4 5.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z",
-      "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z",
-      "M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z",
-      "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-4-8c.79 0 1.5-.71 1.5-1.5S8.79 9 8 9s-1.5.71-1.5 1.5S7.21 12 8 12zm8 0c.79 0 1.5-.71 1.5-1.5S16.79 9 16 9s-1.5.71-1.5 1.5.71 1.5 1.5 1.5zm-4 5.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z",
-    ],
-  },
-];
-
 export default component$(() => {
   const loaderData = useProjects();
+  const featuredProjects = useFeaturedProjects();
+  const platformStats = usePlatformStats();
   const createProject = useCreateProject();
   const deleteProject = useDeleteProject();
   const nav = useNavigate();
@@ -227,31 +246,6 @@ export default component$(() => {
   });
   const toasts = useStore<{ items: ToastItem[] }>({ items: [] });
   const toastId = useSignal(0);
-
-  // Public projects for homepage recommendations
-  const publicProjects = useStore<{
-    items: (Project & { icon_count: number })[];
-    loaded: boolean;
-  }>({
-    items: [],
-    loaded: false,
-  });
-
-  // Fetch public projects
-  useTask$(() => {
-    if (typeof window === "undefined") return;
-    fetch("/api/projects?visibility=public")
-      .then((res) => res.json())
-      .then((data: any) => {
-        if (data.projects) {
-          publicProjects.items = data.projects;
-        }
-        publicProjects.loaded = true;
-      })
-      .catch(() => {
-        publicProjects.loaded = true;
-      });
-  });
 
   const showToast = $((message: string, type: ToastItem["type"] = "info") => {
     const id = ++toastId.value;
@@ -513,7 +507,7 @@ export default component$(() => {
           <div class="animate-fade-in-up mb-6 inline-flex items-center gap-2 rounded-full bg-[var(--color-base-100)] px-4 py-2">
             <span class="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
             <span class="text-sm font-medium text-[var(--color-neutral)]">
-              已支持 {totalIcons} 个图标 · {projectList.length} 个项目
+              已支持 {platformStats.value.iconCount} 个图标 · {platformStats.value.projectCount} 个项目
             </span>
           </div>
 
@@ -576,25 +570,27 @@ export default component$(() => {
               </svg>
               从 GitHub 导入
             </button>
-            <a
-              href="#featured"
-              class="clay-button-secondary flex items-center gap-2 bg-blue-500 px-7 py-3.5 text-base font-bold text-white"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+            {featuredProjects.value.length > 0 && (
+              <a
+                href="#featured"
+                class="clay-button-secondary flex items-center gap-2 bg-blue-500 px-7 py-3.5 text-base font-bold text-white"
               >
-                <path d="m6 9 6 6 6-6" />
-              </svg>
-              浏览推荐图标
-            </a>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+                浏览推荐图标
+              </a>
+            )}
           </div>
 
           {/* Hero Icon Grid Preview */}
@@ -656,152 +652,109 @@ export default component$(() => {
         </div>
 
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {publicProjects.loaded && publicProjects.items.length > 0
-            ? publicProjects.items.slice(0, 8).map((project, idx) => (
-                <div
-                  key={project.id}
-                  class="animate-fade-in-up clay-card group cursor-pointer p-5"
-                  style={`animation-delay: ${idx * 0.08}s`}
-                  onClick$={() => nav(`/project/${project.id}`)}
-                >
-                  {/* Project preview */}
-                  <div class="mb-4 flex items-center gap-3">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-md bg-gradient-to-br from-rose-400 to-rose-500 text-lg font-extrabold text-white">
-                      {project.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div class="min-w-0 flex-1">
-                      <h3 class="truncate text-base font-bold text-[var(--color-neutral)]">
-                        {project.name}
-                      </h3>
-                      <div class="mt-0.5 flex items-center gap-2">
-                        <span class="text-[10px] font-medium text-[var(--color-base-400)]">
-                          {project.author_name || "匿名作者"}
-                        </span>
-                        {project.visibility === "public" && (
-                          <span class="rounded-full bg-[var(--color-base-200)] px-1.5 py-0.5 text-[9px] font-semibold text-emerald-600">
-                            公开
-                          </span>
-                        )}
-                      </div>
-                    </div>
+          {featuredProjects.value.length > 0 ? (
+            featuredProjects.value.map((project, idx) => (
+              <div
+                key={project.id}
+                class="animate-fade-in-up clay-card group cursor-pointer p-5"
+                style={`animation-delay: ${idx * 0.08}s`}
+                onClick$={() => nav(`/project/${project.id}/view`)}
+              >
+                {/* Project preview */}
+                <div class="mb-4 flex items-center gap-3">
+                  <div class="flex h-12 w-12 items-center justify-center rounded-md bg-gradient-to-br from-rose-400 to-rose-500 text-lg font-extrabold text-white">
+                    {project.name.charAt(0).toUpperCase()}
                   </div>
-
-                  <div class="clay-inset mb-3 flex items-center gap-3 px-3 py-2">
-                    <div class="flex items-center gap-1">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="12"
-                        height="12"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#E11D48"
-                        stroke-width="2"
-                        class="text-[var(--color-base-400)]"
-                      >
-                        <rect
-                          x="3"
-                          y="3"
-                          width="18"
-                          height="18"
-                          rx="2"
-                          ry="2"
-                        />
-                        <circle cx="8.5" cy="8.5" r="1.5" />
-                        <polyline points="21 15 16 10 5 21" />
-                      </svg>
-                      <span class="text-xs font-semibold text-[var(--color-base-400)]">
-                        {project.icon_count || 0}
+                  <div class="min-w-0 flex-1">
+                    <h3 class="truncate text-base font-bold text-[var(--color-neutral)]">
+                      {project.name}
+                    </h3>
+                    <div class="mt-0.5 flex items-center gap-2">
+                      <span class="text-[10px] font-medium text-[var(--color-base-400)]">
+                        {project.author_name || "匿名作者"}
                       </span>
-                    </div>
-                    <div class="h-3 w-px bg-rose-200" />
-                    <div class="flex items-center gap-1">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="12"
-                        height="12"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#E11D48"
-                        stroke-width="2"
-                        class="text-[var(--color-base-400)]"
-                      >
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                      </svg>
-                      <span class="text-xs font-semibold text-[var(--color-base-400)]">
-                        {project.favorites_count || 0}
+                      <span class="rounded-full bg-[var(--color-base-200)] px-1.5 py-0.5 text-[9px] font-semibold text-emerald-600">
+                        公开
                       </span>
                     </div>
                   </div>
-
-                  <p class="line-clamp-2 text-xs text-[var(--color-base-400)]">
-                    {project.description || "暂无描述"}
-                  </p>
                 </div>
-              ))
-            : FEATURED_SETS.map((set, idx) => (
-                <div
-                  key={set.id}
-                  class="animate-fade-in-up clay-card group cursor-pointer p-5"
-                  style={`animation-delay: ${idx * 0.08}s`}
-                  onClick$={() => {
-                    showModal.value = true;
-                  }}
-                >
-                  {/* Icon preview grid */}
-                  <div class="mb-4 grid grid-cols-2 gap-3">
-                    {set.icons.map((iconPath, i) => (
-                      <div
-                        key={i}
-                        class="icon-preview-canvas flex aspect-square items-center justify-center transition-transform duration-300 group-hover:scale-105"
-                      >
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke={set.color}
-                          stroke-width="1.5"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          class="h-7 w-7"
-                        >
-                          <path d={iconPath} />
-                        </svg>
-                      </div>
-                    ))}
-                  </div>
 
-                  <div class="flex items-center justify-between">
-                    <div>
-                      <h3 class="text-base font-bold text-[var(--color-neutral)]">
-                        {set.name}
-                      </h3>
-                      <p class="text-xs text-[var(--color-base-400)]">
-                        {set.count} 个图标
-                      </p>
-                    </div>
-                    <div
-                      class="flex h-9 w-9 items-center justify-center rounded-xl transition-all"
-                      style={{
-                        background: `${set.color}15`,
-                        color: set.color,
-                      }}
+                <div class="clay-inset mb-3 flex items-center gap-3 px-3 py-2">
+                  <div class="flex items-center gap-1">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#E11D48"
+                      stroke-width="2"
+                      class="text-[var(--color-base-400)]"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      >
-                        <path d="m9 18 6-6-6-6" />
-                      </svg>
-                    </div>
+                      <rect
+                        x="3"
+                        y="3"
+                        width="18"
+                        height="18"
+                        rx="2"
+                        ry="2"
+                      />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    <span class="text-xs font-semibold text-[var(--color-base-400)]">
+                      {project.icon_count || 0}
+                    </span>
+                  </div>
+                  <div class="h-3 w-px bg-rose-200" />
+                  <div class="flex items-center gap-1">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#E11D48"
+                      stroke-width="2"
+                      class="text-[var(--color-base-400)]"
+                    >
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                    </svg>
+                    <span class="text-xs font-semibold text-[var(--color-base-400)]">
+                      {project.favorites_count || 0}
+                    </span>
                   </div>
                 </div>
-              ))}
+
+                <p class="line-clamp-2 text-xs text-[var(--color-base-400)]">
+                  {project.description || "暂无描述"}
+                </p>
+              </div>
+            ))
+          ) : (
+            <div class="col-span-full flex flex-col items-center justify-center py-12 text-[var(--color-base-400)]">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="40"
+                height="40"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" x2="16.65" y1="21" y2="16.65" />
+              </svg>
+              <p class="mt-3 text-sm">还没有公开图标集</p>
+              <button
+                class="clay-button mt-4 bg-rose-500 px-5 py-2 text-sm text-white"
+                onClick$={() => (showModal.value = true)}
+              >
+                创建第一个
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
