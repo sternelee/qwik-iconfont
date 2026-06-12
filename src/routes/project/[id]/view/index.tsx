@@ -19,6 +19,7 @@ import {
 import { SvgPreview } from "~/components/svg-preview/svg-preview";
 import { getSessionFromRequest } from "~/lib/session";
 import { ThemeToggle } from "~/components/theme-toggle/theme-toggle";
+import { MobileNav } from "~/components/mobile-nav/mobile-nav";
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -303,23 +304,24 @@ export default component$(() => {
           <div class="flex items-center gap-3">
             <a
               href="/"
-              class="rounded-sm px-3 py-1.5 text-sm font-medium text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
+              class="hidden rounded-sm px-3 py-1.5 text-sm font-medium text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)] sm:block"
             >
               首页
             </a>
             <a
               href="/explore"
-              class="rounded-sm px-3 py-1.5 text-sm font-medium text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
+              class="hidden rounded-sm px-3 py-1.5 text-sm font-medium text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)] sm:block"
             >
               探索
             </a>
             <a
               href="/favorites"
-              class="rounded-sm px-3 py-1.5 text-sm font-medium text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)]"
+              class="hidden rounded-sm px-3 py-1.5 text-sm font-medium text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)] sm:block"
             >
               收藏
             </a>
             <ThemeToggle />
+            <MobileNav />
           </div>
         </div>
       </header>
@@ -594,7 +596,7 @@ export default component$(() => {
             </p>
           </div>
         ) : (
-          <div class="grid grid-cols-3 gap-3 pb-8 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10">
+          <div class="grid grid-cols-2 gap-3 pb-8 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10">
             {filteredIcons.list.map((icon) => (
               <div
                 key={icon.id}
@@ -623,7 +625,7 @@ export default component$(() => {
 
                 {/* Add to project button — appears on hover */}
                 <button
-                  class="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[11px] font-bold text-white opacity-0 transition-all group-hover:opacity-100 hover:bg-rose-600 active:scale-95"
+                  class="absolute top-1 right-1 flex h-7 w-7 items-center justify-center rounded-full bg-rose-500 text-sm font-bold text-white opacity-100 shadow-sm transition-all hover:bg-rose-600 active:scale-95 sm:h-5 sm:w-5 sm:opacity-0 sm:group-hover:opacity-100 sm:text-[11px]"
                   title="添加到我的项目"
                   onClick$={() => {
                     addingIcon.value = {

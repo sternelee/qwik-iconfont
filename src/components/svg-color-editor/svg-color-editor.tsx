@@ -130,6 +130,13 @@ export const SvgColorCanvas = component$<SvgColorCanvasProps>(
         el.addEventListener("mouseleave", () => {
           (el as HTMLElement).style.opacity = "";
         });
+        el.addEventListener("touchstart", () => {
+          if (store.selectedIdx !== i)
+            (el as HTMLElement).style.opacity = "0.72";
+        });
+        el.addEventListener("touchend", () => {
+          (el as HTMLElement).style.opacity = "";
+        });
       });
 
       store.entries = entries;
@@ -165,13 +172,11 @@ export const SvgColorCanvas = component$<SvgColorCanvasProps>(
       store.pendingColorChange = null;
     });
 
-    // ── Render: 300×300 canvas cell ────────────────────────────────
+    // ── Render: responsive canvas cell ────────────────────────────────
     return (
       <div
-        class="relative overflow-hidden rounded-xl"
+        class="relative aspect-square w-full max-w-[300px] overflow-hidden rounded-xl"
         style={{
-          width: "300px",
-          height: "300px",
           backgroundImage:
             "linear-gradient(45deg,#f3f4f6 25%,transparent 25%)," +
             "linear-gradient(-45deg,#f3f4f6 25%,transparent 25%)," +

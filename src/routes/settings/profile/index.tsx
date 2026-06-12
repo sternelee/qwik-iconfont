@@ -10,6 +10,7 @@ import {
 import { getSessionFromRequest } from "~/lib/session";
 import { ThemeToggle } from "~/components/theme-toggle/theme-toggle";
 import { UserMenu } from "~/components/user-menu/user-menu";
+import { MobileNav } from "~/components/mobile-nav/mobile-nav";
 export const head: DocumentHead = {
   title: "账户设置 - Iconfont",
   meta: [
@@ -161,6 +162,7 @@ export default component$(() => {
           </a>
           <div class="flex items-center gap-3">
             <ThemeToggle />
+            <MobileNav />
             <a
               href="/"
               class="hidden rounded-md px-3 py-2 text-sm font-semibold text-[var(--color-neutral)] transition-all hover:bg-[var(--color-base-200)] sm:block"

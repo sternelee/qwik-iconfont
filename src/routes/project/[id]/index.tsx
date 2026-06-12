@@ -1464,7 +1464,7 @@ ${classes}`;
               </>
             )}
           </div>
-          <div class="flex gap-2">
+          <div class="flex flex-wrap gap-2">
             <div class="relative">
               <input
                 type="file"
@@ -1522,7 +1522,7 @@ ${classes}`;
         </div>
 
         {/* Search & Sort */}
-        <div class="mb-4 flex flex-wrap items-center gap-2">
+        <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
           <div class="min-w-[200px] flex-1">
             <div class="relative">
               <input
@@ -1623,7 +1623,7 @@ ${classes}`;
 
         {/* Tag filter */}
         {allTags.value.length > 0 && (
-          <div class="mb-4 flex flex-wrap items-center gap-2">
+          <div class="mb-4 flex max-h-24 flex-wrap items-center gap-2 overflow-y-auto sm:max-h-none">
             <span class="text-xs font-semibold text-[var(--color-base-400)]">
               标签:
             </span>
@@ -1689,7 +1689,7 @@ ${classes}`;
             <p class="font-bold text-[var(--color-neutral)]">
               {dragOver.value
                 ? "松开鼠标上传 SVG 文件"
-                : "拖拽 SVG 文件到此处上传"}
+                : "点击上传或拖拽 SVG 文件"}
             </p>
             <p class="mt-1 text-xs text-[var(--color-base-400)]">
               或点击上方「上传图标」按钮
@@ -1818,23 +1818,25 @@ ${classes}`;
               >
                 {/* Selection checkbox */}
                 <button
-                  class={`absolute top-2.5 left-2.5 z-10 flex h-5 w-5 items-center justify-center rounded-md border transition-all ${selectedIds.ids.has(icon.id) ? "border-rose-500 bg-rose-500" : "border-[var(--color-base-300)] bg-[var(--color-base-100)] hover:border-rose-500"}`}
+                  class={`absolute top-1.5 left-1.5 z-10 flex h-11 w-11 items-center justify-center rounded-md border transition-all ${selectedIds.ids.has(icon.id) ? "border-rose-500 bg-rose-500" : "border-[var(--color-base-300)] bg-[var(--color-base-100)] hover:border-rose-500"}`}
                   onClick$={() => toggleSelect(icon.id)}
                 >
-                  {selectedIds.ids.has(icon.id) && (
-                    <svg
-                      class="h-3 w-3 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="3"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    >
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  )}
+                  <div class="flex h-6 w-6 items-center justify-center rounded-sm">
+                    {selectedIds.ids.has(icon.id) && (
+                      <svg
+                        class="h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="3"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                  </div>
                 </button>
 
                 {/* Preview */}
@@ -1894,7 +1896,7 @@ ${classes}`;
                 )}
 
                 {/* Actions */}
-                <div class="mt-2 flex justify-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                <div class="mt-2 flex justify-center gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                   <button
                     class="flex h-7 w-7 items-center justify-center rounded-md text-[var(--color-base-400)] transition-all hover:bg-[var(--color-base-200)] hover:text-[var(--color-neutral)]"
                     title="编辑"
@@ -1985,7 +1987,7 @@ ${classes}`;
       {/* ── Settings Modal ────────────────────────────────────── */}
       {showSettings.value && (
         <div class="modal modal-open">
-          <div class="clay-card animate-modal mx-4 max-w-lg">
+          <div class="clay-card animate-modal max-h-[calc(100vh-2rem)] overflow-y-auto mx-4 max-w-lg">
             <div class="border-b border-[var(--color-base-300)] px-6 py-4">
               <h3 class="text-lg font-bold text-[var(--color-neutral)]">
                 项目设置
@@ -2138,7 +2140,7 @@ ${classes}`;
       {/* ── Preview Icon Modal ────────────────────────────────── */}
       {showPreview.value && (
         <div class="modal modal-open">
-          <div class="clay-card animate-modal mx-4 max-w-sm text-center">
+          <div class="clay-card animate-modal max-h-[calc(100vh-2rem)] overflow-y-auto mx-4 max-w-sm text-center">
             <div class="p-6">
               <h3 class="text-lg font-bold text-[var(--color-neutral)]">
                 {previewIcon.name}
@@ -2202,7 +2204,7 @@ ${classes}`;
       {/* ── Edit Icon Modal ───────────────────────────────────── */}
       {showEdit.value && (
         <div class="modal modal-open">
-          <div class="clay-card animate-modal mx-4 max-w-lg">
+          <div class="clay-card animate-modal max-h-[calc(100vh-2rem)] overflow-y-auto mx-4 max-w-lg">
             <div class="border-b border-[var(--color-base-300)] px-6 py-4">
               <h3 class="text-lg font-bold text-[var(--color-neutral)]">
                 编辑图标
@@ -2390,7 +2392,7 @@ ${classes}`;
       {/* ── Code Generation Modal ─────────────────────────────── */}
       {showCode.value && (
         <div class="modal modal-open">
-          <div class="clay-card animate-modal mx-4 max-w-3xl">
+          <div class="clay-card animate-modal max-h-[calc(100vh-2rem)] overflow-y-auto mx-4 max-w-3xl">
             <div class="border-b border-[var(--color-base-300)] px-6 py-4">
               <h3 class="text-lg font-bold text-[var(--color-neutral)]">
                 生成代码
@@ -2569,7 +2571,7 @@ ${classes}`;
       {/* ── Batch Rename Modal ────────────────────────────────── */}
       {showBatchRename.value && (
         <div class="modal modal-open">
-          <div class="clay-card animate-modal mx-4 max-w-lg">
+          <div class="clay-card animate-modal max-h-[calc(100vh-2rem)] overflow-y-auto mx-4 max-w-lg">
             <div class="border-b border-[var(--color-base-300)] px-6 py-4">
               <h3 class="text-lg font-bold text-[var(--color-neutral)]">
                 批量重命名 ({selectedIds.ids.size} 个图标)
@@ -2748,7 +2750,7 @@ ${classes}`;
       {/* ── Confirm Delete Icon Modal ─────────────────────────── */}
       {confirmDeleteIcon.show && (
         <div class="modal modal-open">
-          <div class="clay-card animate-modal mx-4 max-w-sm text-center">
+          <div class="clay-card animate-modal max-h-[calc(100vh-2rem)] overflow-y-auto mx-4 max-w-sm text-center">
             <div class="p-6">
               <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-md bg-[var(--color-base-200)]">
                 <svg
@@ -2805,7 +2807,7 @@ ${classes}`;
       {/* ── Confirm Batch Delete Modal ────────────────────────── */}
       {confirmBatchDelete.show && (
         <div class="modal modal-open">
-          <div class="clay-card animate-modal mx-4 max-w-sm text-center">
+          <div class="clay-card animate-modal max-h-[calc(100vh-2rem)] overflow-y-auto mx-4 max-w-sm text-center">
             <div class="p-6">
               <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-md bg-[var(--color-base-200)]">
                 <svg
@@ -2862,7 +2864,7 @@ ${classes}`;
       {/* ── Keyboard Shortcuts Help ───────────────────────────── */}
       {showShortcuts.value && (
         <div class="modal modal-open">
-          <div class="clay-card animate-modal mx-4 max-w-xs">
+          <div class="clay-card animate-modal max-h-[calc(100vh-2rem)] overflow-y-auto mx-4 max-w-xs">
             <div class="p-5">
               <h3 class="mb-4 text-base font-bold text-[var(--color-neutral)]">
                 键盘快捷键
@@ -2979,7 +2981,7 @@ ${classes}`;
       {/* ── AI Generate Modal ─────────────────────────────────── */}
       {showAIGenerate.value && (
         <div class="modal modal-open z-50">
-          <div class="clay-card animate-modal mx-4 w-full max-w-lg">
+          <div class="clay-card animate-modal max-h-[calc(100vh-2rem)] overflow-y-auto mx-4 w-full max-w-lg">
             <div class="flex items-center justify-between border-b border-[var(--color-base-300)] px-6 py-4">
               <div>
                 <h3 class="text-lg font-bold text-[var(--color-neutral)]">
@@ -3088,7 +3090,7 @@ ${classes}`;
       {/* ── AI Modify Modal ───────────────────────────────────── */}
       {showAIModify.value && (
         <div class="modal modal-open z-50">
-          <div class="clay-card animate-modal mx-4 w-full max-w-lg">
+          <div class="clay-card animate-modal max-h-[calc(100vh-2rem)] overflow-y-auto mx-4 w-full max-w-lg">
             <div class="flex items-center justify-between border-b border-[var(--color-base-300)] px-6 py-4">
               <div>
                 <h3 class="text-lg font-bold text-[var(--color-neutral)]">
@@ -3202,7 +3204,7 @@ ${classes}`;
       {/* ── AI Settings Modal ────────────────────────────────── */}
       {showAISettings.value && (
         <div class="modal modal-open z-50">
-          <div class="clay-card animate-modal mx-4 w-full max-w-md">
+          <div class="clay-card animate-modal max-h-[calc(100vh-2rem)] overflow-y-auto mx-4 w-full max-w-md">
             <div class="flex items-center justify-between border-b border-[var(--color-base-300)] px-6 py-4">
               <div>
                 <h3 class="text-lg font-bold text-[var(--color-neutral)]">
@@ -3310,7 +3312,7 @@ ${classes}`;
       {/* ── Batch Tag Management Modal ────────────────────────── */}
       {showBatchTag.value && (
         <div class="modal modal-open">
-          <div class="clay-card animate-modal mx-4 max-w-lg">
+          <div class="clay-card animate-modal max-h-[calc(100vh-2rem)] overflow-y-auto mx-4 max-w-lg">
             <div class="border-b border-[var(--color-base-300)] px-6 py-4">
               <h3 class="text-lg font-bold text-[var(--color-neutral)]">
                 批量标签管理 ({selectedIds.ids.size} 个图标)
@@ -3435,7 +3437,7 @@ ${classes}`;
       {/* ── Members Modal ─────────────────────────────────────── */}
       {showMembers.value && (
         <div class="modal modal-open">
-          <div class="clay-card animate-modal mx-4 max-w-lg">
+          <div class="clay-card animate-modal max-h-[calc(100vh-2rem)] overflow-y-auto mx-4 max-w-lg">
             <div class="border-b border-[var(--color-base-300)] px-6 py-4">
               <h3 class="text-lg font-bold text-[var(--color-neutral)]">
                 项目成员

@@ -111,7 +111,7 @@ export const ColorLayerEditor = component$<ColorLayerEditorProps>(
           return (
             <div
               key={idx}
-              class="flex items-center gap-2 rounded-md border border-[var(--color-base-300)] bg-[var(--color-base-100)] px-3 py-2"
+              class="flex flex-wrap items-center gap-2 rounded-md border border-[var(--color-base-300)] bg-[var(--color-base-100)] px-3 py-2 sm:flex-nowrap"
             >
               {/* Layer index badge */}
               <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--color-base-200)] text-[9px] font-bold text-[var(--color-neutral)]">
@@ -127,7 +127,7 @@ export const ColorLayerEditor = component$<ColorLayerEditorProps>(
               <div class="flex min-w-0 flex-1 items-center gap-1.5">
                 <input
                   type="color"
-                  class="h-7 w-7 shrink-0 cursor-pointer rounded-md border border-[var(--color-base-300)] p-0.5"
+                  class="h-8 w-8 shrink-0 cursor-pointer rounded-md border border-[var(--color-base-300)] p-0.5 sm:h-6 sm:w-6"
                   value={displayColor}
                   title="选择颜色"
                   onInput$={(e) =>
@@ -162,7 +162,7 @@ export const ColorLayerEditor = component$<ColorLayerEditorProps>(
               {/* Reorder + delete */}
               <div class="flex shrink-0 items-center gap-0.5">
                 <button
-                  class="flex h-6 w-6 items-center justify-center rounded-lg text-[var(--color-base-400)] hover:bg-[var(--color-base-200)] hover:text-[var(--color-neutral)] disabled:opacity-30"
+                  class="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--color-base-400)] hover:bg-[var(--color-base-200)] hover:text-[var(--color-neutral)] disabled:opacity-30 sm:h-7 sm:w-7"
                   title="上移"
                   disabled={idx === 0}
                   onClick$={() => moveUp(idx)}
@@ -170,7 +170,7 @@ export const ColorLayerEditor = component$<ColorLayerEditorProps>(
                   ↑
                 </button>
                 <button
-                  class="flex h-6 w-6 items-center justify-center rounded-lg text-[var(--color-base-400)] hover:bg-[var(--color-base-200)] hover:text-[var(--color-neutral)] disabled:opacity-30"
+                  class="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--color-base-400)] hover:bg-[var(--color-base-200)] hover:text-[var(--color-neutral)] disabled:opacity-30 sm:h-7 sm:w-7"
                   title="下移"
                   disabled={idx === layers.length - 1}
                   onClick$={() => moveDown(idx)}
@@ -178,7 +178,7 @@ export const ColorLayerEditor = component$<ColorLayerEditorProps>(
                   ↓
                 </button>
                 <button
-                  class="flex h-6 w-6 items-center justify-center rounded-lg text-[var(--color-base-400)] hover:bg-red-50 hover:text-red-500"
+                  class="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--color-base-400)] hover:bg-red-50 hover:text-red-500 sm:h-7 sm:w-7"
                   title="删除此图层"
                   onClick$={() => deleteLayer(idx)}
                 >

@@ -58,7 +58,7 @@ export const IconDetailPanel = component$((props: IconDetailPanelProps) => {
       onClick$={onClose$}
     >
       <div
-        class="clay-card w-full max-w-md overflow-hidden"
+        class="clay-card w-full max-w-[calc(100vw-2rem)] overflow-hidden sm:max-w-md"
         onClick$={(e: any) => e.stopPropagation()}
       >
         {/* Header */}
@@ -125,11 +125,12 @@ export const IconDetailPanel = component$((props: IconDetailPanelProps) => {
           </div>
 
           {/* Icon preview */}
-          <div
-            class="icon-preview-canvas flex items-center justify-center"
-            style={{
-              width: `${previewSize.value + 64}px`,
-              height: `${previewSize.value + 64}px`,
+          <div class="max-w-full overflow-x-auto">
+            <div
+              class="icon-preview-canvas flex items-center justify-center"
+              style={{
+                width: `${previewSize.value + 64}px`,
+                height: `${previewSize.value + 64}px`,
               backgroundColor: "rgb(255, 255, 255)",
               backgroundImage:
                 "linear-gradient(45deg, rgb(243, 244, 246) 25%, transparent 25%), linear-gradient(-45deg, rgb(243, 244, 246) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgb(243, 244, 246) 75%), linear-gradient(-45deg, transparent 75%, rgb(243, 244, 246) 75%)",
@@ -150,6 +151,7 @@ export const IconDetailPanel = component$((props: IconDetailPanelProps) => {
                 class="h-full w-full object-contain"
               />
             </div>
+            </div>
           </div>
 
           {/* Color picker */}
@@ -160,7 +162,7 @@ export const IconDetailPanel = component$((props: IconDetailPanelProps) => {
               </span>
               <input
                 type="color"
-                class="h-7 w-7 cursor-pointer overflow-hidden rounded-full border-0 p-0"
+                class="h-8 w-8 cursor-pointer overflow-hidden rounded-full border-0 p-0 sm:h-6 sm:w-6"
                 value={fillColor.value}
                 onInput$={(e: any) => (fillColor.value = e.target.value)}
               />
@@ -177,7 +179,7 @@ export const IconDetailPanel = component$((props: IconDetailPanelProps) => {
                 ].map((c) => (
                   <button
                     key={c}
-                    class={`h-6 w-6 rounded-full border-2 transition-transform hover:scale-110 ${fillColor.value === c ? "scale-110 border-[var(--color-base-300)]" : "border-transparent"}`}
+                    class={`h-8 w-8 rounded-full border-2 transition-transform hover:scale-110 sm:h-6 sm:w-6 ${fillColor.value === c ? "scale-110 border-[var(--color-base-300)]" : "border-transparent"}`}
                     style={{ backgroundColor: c }}
                     onClick$={() => (fillColor.value = c)}
                   />

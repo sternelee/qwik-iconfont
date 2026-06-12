@@ -30,6 +30,7 @@ import { GithubImport } from "~/components/github-import/github-import";
 import { UserMenu } from "~/components/user-menu/user-menu";
 import { getSessionFromRequest } from "~/lib/session";
 import { ThemeToggle } from "~/components/theme-toggle/theme-toggle";
+import { MobileNav } from "~/components/mobile-nav/mobile-nav";
 import {
   getLocalProjects,
   createLocalProject,
@@ -448,6 +449,7 @@ export default component$(() => {
           {/* Right: Actions */}
           <div class="flex items-center gap-3">
             <ThemeToggle />
+            <MobileNav />
             {/* Search link */}
             <a
               href="/search"

@@ -370,12 +370,12 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
 
         {/* Body */}
         <div class="min-h-0 flex-1 overflow-y-auto px-6 py-5">
-          <div class="grid gap-4 xl:grid-cols-[minmax(0,1.5fr),minmax(0,0.8fr)]">
+          <div class="grid gap-4 lg:grid-cols-[minmax(0,1.5fr),minmax(0,0.8fr)]">
             {/* Left: Preview */}
             <div class="flex min-w-0 flex-col gap-4">
               <div class="card bg-base-200 border-base-300 border shadow-sm">
                 <div class="card-body p-5">
-                  <div class="grid grid-cols-1 gap-4 lg:grid-cols-[300px_1fr_1fr]">
+                  <div class="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:grid-cols-[260px_1fr_1fr]">
                     {/* Col 1 — 300×300 preview (interactive when multi-colour) */}
                     {isMultiColor.value && !isEmpty ? (
                       <div class="mx-auto shrink-0 lg:mx-0">
@@ -386,10 +386,8 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                       </div>
                     ) : (
                       <div
-                        class="mx-auto shrink-0 overflow-hidden rounded-xl lg:mx-0"
+                        class="mx-auto h-48 w-full max-w-[300px] shrink-0 overflow-hidden rounded-xl sm:h-64 md:h-72 lg:mx-0 lg:h-80"
                         style={{
-                          width: "300px",
-                          height: "300px",
                           backgroundColor: "rgb(255,255,255)",
                           backgroundImage:
                             "linear-gradient(45deg,rgb(243,244,246) 25%,transparent 25%)," +
@@ -478,7 +476,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                           </label>
                           <input
                             type="number"
-                            class="input input-bordered input-xs"
+                            class="input input-bordered input-sm sm:input-xs"
                             value={viewBoxParts.minX}
                             onInput$={(e: any) => {
                               viewBoxParts.minX =
@@ -493,7 +491,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                           </label>
                           <input
                             type="number"
-                            class="input input-bordered input-xs"
+                            class="input input-bordered input-sm sm:input-xs"
                             value={viewBoxParts.minY}
                             onInput$={(e: any) => {
                               viewBoxParts.minY =
@@ -508,7 +506,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                           </label>
                           <input
                             type="number"
-                            class="input input-bordered input-xs"
+                            class="input input-bordered input-sm sm:input-xs"
                             value={viewBoxParts.vbWidth}
                             onInput$={(e: any) => {
                               viewBoxParts.vbWidth =
@@ -523,7 +521,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                           </label>
                           <input
                             type="number"
-                            class="input input-bordered input-xs"
+                            class="input input-bordered input-sm sm:input-xs"
                             value={viewBoxParts.vbHeight}
                             onInput$={(e: any) => {
                               viewBoxParts.vbHeight =
@@ -608,7 +606,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                                 <button
                                   key={e.idx}
                                   class={[
-                                    "h-5 w-5 rounded border-2 transition-all hover:scale-110",
+                                    "h-7 w-7 rounded border-2 transition-all hover:scale-110",
                                     colorStore.selectedIdx === e.idx
                                       ? "border-rose-500 ring-1 ring-rose-300"
                                       : "border-[var(--color-base-300)] hover:border-[var(--color-base-400)]",
@@ -635,7 +633,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                                 <div class="flex items-center gap-2">
                                   <input
                                     type="color"
-                                    class="h-7 w-7 cursor-pointer rounded border-2 border-[var(--color-base-300)] p-0.5"
+                                    class="h-9 w-9 cursor-pointer rounded border-2 border-[var(--color-base-300)] p-0.5 sm:h-7 sm:w-7"
                                     value={
                                       colorStore.entries.find(
                                         (e) => e.idx === colorStore.selectedIdx,
@@ -679,7 +677,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                                 <button
                                   key={c}
                                   class={[
-                                    "h-5 w-5 rounded border-2 transition-all hover:scale-110 active:scale-95",
+                                    "h-7 w-7 rounded border-2 transition-all hover:scale-110 active:scale-95",
                                     fillColor.value === c
                                       ? "border-primary ring-primary/50 ring-1"
                                       : "border-base-300",
@@ -693,7 +691,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                             <div class="mt-2 flex items-center gap-2">
                               <input
                                 type="color"
-                                class="border-base-300 h-7 w-7 cursor-pointer rounded border-2 p-0.5"
+                                class="border-base-300 h-9 w-9 cursor-pointer rounded border-2 p-0.5 sm:h-7 sm:w-7"
                                 value={fillColor.value}
                                 onInput$={(e: any) =>
                                   (fillColor.value = e.target.value)
@@ -720,7 +718,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                             </label>
                             <input
                               type="number"
-                              class="input input-bordered input-xs"
+                              class="input input-bordered input-sm sm:input-xs"
                               step="0.1"
                               min="0.1"
                               max="10"
@@ -737,7 +735,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                             </label>
                             <input
                               type="number"
-                              class="input input-bordered input-xs"
+                              class="input input-bordered input-sm sm:input-xs"
                               step="0.1"
                               min="0.1"
                               max="10"
@@ -754,7 +752,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                             </label>
                             <input
                               type="number"
-                              class="input input-bordered input-xs"
+                              class="input input-bordered input-sm sm:input-xs"
                               step="1"
                               min="-360"
                               max="360"
@@ -771,7 +769,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                             </label>
                             <input
                               type="number"
-                              class="input input-bordered input-xs"
+                              class="input input-bordered input-sm sm:input-xs"
                               step="1"
                               value={transform.translateX}
                               onInput$={(e: any) =>
@@ -786,7 +784,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
                             </label>
                             <input
                               type="number"
-                              class="input input-bordered input-xs"
+                              class="input input-bordered input-sm sm:input-xs"
                               step="1"
                               value={transform.translateY}
                               onInput$={(e: any) =>
@@ -1007,7 +1005,7 @@ export const SvgEditor = component$((props: SvgEditorProps) => {
 
         {/* Footer */}
         <div class="border-base-200 bg-base-200/60 flex items-center justify-between border-t px-6 py-4">
-          <div class="text-base-content/60 text-xs">
+          <div class="hidden text-base-content/60 text-xs sm:block">
             <kbd class="kbd kbd-xs">Ctrl+S</kbd> 保存 ·{" "}
             <kbd class="kbd kbd-xs">Esc</kbd> 关闭
           </div>
