@@ -608,6 +608,7 @@ export default component$(() => {
 
   // Sync search/sort to URL query params
   useTask$(({ track }) => {
+    if (typeof window === "undefined") return;
     track(() => searchQuery.value);
     track(() => sortBy.value);
     const url = new URL(loc.url.href);
